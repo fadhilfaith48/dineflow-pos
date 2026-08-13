@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\PaymentResource;
+use App\Models\Order;
+use App\Models\Payment;
+use App\Models\Table;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PaymentController extends Controller
+{
+    public function store(Request $request, Order $order): PaymentResource
+    {
+        $validated = $request->validate([
+            'method' => ['required', 'in:tunai,qris'],
+            'cashReceived' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        return DB::transaction(function () use ($validated, $order, $request) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($order->payment()->exists()) {
+                abort(409, 'Pesanan sudah dibayar');
+            }
+
+            $order->status = 'selesai';
+            $order->save();
+
+            if ($order->table_id) {
+                $table = Table::find($order->table_id);
+                if ($table) {
+                    $table->status = 'perlu-dibersihkan';
+                    $table->save();
+                }
+            }
+
+            $payment = Payment::create([
+                'order_id' => $order->id,
+                'method' => $validated['method'],
+                'amount' => $order->total,
+                'cash_received' => $validated['cashReceived'] ?? null,
+                'change' => $validated['cashReceived'] !== null
+                    ? $validated['cashReceived'] - $order->total
+                    : null,
+                'paid_by' => $request->user()?->id,
+                'paid_at' => now(),
+            ]);
+
+            return new PaymentResource($payment);
+        });
+    }
+}
