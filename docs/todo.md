@@ -73,8 +73,8 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] Update referensi path di `AGENTS.md` & `docs/*.md` (dokumen sudah pindah ke `docs/`).
 - [x] `git init` → `git add -A` → `git commit`.
 - [x] Verifikasi `git ls-files`: `.env`, `vendor/`, `node_modules/`, `dist/`, `database.sqlite` TIDAK muncul.
-- [ ] Buat repo **public** di github.com (manual, tanpa README) — **menunggu user memberi URL remote**.
-- [ ] `git remote add origin <URL>` → `git push -u origin main`.
+- [x] Buat repo **public** di github.com (manual, tanpa README) → `https://github.com/fadhilfaith48/dineflow-pos.git`.
+- [x] `git remote add origin <URL>` → `git push -u origin main`.
 
 > Langkah detail: `workflow.md` §8.
 
