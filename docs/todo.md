@@ -50,6 +50,7 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] Verifikasi: Redis `cache()->put/get` OK; `migrate:status` semua Ran; `artisan list` ada `reverb:*`.
 
 ### B1. Implementasi API Laravel (Prioritas: P1)
+- [x] Data layer: migrasi + model + seeder (meniru `mockData.ts`) — B1a.
 - [ ] Implement `Api` interface di `frontend/src/services/api.ts` → ganti `mockApi.ts` dengan fetch/axios (base URL di `.env`).
 - [ ] Setup CORS backend Laravel.
 - [ ] Sinkronkan payload/response agar sama dengan tipe data `frontend/src/types/index.ts`.
