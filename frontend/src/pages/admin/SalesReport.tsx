@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { SalesPeriod, SalesSummary } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
 import { formatRupiah } from '@/lib/format'
 
 const periods: { value: SalesPeriod; label: string }[] = [

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Order, OrderItem } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
 import { TopNavBar } from '@/components/TopNavBar'
 import { OrderTicket } from './OrderTicket'
 

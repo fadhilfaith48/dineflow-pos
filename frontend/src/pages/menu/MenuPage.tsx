@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { MenuCategory, MenuItem, Order } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
 import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'

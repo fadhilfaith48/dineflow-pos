@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
 import { useCart } from '@/hooks/useCart'
 import { TopNavBar } from '@/components/TopNavBar'
 import { MenuPanel } from './MenuPanel'

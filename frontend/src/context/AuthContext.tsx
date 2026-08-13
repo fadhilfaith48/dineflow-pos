@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
+import { clearToken } from '@/services/httpApi'
 
 interface AuthContextValue {
   user: User | null
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    clearToken()
     localStorage.removeItem(STORAGE_KEY)
     setUser(null)
   }, [])

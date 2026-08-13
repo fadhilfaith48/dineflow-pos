@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { MenuCategory, MenuItem, TableStatus, DiningTable, Role, User } from '@/types'
-import { api } from '@/services/mockApi'
+import { api } from '@/services/httpApi'
 import { TopNavBar } from '@/components/TopNavBar'
 import { MenuManagement, type MenuFormData } from './MenuManagement'
 import { SalesReport } from './SalesReport'

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -13,6 +13,25 @@ const STORAGE_KEY = 'dineflow-user'
 function seedUser(user: User | null) {
   if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
   else localStorage.removeItem(STORAGE_KEY)
+}
+
+function mockFetchLogin(role: User['role']) {
+  const users: Record<string, User> = {
+    admin: { id: 1, name: 'Admin Resto', username: 'admin', role: 'admin' },
+    kasir: { id: 2, name: 'Kasir Shift 1', username: 'kasir', role: 'kasir' },
+    pelayan: { id: 3, name: 'Pelayan A', username: 'pelayan', role: 'pelayan' },
+    dapur: { id: 4, name: 'Staf Dapur', username: 'dapur', role: 'dapur' },
+  }
+  const json = JSON.stringify({ token: 'test-token', user: users[role] })
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => {
+      return new Response(json, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }),
+  )
 }
 
 describe('roleHome', () => {
@@ -92,8 +111,10 @@ function renderLogin() {
 
 describe('LoginPage — redirect sesuai role', () => {
   beforeEach(() => seedUser(null))
+  afterEach(() => vi.unstubAllGlobals())
 
   it('setelah login admin diarahkan ke /admin', async () => {
+    mockFetchLogin('admin')
     const user = userEvent.setup()
     renderLogin()
 
@@ -105,6 +126,7 @@ describe('LoginPage — redirect sesuai role', () => {
   })
 
   it('setelah login kasir diarahkan ke /kasir', async () => {
+    mockFetchLogin('kasir')
     const user = userEvent.setup()
     renderLogin()
 
