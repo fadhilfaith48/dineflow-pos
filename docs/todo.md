@@ -41,6 +41,14 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 
 ## Fase B - Tergantung Backend Laravel
 
+### B0. Setup infrastruktur backend (Prioritas: P1)
+- [x] Aktifkan MySQL 8.4 & Redis 5.0 di Laragon (`D:/laragon`); MySQL via GUI Start All, Redis via `redis-server` (Windows tanpa daemonize → `Start-Process`).
+- [x] Buat database `dineflow_pos` (utf8mb4_unicode_ci).
+- [x] Ubah `.env` backend: MySQL (`dineflow_pos`, root tanpa password), `REDIS_CLIENT=predis` (DLL phpredis tidak tersedia di PHP Laragon 8.3), `QUEUE/CACHE/SESSION=redis`, `BROADCAST_CONNECTION=reverb` + key Reverb.
+- [x] Install `laravel/sanctum`, `laravel/reverb`, `predis/predis` (composer via PHP 8.3 Laragon, bukan XAMPP 8.2).
+- [x] Publish config Sanctum & Reverb (`config/sanctum.php`, `config/reverb.php`); migrate dasar + `personal_access_tokens` sukses.
+- [x] Verifikasi: Redis `cache()->put/get` OK; `migrate:status` semua Ran; `artisan list` ada `reverb:*`.
+
 ### B1. Implementasi API Laravel (Prioritas: P1)
 - [ ] Implement `Api` interface di `frontend/src/services/api.ts` → ganti `mockApi.ts` dengan fetch/axios (base URL di `.env`).
 - [ ] Setup CORS backend Laravel.
