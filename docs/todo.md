@@ -68,12 +68,12 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 ## Fase C - Repo & Deployment
 
 ### C1. Upload repo ke GitHub (Prioritas: P2)
-- [ ] Gabung frontend + backend ke folder utama `resto_pos/` (frontend/ + backend/ + docs/ + AGENTS.md).
-- [ ] Bersihkan `.gitignore` backend: pastikan `.env`, `/vendor`, `database/database.sqlite` tidak ikut.
-- [ ] Update referensi path di `AGENTS.md` & `docs/*.md` (dokumen sudah pindah ke `docs/`).
-- [ ] `git init` → `git add -A` → `git commit`.
-- [ ] Verifikasi `git ls-files`: `.env`, `vendor/`, `node_modules/`, `dist/`, `database.sqlite` TIDAK muncul.
-- [ ] Buat repo **private** di github.com (manual, tanpa README).
+- [x] Gabung frontend + backend ke folder utama `resto_pos/` (frontend/ + backend/ + docs/ + AGENTS.md).
+- [x] Bersihkan `.gitignore` backend: pastikan `.env`, `/vendor`, `database/database.sqlite` tidak ikut.
+- [x] Update referensi path di `AGENTS.md` & `docs/*.md` (dokumen sudah pindah ke `docs/`).
+- [x] `git init` → `git add -A` → `git commit`.
+- [x] Verifikasi `git ls-files`: `.env`, `vendor/`, `node_modules/`, `dist/`, `database.sqlite` TIDAK muncul.
+- [ ] Buat repo **public** di github.com (manual, tanpa README) — **menunggu user memberi URL remote**.
 - [ ] `git remote add origin <URL>` → `git push -u origin main`.
 
 > Langkah detail: `workflow.md` §8.
