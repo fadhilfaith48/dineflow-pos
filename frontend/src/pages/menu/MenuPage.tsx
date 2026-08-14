@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import type { MenuCategory, MenuItem, Order } from '@/types'
 import { api } from '@/services/httpApi'
+import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
@@ -50,15 +51,12 @@ export function MenuPage() {
 
   useEffect(() => {
     if (view !== 'tracking' || !orderNumber) return
-    const poll = () => {
-      api.getOrders().then((orders) => {
-        const found = orders.find((o) => o.orderNumber === orderNumber)
-        if (found) setTrackedOrder(found)
-      })
+    echo.channel(`order.${orderNumber}`).listen('OrderStatusChanged', (event: { order?: Order }) => {
+      if (event.order?.orderNumber === orderNumber) setTrackedOrder(event.order)
+    })
+    return () => {
+      echo.leaveChannel(`order.${orderNumber}`)
     }
-    poll()
-    const timer = setInterval(poll, 5000)
-    return () => clearInterval(timer)
   }, [view, orderNumber])
 
   const visibleItems = useMemo(() => {
@@ -73,6 +71,7 @@ export function MenuPage() {
       items: cart.lines,
     })
     setOrderNumber(order.orderNumber)
+    setTrackedOrder(order)
     cart.clear()
     setView('tracking')
   }

@@ -58,9 +58,12 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] UI tidak boleh berubah (service layer menukar implementasi di balik layar).
 
 ### B2. Real-time Reverb + Redis (Prioritas: P1)
-- [ ] Ganti polling 5s di `KitchenPage` dengan `laravel-echo` subscribe channel pesanan.
-- [ ] Ganti polling tracking di `MenuPage` (status pesanan pelanggan) dengan Echo.
-- [ ] NFR: pembaruan status ke semua channel ≤ 2 detik.
+- [x] Event `OrderStatusChanged` (ShouldBroadcastNow) disebar saat order dibuat, dikonfirmasi, status item berubah, & dibayar (`docs/architecture.md` §4; channel `orders` + `order.{orderNumber}`).
+- [x] Ganti polling 5s di `KitchenPage` dengan `laravel-echo` subscribe channel pesanan.
+- [x] Ganti polling tracking di `MenuPage` (status pesanan pelanggan) dengan Echo.
+- [x] Panel pesanan masuk & nota Kasir (`KasirPage`) ikut real-time via channel `orders`.
+- [x] Broadcast memakai Reverb + Redis (BROADCAST_CONNECTION=reverb); `reverb:start` jalan di port 8080.
+- [x] NFR: pembaruan status ke semua channel ≤ 2 detik (terverifikasi: order baru terima ≤2s tanpa refresh).
 
 ### B3. Auth nyata (Sanctum) (Prioritas: P1)
 - [ ] Ganti mock login (`AuthContext` + `mockApi.login`) dengan endpoint auth Laravel (Sanctum).

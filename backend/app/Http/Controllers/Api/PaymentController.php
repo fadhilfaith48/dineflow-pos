@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Order;
@@ -19,7 +20,7 @@ class PaymentController extends Controller
             'cashReceived' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        return DB::transaction(function () use ($validated, $order, $request) {
+        [$order, $payment] = DB::transaction(function () use ($validated, $order, $request) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
 
             if ($order->payment()->exists()) {
@@ -49,7 +50,11 @@ class PaymentController extends Controller
                 'paid_at' => now(),
             ]);
 
-            return new PaymentResource($payment);
+            return [$order, $payment];
         });
+
+        OrderStatusChanged::dispatch($order, 'paid');
+
+        return new PaymentResource($payment);
     }
 }

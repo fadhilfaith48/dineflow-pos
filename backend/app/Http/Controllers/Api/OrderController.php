@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\MenuItem;
@@ -34,7 +35,7 @@ class OrderController extends Controller
             'items.*.note' => ['nullable', 'string'],
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        $order = DB::transaction(function () use ($validated) {
             $table = $validated['tableId'] ? Table::lockForUpdate()->find($validated['tableId']) : null;
 
             $menuItems = MenuItem::whereIn('id', collect($validated['items'])->pluck('menuItemId'))->lockForUpdate()->get()->keyBy('id');
@@ -76,8 +77,12 @@ class OrderController extends Controller
                 $table->save();
             }
 
-            return new OrderResource($order->load(['table', 'items']));
+            return $order;
         });
+
+        OrderStatusChanged::dispatch($order, 'created');
+
+        return new OrderResource($order->load(['table', 'items']));
     }
 
     public function confirm(Request $request, Order $order): OrderResource
@@ -91,6 +96,8 @@ class OrderController extends Controller
         $order->status = 'diproses';
         $order->save();
 
+        OrderStatusChanged::dispatch($order, 'confirmed');
+
         return new OrderResource($order->load(['table', 'items']));
     }
 
@@ -103,6 +110,8 @@ class OrderController extends Controller
         $item = $order->items()->findOrFail($itemId);
         $item->status = $validated['status'];
         $item->save();
+
+        OrderStatusChanged::dispatch($order, 'item-status');
 
         return new OrderResource($order->load(['table', 'items']));
     }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod } from '@/types'
 import { api } from '@/services/httpApi'
+import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { TopNavBar } from '@/components/TopNavBar'
 import { MenuPanel } from './MenuPanel'
@@ -35,13 +36,15 @@ export function KasirPage() {
   }, [])
 
   useEffect(() => {
-    const loadOrders = () => api.getOrders().then(setOrders)
-    loadOrders()
-    const timer = setInterval(() => {
-      loadOrders()
+    const refresh = () => {
+      api.getOrders().then(setOrders)
       api.getTables().then(setTables)
-    }, 5000)
-    return () => clearInterval(timer)
+    }
+    refresh()
+    echo.channel('orders').listen('OrderStatusChanged', refresh)
+    return () => {
+      echo.leaveChannel('orders')
+    }
   }, [])
 
   const pendingOrders = useMemo(

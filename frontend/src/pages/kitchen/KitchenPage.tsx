@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Order, OrderItem } from '@/types'
 import { api } from '@/services/httpApi'
+import echo from '@/services/echo'
 import { TopNavBar } from '@/components/TopNavBar'
 import { OrderTicket } from './OrderTicket'
 
@@ -13,8 +14,10 @@ export function KitchenPage() {
 
   useEffect(() => {
     loadOrders()
-    const timer = setInterval(loadOrders, 5000)
-    return () => clearInterval(timer)
+    echo.channel('orders').listen('OrderStatusChanged', loadOrders)
+    return () => {
+      echo.leaveChannel('orders')
+    }
   }, [loadOrders])
 
   async function handleAdvanceItem(orderId: number, itemId: number, status: OrderItem['status']) {
