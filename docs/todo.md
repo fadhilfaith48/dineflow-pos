@@ -7,8 +7,8 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 ## Ringkasan Status
 
 - ✅ **Fase A (frontend murni) SELESAI**: Kasir (pesanan masuk + konfirmasi + bayar nota meja), Pelayan, KDS (urut waktu), Menu QR, Admin (menu/meja/staf/laporan + filter periode), Auth mock (4 role), QR per meja, struk, navbar di semua halaman role, status meja otomatis, tes otomatis Vitest (18 tes).
-- ⬜ **Fase B (butuh backend Laravel)**: API asli, real-time Reverb, auth Sanctum.
-- ⬜ **Upload ke GitHub** (private): gabung folder utama `resto_pos/`, bersihkan `.gitignore`, init+commit+push (langkah detail: `workflow.md` §8).
+- ✅ **Fase B (backend Laravel) SELESAI**: API asli (data layer + endpoints + httpApi), real-time Reverb + Redis (≤ 2 detik), auth Sanctum (role dari server, akses publik Menu QR, logout revoke token), foto menu upload, race condition transaction + `lockForUpdate()`. Tes backend (3 tes fitur). Lihat detail B0–B5.
+- ✅ **Upload ke GitHub SELESAI**: gabung folder utama `resto_pos/`, bersihkan `.gitignore`, init+commit+push → repo **public** `github.com/fadhilfaith48/dineflow-pos` (branch `main`). Lihat C1.
 
 ---
 
@@ -77,7 +77,7 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] Simpan URL dari server & tampilkan di menu pelanggan — `image_url` berisi URL absolut `APP_URL/storage/...` yang dikembalikan `MenuItemResource` → tampil di tabel Admin & katalog `MenuPage`.
 
 ### B5. Race condition stok/order (Prioritas: P2)
-- [ ] Di backend: database transaction + `lockForUpdate()` untuk order & stok bersamaan (aturan AGENTS.md, BUKAN Golang/Kafka).
+- [x] Di backend: database transaction + `lockForUpdate()` untuk order & stok bersamaan (aturan AGENTS.md, BUKAN Golang/Kafka) — sudah terimplementasi sejak B1b: `OrderController::store` (transaction + `lockForUpdate()` pada tabel & menu item, cek ketersediaan) dan `PaymentController::store` (transaction + `lockForUpdate()` pada order, cegah bayar ganda → 409). Ditambah tes fitur `OrderPaymentTest` (pembayaran dua kali → 409).
 
 ---
 

@@ -64,7 +64,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 4.1 | Login `dapur`, buka `/kitchen` | Grid ticket pesanan aktif tampil (teks besar, kontras) | |
 | 4.2 | Tombol **Mulai Masak** pada item | Status item → Dimasak | |
 | 4.3 | Tombol **Siap Saji** | Status item → Siap | |
-| 4.4 | Buat order baru dari Kasir/Pelayan (tab lain) | Ticket muncul di KDS ≤ 5 detik (polling) | |
+| 4.4 | Konfirmasi order baru dari Kasir (tab lain) | Ticket muncul di KDS **tanpa refresh** ≤ 2 detik (real-time Reverb) | |
 | 4.5 | Navbar tombol **Keluar** | Bisa logout | |
 
 ---
@@ -73,9 +73,9 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 5.1 | Buka `http://localhost:5173/menu/T1` | Katalog menu tampil dengan header meja T1 | |
+| 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | |
 | 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | |
-| 5.3 | Tambah item ke keranjang, isi catatan, **Kirim Pesanan** | Pesanan masuk (muncul di KDS), tracking tampil | |
+| 5.3 | Tambah item ke keranjang, isi catatan, **Kirim Pesanan** | Pesanan masuk ke panel Kasir (status `menunggu-konfirmasi`); tracking tampil real-time. Setelah Kasir **Konfirmasi** → muncul di KDS ≤ 2 detik tanpa refresh | |
 | 5.4 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | |
 
 ---
@@ -84,7 +84,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 6.1 | Tab **Manajemen Menu**: tambah menu baru (nama, harga, kategori, foto URL) | Menu muncul di tabel & di menu pelanggan | |
+| 6.1 | Tab **Manajemen Menu**: tambah menu baru (nama, harga, kategori, foto **upload file** PNG/JPG/WebP ≤ 2 MB) | Menu muncul di tabel & di menu pelanggan; foto tampil (URL dari server) | |
 | 6.2 | Edit nama/kategori/deskripsi menu | Data berubah | |
 | 6.3 | Ubah harga langsung di tabel (tombol Harga → Simpan) | Harga berubah | |
 | 6.4 | Tandai **Habis** / **Tersedia** | Badge berubah; menu habis hilang dari Menu QR | |
@@ -108,12 +108,14 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 7.2 | Login `kasir` lalu akses `/admin` | Ditolak, dialihkan ke `/kasir` | |
 | 7.3 | Login `dapur` lalu akses `/kasir` | Ditolak, dialihkan ke `/kitchen` | |
 | 7.4 | Buka `/menu/T1` tanpa login | Tetap bisa (halaman publik) | |
-| 7.5 | Hapus menu/meja yang sedang dipakai order | Tidak menyebabkan crash (mock) | |
+| 7.5 | Kirim pesanan self-order tanpa login | Berhasil (POST `/orders` publik) | |
+| 7.6 | Login → logout → pakai token lama (cek via DevTools/network) | Request dengan token lama ditolak 401 (token di-revoke server) | |
 
 ---
 
 ## Catatan Penting
 
-- **Real-time masih simulasi**: KDS & tracking pakai polling 5s (bukan Reverb). Uji 4.4 bersifat polling, bukan push instan.
-- **Data mock disimpan di memori browser**: refresh penuh (`F5`) akan me-reset data pesanan ke kondisi awal.
+- **Real-time asli**: KDS, panel Kasir, & tracking pelanggan memakai Laravel Reverb + Redis (≤ 2 detik, tanpa refresh). Pastikan backend `8000`, `reverb:start` `8080`, Redis `6379`, MySQL `3306`, dan Vite `5173` menyala.
+- **Data tersimpan di database MySQL** (`dineflow_pos`): perubahan tidak hilang saat refresh. Untuk reset ke data demo: `php artisan migrate:fresh --seed` di `backend/`.
+- **Upload foto menu** disimpan di `backend/storage/app/public/menu-items` (URL `http://localhost:8000/storage/...`).
 - Jika ditemukan bug → tulis langkah reproduksinya ke `todo.md` lalu kerjakan.
