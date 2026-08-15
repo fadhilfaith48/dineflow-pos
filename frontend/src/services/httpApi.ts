@@ -90,6 +90,14 @@ export class HttpApi implements Api {
     return json.user
   }
 
+  async logout(): Promise<void> {
+    try {
+      await request('/logout', { method: 'POST' })
+    } finally {
+      clearToken()
+    }
+  }
+
   async getCategories(): Promise<MenuCategory[]> {
     return request<{ data: MenuCategory[] }>('/categories').then(unwrap)
   }

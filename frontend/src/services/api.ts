@@ -7,6 +7,7 @@ import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, DiningTable
  */
 export interface Api {
   login(username: string, password: string): Promise<User>
+  logout(): Promise<void>
   getCategories(): Promise<MenuCategory[]>
   getMenuItems(categoryId?: number): Promise<MenuItem[]>
   getTables(): Promise<DiningTable[]>

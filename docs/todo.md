@@ -67,8 +67,10 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] **Bug fix real-time (B2 lanjutan)**: laravel-echo v2.4 default `namespace: "App.Events"` membuat event dibind sebagai `App.Events\OrderStatusChanged` (tidak cocok dengan `broadcastAs()` server yang mengirim `OrderStatusChanged`) → client tidak pernah menerima event meski WS connect & subscribe OK. Solusi: `namespace: ''` di `frontend/src/services/echo.ts`. Setelah fix, uji 2 browser (Kasir Konfirmasi → KDS tampil ≤2s tanpa refresh) LOLOS.
 
 ### B3. Auth nyata (Sanctum) (Prioritas: P1)
-- [ ] Ganti mock login (`AuthContext` + `mockApi.login`) dengan endpoint auth Laravel (Sanctum).
-- [ ] Role dari server (bukan dari localStorage/demo).
+- [x] Ganti mock login (`AuthContext` + `mockApi.login`) dengan endpoint auth Laravel (Sanctum) — dikerjakan bersama B1c.
+- [x] Role dari server (bukan dari localStorage/demo) — via `UserResource`.
+- [x] **Bug fix (B3 Opsi A) — akses publik**: GET `/categories`, GET `/menu-items`, GET `/tables`, dan POST `/orders` (self-order) keluar dari grup `auth:sanctum` di `routes/api.php`; sisanya tetap auth. `MenuPage` `/menu/:table` kini bisa diakses tanpa login (katalog tampil, kirim pesanan jalan). Verifikasi curl: tanpa token katalog/menu/meja/order-self = 200, GET `/orders` tetap 401.
+- [x] **Bug fix (B3 Opsi A) — logout revoke token server**: tambah `Api.logout()` (POST `/logout` + `clearToken`) di `httpApi.ts`, stub di `mockApi.ts`, dan `AuthContext.logout` memanggil `api.logout()` best-effort (`.catch(() => {})`). Verifikasi curl: login → logout → token lama = 401.
 
 ### B4. Foto menu upload (Prioritas: P2)
 - [ ] Ganti input URL gambar dengan upload file ke server.

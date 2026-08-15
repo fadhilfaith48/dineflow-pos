@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    api.logout().catch(() => {})
     clearToken()
     localStorage.removeItem(STORAGE_KEY)
     setUser(null)

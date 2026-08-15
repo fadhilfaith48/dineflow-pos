@@ -22,6 +22,10 @@ export class MockApi implements Api {
     return { ...user }
   }
 
+  async logout(): Promise<void> {
+    // No-op: MockApi tidak memakai token server.
+  }
+
   async getCategories(): Promise<MenuCategory[]> {
     return [...mockCategories]
   }
