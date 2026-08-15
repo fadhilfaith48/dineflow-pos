@@ -64,6 +64,7 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] Panel pesanan masuk & nota Kasir (`KasirPage`) ikut real-time via channel `orders`.
 - [x] Broadcast memakai Reverb + Redis (BROADCAST_CONNECTION=reverb); `reverb:start` jalan di port 8080.
 - [x] NFR: pembaruan status ke semua channel ≤ 2 detik (terverifikasi: order baru terima ≤2s tanpa refresh).
+- [x] **Bug fix real-time (B2 lanjutan)**: laravel-echo v2.4 default `namespace: "App.Events"` membuat event dibind sebagai `App.Events\OrderStatusChanged` (tidak cocok dengan `broadcastAs()` server yang mengirim `OrderStatusChanged`) → client tidak pernah menerima event meski WS connect & subscribe OK. Solusi: `namespace: ''` di `frontend/src/services/echo.ts`. Setelah fix, uji 2 browser (Kasir Konfirmasi → KDS tampil ≤2s tanpa refresh) LOLOS.
 
 ### B3. Auth nyata (Sanctum) (Prioritas: P1)
 - [ ] Ganti mock login (`AuthContext` + `mockApi.login`) dengan endpoint auth Laravel (Sanctum).

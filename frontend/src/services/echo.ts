@@ -10,6 +10,7 @@ const echo = new Echo({
   key: import.meta.env.VITE_REVERB_APP_KEY,
   Pusher,
   cluster: 'mt1',
+  namespace: '',
   wsHost: import.meta.env.VITE_REVERB_HOST,
   wsPort: Number(import.meta.env.VITE_REVERB_PORT),
   forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'https',
