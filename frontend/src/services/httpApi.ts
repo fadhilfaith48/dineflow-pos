@@ -80,6 +80,14 @@ function jsonBody(data: unknown): RequestInit {
   return { body: JSON.stringify(data) }
 }
 
+function appendScalar(formData: FormData, data: Record<string, unknown>): void {
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined && value !== null) {
+      formData.append(key, String(value))
+    }
+  }
+}
+
 export class HttpApi implements Api {
   async login(username: string, password: string): Promise<User> {
     const json = await request<{ token: string; user: User }>('/login', {
@@ -165,16 +173,50 @@ export class HttpApi implements Api {
   }
 
   async createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {
+    if (input.image instanceof File) {
+      const formData = new FormData()
+      appendScalar(formData, {
+        name: input.name,
+        price: input.price,
+        categoryId: input.categoryId,
+        description: input.description ?? '',
+      })
+      formData.append('image', input.image)
+      return request<{ data: MenuItem }>('/menu-items', {
+        method: 'POST',
+        body: formData,
+      }).then(unwrap)
+    }
     return request<{ data: MenuItem }>('/menu-items', {
       method: 'POST',
-      ...jsonBody(input),
+      ...jsonBody({
+        name: input.name,
+        price: input.price,
+        categoryId: input.categoryId,
+        description: input.description,
+        imageUrl: input.imageUrl,
+      }),
     }).then(unwrap)
   }
 
-  async updateMenuItem(id: number, data: Partial<MenuItem>): Promise<MenuItem> {
+  async updateMenuItem(
+    id: number,
+    data: Partial<MenuItem> & { image?: File },
+  ): Promise<MenuItem> {
+    const { image, ...scalars } = data
+    if (image instanceof File) {
+      const formData = new FormData()
+      formData.append('_method', 'PUT')
+      appendScalar(formData, scalars)
+      formData.append('image', image)
+      return request<{ data: MenuItem }>(`/menu-items/${id}`, {
+        method: 'POST',
+        body: formData,
+      }).then(unwrap)
+    }
     return request<{ data: MenuItem }>(`/menu-items/${id}`, {
       method: 'PUT',
-      ...jsonBody(data),
+      ...jsonBody(scalars),
     }).then(unwrap)
   }
 

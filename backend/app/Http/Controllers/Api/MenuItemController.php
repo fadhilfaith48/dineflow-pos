@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class MenuItemController extends Controller
 {
@@ -30,6 +31,7 @@ class MenuItemController extends Controller
             'categoryId' => ['required', 'exists:menu_categories,id'],
             'description' => ['nullable', 'string'],
             'imageUrl' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $last = MenuItem::query()->orderByDesc('id')->value('id') ?? 0;
@@ -41,7 +43,7 @@ class MenuItemController extends Controller
             'price' => $validated['price'],
             'category_id' => $validated['categoryId'],
             'available' => true,
-            'image_url' => $validated['imageUrl'] ?? null,
+            'image_url' => $this->resolveImageUrl($request) ?? $validated['imageUrl'] ?? null,
         ]);
 
         return new MenuItemResource($item);
@@ -56,6 +58,7 @@ class MenuItemController extends Controller
             'description' => ['sometimes', 'nullable', 'string'],
             'available' => ['sometimes', 'boolean'],
             'imageUrl' => ['sometimes', 'nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $map = [
@@ -64,7 +67,6 @@ class MenuItemController extends Controller
             'categoryId' => 'category_id',
             'description' => 'description',
             'available' => 'available',
-            'imageUrl' => 'image_url',
         ];
 
         foreach ($map as $inputKey => $column) {
@@ -73,9 +75,27 @@ class MenuItemController extends Controller
             }
         }
 
+        $uploaded = $this->resolveImageUrl($request);
+        if ($uploaded !== null) {
+            $menuItem->image_url = $uploaded;
+        } elseif (array_key_exists('imageUrl', $validated)) {
+            $menuItem->image_url = $validated['imageUrl'];
+        }
+
         $menuItem->save();
 
         return new MenuItemResource($menuItem);
+    }
+
+    private function resolveImageUrl(Request $request): ?string
+    {
+        if (! $request->hasFile('image')) {
+            return null;
+        }
+
+        $path = $request->file('image')->store('menu-items', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 
     public function destroy(MenuItem $menuItem): JsonResponse

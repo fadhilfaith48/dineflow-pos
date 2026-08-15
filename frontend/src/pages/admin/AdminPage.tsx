@@ -52,6 +52,7 @@ export function AdminPage() {
       categoryId: data.categoryId,
       description: data.description,
       imageUrl: data.imageUrl,
+      image: data.image,
     })
     loadItems()
   }

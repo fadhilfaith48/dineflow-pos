@@ -73,8 +73,8 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] **Bug fix (B3 Opsi A) — logout revoke token server**: tambah `Api.logout()` (POST `/logout` + `clearToken`) di `httpApi.ts`, stub di `mockApi.ts`, dan `AuthContext.logout` memanggil `api.logout()` best-effort (`.catch(() => {})`). Verifikasi curl: login → logout → token lama = 401.
 
 ### B4. Foto menu upload (Prioritas: P2)
-- [ ] Ganti input URL gambar dengan upload file ke server.
-- [ ] Simpan URL dari server & tampilkan di menu pelanggan.
+- [x] Ganti input URL gambar dengan upload file ke server — backend `MenuItemController` terima field `image` (multipart, PNG/JPG/WebP max 2 MB) di `store` & `update`; simpan ke disk `public/menu-items` + `storage:link`; `imageUrl` string lama tetap didukung. Frontend: input URL → `<input type=file>` + preview di `MenuManagement`, kirim FormData via `httpApi` (update pakai method spoofing `_method=PUT` karena PHP tidak mengisi `$_FILES` untuk multipart PUT).
+- [x] Simpan URL dari server & tampilkan di menu pelanggan — `image_url` berisi URL absolut `APP_URL/storage/...` yang dikembalikan `MenuItemResource` → tampil di tabel Admin & katalog `MenuPage`.
 
 ### B5. Race condition stok/order (Prioritas: P2)
 - [ ] Di backend: database transaction + `lockForUpdate()` untuk order & stok bersamaan (aturan AGENTS.md, BUKAN Golang/Kafka).

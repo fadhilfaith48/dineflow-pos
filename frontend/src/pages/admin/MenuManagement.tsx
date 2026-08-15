@@ -19,6 +19,7 @@ export interface MenuFormData {
   categoryId: number
   description?: string
   imageUrl?: string
+  image?: File
 }
 
 const emptyForm: MenuFormData = {
@@ -44,6 +45,13 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
   })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [preview, setPreview] = useState<string | null>(initial.imageUrl ?? null)
+
+  function handleFileChange(file: File | undefined) {
+    if (!file) return
+    setForm({ ...form, image: file })
+    setPreview(URL.createObjectURL(file))
+  }
 
   async function handleSave() {
     if (!form.name.trim() || form.price <= 0 || !form.categoryId) {
@@ -118,13 +126,28 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
             />
           </div>
           <div>
-            <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Foto (URL gambar)</label>
-            <input
-              value={form.imageUrl ?? ''}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="https://... (opsional)"
-              className="mt-1 w-full rounded-lg border border-border-subtle px-3 py-2 text-body focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
-            />
+            <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Foto Menu</label>
+            <div className="mt-1 flex items-center gap-3">
+              {preview ? (
+                <img src={preview} alt="Pratinjau" className="h-16 w-16 rounded-lg object-cover" />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-bg-secondary">
+                  <svg className="h-6 w-6 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 11h18" />
+                    <path d="M12 11v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11" />
+                    <path d="M21 11v8a3 3 0 0 1-3 3h-3a3 3 0 0 1-3-3" />
+                    <circle cx="12" cy="5" r="2" />
+                  </svg>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => handleFileChange(e.target.files?.[0])}
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-body file:mr-3 file:rounded-lg file:border-0 file:bg-accent-primary file:px-3 file:py-1.5 file:text-caption file:font-bold file:uppercase file:text-text-on-accent focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
+              />
+            </div>
+            <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB (opsional)</p>
           </div>
           {error && <p className="text-caption text-status-danger">{error}</p>}
         </div>
