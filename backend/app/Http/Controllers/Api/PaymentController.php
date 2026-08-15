@@ -38,13 +38,15 @@ class PaymentController extends Controller
                 }
             }
 
+            $cashReceived = $validated['cashReceived'] ?? null;
+
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'method' => $validated['method'],
                 'amount' => $order->total,
-                'cash_received' => $validated['cashReceived'] ?? null,
-                'change' => $validated['cashReceived'] !== null
-                    ? $validated['cashReceived'] - $order->total
+                'cash_received' => $cashReceived,
+                'change' => $cashReceived !== null
+                    ? $cashReceived - $order->total
                     : null,
                 'paid_by' => $request->user()?->id,
                 'paid_at' => now(),

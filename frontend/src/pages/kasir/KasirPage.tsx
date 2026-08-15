@@ -116,7 +116,7 @@ export function KasirPage() {
           tax: Math.round(order.total - order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)),
           total: order.total,
           method: payment.method,
-          change: payment.change,
+          change: payment.change ?? undefined,
         })
         setNoteToPay(null)
         setShowPayment(false)
@@ -149,7 +149,7 @@ export function KasirPage() {
         tax: cart.summary.tax,
         total: cart.summary.total,
         method: payment.method,
-        change: payment.change,
+        change: payment.change ?? undefined,
       })
       setShowPayment(false)
       cart.clear()

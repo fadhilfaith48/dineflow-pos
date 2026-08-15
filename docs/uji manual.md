@@ -17,13 +17,13 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 1.1 | Login `admin`/`1234` | Masuk ke **/admin** | |
-| 1.2 | Logout, login `kasir`/`1234` | Masuk ke **/kasir** | |
-| 1.3 | Logout, login `pelayan`/`1234` | Masuk ke **/pelayan** | |
-| 1.4 | Logout, login `dapur`/`1234` | Masuk ke **/kitchen** | |
-| 1.5 | Login password salah (mis. `0000`) | Muncul error "Username atau password salah", tetap di login | |
-| 1.6 | Buka `/admin` saat belum login | Dialihkan ke `/login` | |
-| 1.7 | Sebagai `pelayan`, coba buka `/admin` | Tidak bisa; diarahkan ke `/pelayan` | |
+| 1.1 | Login `admin`/`1234` | Masuk ke **/admin** | ✅ |
+| 1.2 | Logout, login `kasir`/`1234` | Masuk ke **/kasir** | ✅ |
+| 1.3 | Logout, login `pelayan`/`1234` | Masuk ke **/pelayan** | ✅ |
+| 1.4 | Logout, login `dapur`/`1234` | Masuk ke **/kitchen** | ✅ |
+| 1.5 | Login password salah (mis. `0000`) | Muncul error "Username atau password salah", tetap di login | ✅ |
+| 1.6 | Buka `/admin` saat belum login | Dialihkan ke `/login` | ✅ |
+| 1.7 | Sebagai `pelayan`, coba buka `/admin` | Tidak bisa; diarahkan ke `/pelayan` | ✅ |
 
 ---
 
@@ -31,16 +31,16 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 2.1 | Pilih kategori, tambah beberapa item ke keranjang | Item muncul di keranjang, subtotal/pajak/total benar (pajak 10%) | |
-| 2.2 | Cari menu dengan kata kunci | Daftar menu terfilter | |
-| 2.3 | Klik area meja → pilih **Take Away** | Label keranjang "Take Away" | |
-| 2.4 | Pilih **meja** (mis. T1) | Label keranjang "Meja T1" | |
-| 2.5 | Klik **Bayar** → pilih **Tunai** → input uang ≥ total | Muncul kembalian yang benar | |
-| 2.6 | Bayar dengan uang < total | Tombol bayar nonaktif / error | |
-| 2.7 | Setelah bayar | Struk tampil: kode order, item, total, metode bayar | |
-| 2.8 | Klik **Cetak** | Dialog print browser terbuka | |
-| 2.9 | Klik **Salin Struk** | Teks struk tersalin ke clipboard | |
-| 2.10 | Bayar pakai **QRIS** | QR dinamis tampil dengan nominal; status "Menunggu pembayaran..."; klik **Simulasi Pembayaran Sukses** → status berubah "Pembayaran berhasil"; klik **Tandai Lunas** → struk tampil metode QRIS, tanpa kembalian | |
+| 2.1 | Pilih kategori, tambah beberapa item ke keranjang | Item muncul di keranjang, subtotal/pajak/total benar (pajak 10%) | ✅ |
+| 2.2 | Cari menu dengan kata kunci | Daftar menu terfilter | ✅ |
+| 2.3 | Klik area meja → pilih **Take Away** | Label keranjang "Take Away" | ✅ |
+| 2.4 | Pilih **meja** (mis. T1) | Label keranjang "Meja T1" | ✅ |
+| 2.5 | Klik **Bayar** → pilih **Tunai** → input uang ≥ total | Muncul kembalian yang benar | ✅ |
+| 2.6 | Bayar dengan uang < total | Tombol bayar nonaktif / error | ✅ |
+| 2.7 | Setelah bayar | Struk tampil: kode order, item, total, metode bayar | ✅ |
+| 2.8 | Klik **Cetak** | Dialog print browser terbuka | ✅ |
+| 2.9 | Klik **Salin Struk** | Teks struk tersalin ke clipboard | ✅ |
+| 2.10 | Bayar pakai **QRIS** | QR dinamis tampil dengan nominal; status "Menunggu pembayaran..."; klik **Simulasi Pembayaran Sukses** → status berubah "Pembayaran berhasil"; klik **Tandai Lunas** → struk tampil metode QRIS, tanpa kembalian | ✅ (2 bug difix: `cashReceived` undefined array key & halaman putih karena `change: null`) |
 
 ---
 
@@ -48,12 +48,12 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 3.1 | Buka `/pelayan` | Tampil peta meja dengan status (Kosong/Terisi/Perlu Dibersihkan) | |
-| 3.2 | Klik meja kosong | Masuk tampilan input pesanan meja tsb | |
-| 3.3 | Tambah item + isi **catatan** (mis. "tidak pedas") | Item masuk keranjang dengan catatan | |
-| 3.4 | Kirim pesanan | Kembali ke daftar pesanan, pesanan muncul | |
-| 3.5 | Tombol **Daftar Pesanan** → tandai **diantar** | Status item jadi diantar | |
-| 3.6 | Navbar ada tombol **Keluar** | Klik → kembali ke `/login` | |
+| 3.1 | Buka `/pelayan` | Tampil peta meja dengan status (Kosong/Terisi/Perlu Dibersihkan) | ✅ |
+| 3.2 | Klik meja kosong | Masuk tampilan input pesanan meja tsb | ✅ |
+| 3.3 | Tambah item + isi **catatan** (mis. "tidak pedas") | Item masuk keranjang dengan catatan | ✅ |
+| 3.4 | Kirim pesanan | Kembali ke daftar pesanan, pesanan muncul | ✅ |
+| 3.5 | Tombol **Daftar Pesanan** → tandai **diantar** | Status item jadi diantar (badge item + label "Sudah diantar") | ✅ |
+| 3.6 | Navbar ada tombol **Keluar** | Klik → kembali ke `/login` | ✅ |
 
 ---
 

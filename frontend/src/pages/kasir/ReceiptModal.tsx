@@ -35,7 +35,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
       `Pajak 10%\t${formatRupiah(receipt.tax)}`,
       `TOTAL\t${formatRupiah(receipt.total)}`,
       `Bayar\t${receipt.method === 'tunai' ? 'Tunai' : 'QRIS'}`,
-      ...(receipt.change !== undefined ? [`Kembalian\t${formatRupiah(receipt.change)}`] : []),
+      ...(receipt.change != null ? [`Kembalian\t${formatRupiah(receipt.change)}`] : []),
       '',
       'Terima kasih sudah berkunjung!',
     ]
@@ -84,7 +84,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
             <span>Bayar</span>
             <span>{receipt.method === 'tunai' ? 'Tunai' : 'QRIS'}</span>
           </div>
-          {receipt.change !== undefined && (
+          {receipt.change != null && (
             <div className="flex justify-between">
               <span>Kembalian</span>
               <span>{formatRupiah(receipt.change)}</span>
