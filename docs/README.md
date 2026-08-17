@@ -57,9 +57,12 @@ npm test           # vitest (18 tes: service layer & guard role)
 
 ## Status
 
-- ✅ **Fase A (frontend murni) SELESAI** — semua antarmuka + auth mock + struk + simulasi QRIS.
-- ⬜ **Fase B (butuh backend Laravel)** — API asli, real-time Reverb, auth Sanctum.
-- ⬜ **Upload repo ke GitHub private** — langkah: `workflow.md` §8.
+- ✅ **Fase A (frontend murni) SELESAI** — semua antarmuka + auth + struk + simulasi QRIS.
+- ✅ **Fase B (backend Laravel) SELESAI** — API asli, real-time Reverb + Redis, auth Sanctum,
+  foto upload, race condition (`lockForUpdate`).
+- ✅ **Upload repo ke GitHub SELESAI** — repo public `github.com/fadhilfaith48/dineflow-pos`.
+- ✅ **Uji manual menyeluruh SELESAI** — `uji manual.md` §1–§7 semua lolos.
+- ➡️ **Deployment (Vercel + Render)** — panduan siap pakai di `deployment.md`.
 - Detail: `frontend/PROGRESS.md` dan `todo.md`.
 
 ## Dokumen Referensi (folder `docs/`)
@@ -70,3 +73,6 @@ npm test           # vitest (18 tes: service layer & guard role)
 - **Status & peta file frontend**: `frontend/PROGRESS.md`
 - **Roadmap**: `todo.md`
 - **Alur kerja & upload**: `workflow.md`
+- **Panduan uji manual**: `uji manual.md`
+- **Panduan demo/presentasi**: `presentasi-demo.md`
+- **Panduan deployment**: `deployment.md`

@@ -18,7 +18,9 @@ apa pun, baca dokumen berikut:
 - `docs/DESIGN.md` - warna, tipografi, komponen visual (token warna WAJIB dirujuk dari sini, jangan pakai hex code baru)
 - `docs/todo.md` - roadmap tugas fase A/B/C, prioritas P1/P2/P3 (sumber daftar pekerjaan)
 - `docs/skill.md` - keterampilan yang dibutuhkan & di mana dipakai
-- `docs/workflow.md` - alur kerja, konvensi kode, verifikasi build/lint, cara migrasi mock → Laravel, upload GitHub (§8)
+- `docs/workflow.md` - alur kerja, konvensi kode, verifikasi build/lint, cara migrasi mock → Laravel, upload GitHub (§8), penutup sesi (§7)
+- `docs/presentasi-demo.md` - panduan demo/presentasi PKL per role
+- `docs/deployment.md` - runbook deployment Vercel (frontend) + Render (backend/Reverb)
 
 Untuk sesi kerja di frontend (`frontend/`), WAJIB baca juga di awal sesi dan perbarui di akhir sesi:
 - `frontend/PROGRESS.md` - status pengerjaan (checklist), cara kerja, peta file `src/`, rencana langkah berikutnya, dan log keputusan. Update checklist & log setiap kali selesai satu step/fitur.

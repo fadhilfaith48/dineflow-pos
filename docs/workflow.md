@@ -115,13 +115,22 @@ Jika bingung alur ini: tanya di sesi mana pun — AI membaca `workflow.md` ini.
 
 ---
 
-## 7. Checklist Sebelum Menyelesaikan Sesi
+## 7. Penutup Sesi (wajib di akhir tiap sesi kerja)
 
-- [ ] `npm run build` lolos (tsc).
-- [ ] `npm run lint` lolos (oxlint) tanpa error baru.
-- [ ] `npm test` lolos (vitest) tanpa test gagal.
-- [ ] Fitur diuji manual sesuai `uji manual.md`.
-- [ ] `todo.md` & `frontend/PROGRESS.md` diperbarui.
+Checklist penutupan sesi. Jalankan berurutan, lalu komit + push hanya bila diminta pengguna.
+
+- [ ] **Verifikasi build/lint/test** di `frontend/`:
+      `npm run build` (tsc) → `npm run lint` (oxlint) → `npm test` (vitest, 18 tes).
+- [ ] **Verifikasi tes backend** di `backend/`: `php artisan test` (3 tes).
+- [ ] **Uji manual** sesuai `uji manual.md` untuk fitur yang dikerjakan sesi ini.
+- [ ] **Reset DB ke data demo**: `php artisan migrate:fresh --seed` di `backend/`
+      (data presentasi: 4 user, 19 menu, 8 meja, 3 order).
+- [ ] **Update dokumen**: centang item di `docs/todo.md`, sinkronkan
+      `frontend/PROGRESS.md` (checklist, peta file, log keputusan), dan tambah
+      entri sesi di `docs/jurnal-pkl.md` bila perlu.
+- [ ] **Cek `git status`** — pastikan tidak ada file rahasia/berat tertinggal
+      (`.env`, `vendor/`, `node_modules/`, `dist/`, `database.sqlite`).
+- [ ] **Commit + push** — TANYA pesan commit ke pengguna dulu, jangan commit otomatis.
 
 ---
 
