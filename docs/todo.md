@@ -9,6 +9,8 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - ✅ **Fase A (frontend murni) SELESAI**: Kasir (pesanan masuk + konfirmasi + bayar nota meja), Pelayan, KDS (urut waktu), Menu QR, Admin (menu/meja/staf/laporan + filter periode), Auth mock (4 role), QR per meja, struk, navbar di semua halaman role, status meja otomatis, tes otomatis Vitest (18 tes).
 - ✅ **Fase B (backend Laravel) SELESAI**: API asli (data layer + endpoints + httpApi), real-time Reverb + Redis (≤ 2 detik), auth Sanctum (role dari server, akses publik Menu QR, logout revoke token), foto menu upload, race condition transaction + `lockForUpdate()`. Tes backend (3 tes fitur). Lihat detail B0–B5.
 - ✅ **Upload ke GitHub SELESAI**: gabung folder utama `resto_pos/`, bersihkan `.gitignore`, init+commit+push → repo **public** `github.com/fadhilfaith48/dineflow-pos` (branch `main`). Lihat C1.
+- ✅ **Uji manual menyeluruh SELESAI**: semua kasus §1–§7 di `docs/uji manual.md` lolos (Opsi A). 2 bug ditemukan & difix: bayar QRIS "undefined array key `cashReceived`", dan halaman putih setelah Tandai Lunas karena `change: null`.
+- ✅ **Enhancement real-time menu (pasca B5)**: event `MenuAvailabilityChanged` (channel `menu`, `ShouldBroadcastNow`) + subscribe Echo di `MenuPage` → menu yang ditandai **Habis**/dihapus langsung hilang dari halaman Menu QR tanpa refresh (PRD "otomatis tidak muncul lagi").
 
 ---
 

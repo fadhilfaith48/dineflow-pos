@@ -61,11 +61,11 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 4.1 | Login `dapur`, buka `/kitchen` | Grid ticket pesanan aktif tampil (teks besar, kontras) | |
-| 4.2 | Tombol **Mulai Masak** pada item | Status item → Dimasak | |
-| 4.3 | Tombol **Siap Saji** | Status item → Siap | |
-| 4.4 | Konfirmasi order baru dari Kasir (tab lain) | Ticket muncul di KDS **tanpa refresh** ≤ 2 detik (real-time Reverb) | |
-| 4.5 | Navbar tombol **Keluar** | Bisa logout | |
+| 4.1 | Login `dapur`, buka `/kitchen` | Grid ticket pesanan aktif tampil (teks besar, kontras) | ✅ |
+| 4.2 | Tombol **Mulai Masak** pada item | Status item → Dimasak | ✅ |
+| 4.3 | Tombol **Siap Saji** | Status item → Siap | ✅ |
+| 4.4 | Konfirmasi order baru dari Kasir (tab lain) | Ticket muncul di KDS **tanpa refresh** ≤ 2 detik (real-time Reverb) | ✅ |
+| 4.5 | Navbar tombol **Keluar** | Bisa logout | ✅ |
 
 ---
 
@@ -73,10 +73,10 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | |
-| 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | |
-| 5.3 | Tambah item ke keranjang, isi catatan, **Kirim Pesanan** | Pesanan masuk ke panel Kasir (status `menunggu-konfirmasi`); tracking tampil real-time. Setelah Kasir **Konfirmasi** → muncul di KDS ≤ 2 detik tanpa refresh | |
-| 5.4 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | |
+| 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | ✅ |
+| 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | ✅ |
+| 5.3 | Tambah item ke keranjang, isi catatan, **Kirim Pesanan** | Pesanan masuk ke panel Kasir (status `menunggu-konfirmasi`); tracking tampil real-time. Setelah Kasir **Konfirmasi** → muncul di KDS ≤ 2 detik tanpa refresh | ✅ |
+| 5.4 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---
 
@@ -84,19 +84,19 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 6.1 | Tab **Manajemen Menu**: tambah menu baru (nama, harga, kategori, foto **upload file** PNG/JPG/WebP ≤ 2 MB) | Menu muncul di tabel & di menu pelanggan; foto tampil (URL dari server) | |
-| 6.2 | Edit nama/kategori/deskripsi menu | Data berubah | |
-| 6.3 | Ubah harga langsung di tabel (tombol Harga → Simpan) | Harga berubah | |
-| 6.4 | Tandai **Habis** / **Tersedia** | Badge berubah; menu habis hilang dari Menu QR | |
-| 6.5 | Hapus menu (dengan konfirmasi) | Menu hilang | |
-| 6.6 | Tab **Manajemen Meja**: tambah meja | Meja muncul di peta | |
-| 6.7 | Ubah status meja via dropdown | Status berubah | |
-| 6.8 | Klik **Lihat QR** | Modal QR tampil, link ke `/menu/:qr` | |
-| 6.9 | **Salin Link** | Link tersalin | |
-| 6.10 | Tab **Manajemen Staf**: tambah staf (nama, username, role) | Staf muncul & bisa login | |
-| 6.11 | Ubah role staf | Role berubah | |
-| 6.12 | Tab **Laporan Penjualan**: pilih **Hari ini** | Total sesuai pesanan hari ini (bisa 0) | |
-| 6.13 | Pilih **7 Hari** / **Bulan ini** / **Semua** | Angka & menu terlaris menyesuaikan periode | |
+| 6.1 | Tab **Manajemen Menu**: tambah menu baru (nama, harga, kategori, foto **upload file** PNG/JPG/WebP ≤ 2 MB) | Menu muncul di tabel & di menu pelanggan; foto tampil (URL dari server) | ✅ |
+| 6.2 | Edit nama/kategori/deskripsi menu | Data berubah | ✅ |
+| 6.3 | Ubah harga langsung di tabel (tombol Harga → Simpan) | Harga berubah | ✅ |
+| 6.4 | Tandai **Habis** / **Tersedia** | Badge berubah; menu habis hilang dari Menu QR | ✅ |
+| 6.5 | Hapus menu (dengan konfirmasi) | Menu hilang | ✅ |
+| 6.6 | Tab **Manajemen Meja**: tambah meja | Meja muncul di peta | ✅ |
+| 6.7 | Ubah status meja via dropdown | Status berubah | ✅ |
+| 6.8 | Klik **Lihat QR** | Modal QR tampil, link ke `/menu/:qr` | ✅ |
+| 6.9 | **Salin Link** | Link tersalin | ✅ |
+| 6.10 | Tab **Manajemen Staf**: tambah staf (nama, username, role) | Staf muncul & bisa login | ✅ |
+| 6.11 | Ubah role staf | Role berubah | ✅ |
+| 6.12 | Tab **Laporan Penjualan**: pilih **Hari ini** | Total sesuai pesanan hari ini (bisa 0) | ✅ |
+| 6.13 | Pilih **7 Hari** / **Bulan ini** / **Semua** | Angka & menu terlaris menyesuaikan periode | ✅ |
 
 ---
 
@@ -104,12 +104,12 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 7.1 | Login `pelayan` lalu akses `/kasir`, `/kitchen`, `/admin` | Ditolak, dialihkan ke `/pelayan` | |
-| 7.2 | Login `kasir` lalu akses `/admin` | Ditolak, dialihkan ke `/kasir` | |
-| 7.3 | Login `dapur` lalu akses `/kasir` | Ditolak, dialihkan ke `/kitchen` | |
-| 7.4 | Buka `/menu/T1` tanpa login | Tetap bisa (halaman publik) | |
-| 7.5 | Kirim pesanan self-order tanpa login | Berhasil (POST `/orders` publik) | |
-| 7.6 | Login → logout → pakai token lama (cek via DevTools/network) | Request dengan token lama ditolak 401 (token di-revoke server) | |
+| 7.1 | Login `pelayan` lalu akses `/kasir`, `/kitchen`, `/admin` | Ditolak, dialihkan ke `/pelayan` | ✅ |
+| 7.2 | Login `kasir` lalu akses `/admin` | Ditolak, dialihkan ke `/kasir` | ✅ |
+| 7.3 | Login `dapur` lalu akses `/kasir` | Ditolak, dialihkan ke `/kitchen` | ✅ |
+| 7.4 | Buka `/menu/T1` tanpa login | Tetap bisa (halaman publik) | ✅ |
+| 7.5 | Kirim pesanan self-order tanpa login | Berhasil (POST `/orders` publik) | ✅ |
+| 7.6 | Login → logout → pakai token lama (cek via DevTools/network) | Request dengan token lama ditolak 401 (token di-revoke server) | ✅ (verifikasi curl: `/api/me` 200 → logout → token lama 401) |
 
 ---
 

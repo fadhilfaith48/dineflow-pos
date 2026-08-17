@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MenuAvailabilityChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuItemResource;
 use App\Models\MenuItem;
@@ -84,6 +85,10 @@ class MenuItemController extends Controller
 
         $menuItem->save();
 
+        if (array_key_exists('available', $validated)) {
+            MenuAvailabilityChanged::dispatch($menuItem);
+        }
+
         return new MenuItemResource($menuItem);
     }
 
@@ -101,6 +106,8 @@ class MenuItemController extends Controller
     public function destroy(MenuItem $menuItem): JsonResponse
     {
         $menuItem->delete();
+
+        MenuAvailabilityChanged::dispatch($menuItem);
 
         return response()->json(['message' => 'Menu dihapus']);
     }

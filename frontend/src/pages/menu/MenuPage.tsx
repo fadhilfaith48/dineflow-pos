@@ -38,6 +38,15 @@ export function MenuPage() {
   }, [])
 
   useEffect(() => {
+    echo.channel('menu').listen('MenuAvailabilityChanged', () => {
+      api.getMenuItems().then(setItems)
+    })
+    return () => {
+      echo.leaveChannel('menu')
+    }
+  }, [])
+
+  useEffect(() => {
     if (!table) return
     api.getTables().then((tables) => {
       const found = tables.find((t) => t.number.toLowerCase() === table.toLowerCase())
