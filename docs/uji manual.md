@@ -116,6 +116,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 ## Catatan Penting
 
 - **Real-time asli**: KDS, panel Kasir, & tracking pelanggan memakai Laravel Reverb + Redis (≤ 2 detik, tanpa refresh). Pastikan backend `8000`, `reverb:start` `8080`, Redis `6379`, MySQL `3306`, dan Vite `5173` menyala.
+- **Menu juga real-time** (event `MenuChanged`, channel `menu`): perubahan menu dari Admin (Habis/Tersedia, nama, harga, deskripsi, foto, tambah/hapus) langsung tampil di halaman Menu QR & panel menu Kasir tanpa refresh.
 - **Data tersimpan di database MySQL** (`dineflow_pos`): perubahan tidak hilang saat refresh. Untuk reset ke data demo: `php artisan migrate:fresh --seed` di `backend/`.
 - **Upload foto menu** disimpan di `backend/storage/app/public/menu-items` (URL `http://localhost:8000/storage/...`).
 - Jika ditemukan bug → tulis langkah reproduksinya ke `todo.md` lalu kerjakan.

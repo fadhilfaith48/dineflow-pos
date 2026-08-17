@@ -38,7 +38,7 @@ export function MenuPage() {
   }, [])
 
   useEffect(() => {
-    echo.channel('menu').listen('MenuAvailabilityChanged', () => {
+    echo.channel('menu').listen('MenuChanged', () => {
       api.getMenuItems().then(setItems)
     })
     return () => {

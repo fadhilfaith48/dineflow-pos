@@ -9,7 +9,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class MenuAvailabilityChanged implements ShouldBroadcastNow
+class MenuChanged implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -31,6 +31,6 @@ class MenuAvailabilityChanged implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'MenuAvailabilityChanged';
+        return 'MenuChanged';
     }
 }

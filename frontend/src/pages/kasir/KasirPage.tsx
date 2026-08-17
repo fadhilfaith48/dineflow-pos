@@ -47,6 +47,15 @@ export function KasirPage() {
     }
   }, [])
 
+  useEffect(() => {
+    echo.channel('menu').listen('MenuChanged', () => {
+      api.getMenuItems().then(setItems)
+    })
+    return () => {
+      echo.leaveChannel('menu')
+    }
+  }, [])
+
   const pendingOrders = useMemo(
     () => orders.filter((o) => o.status === 'menunggu-konfirmasi'),
     [orders],

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\MenuAvailabilityChanged;
+use App\Events\MenuChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuItemResource;
 use App\Models\MenuItem;
@@ -47,6 +47,8 @@ class MenuItemController extends Controller
             'image_url' => $this->resolveImageUrl($request) ?? $validated['imageUrl'] ?? null,
         ]);
 
+        MenuChanged::dispatch($item);
+
         return new MenuItemResource($item);
     }
 
@@ -85,9 +87,7 @@ class MenuItemController extends Controller
 
         $menuItem->save();
 
-        if (array_key_exists('available', $validated)) {
-            MenuAvailabilityChanged::dispatch($menuItem);
-        }
+        MenuChanged::dispatch($menuItem);
 
         return new MenuItemResource($menuItem);
     }
@@ -107,7 +107,7 @@ class MenuItemController extends Controller
     {
         $menuItem->delete();
 
-        MenuAvailabilityChanged::dispatch($menuItem);
+        MenuChanged::dispatch($menuItem);
 
         return response()->json(['message' => 'Menu dihapus']);
     }
