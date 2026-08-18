@@ -137,7 +137,7 @@ Checklist penutupan sesi. Jalankan berurutan, lalu komit + push hanya bila dimin
 ## 8. Gabung ke Folder Utama & Upload ke GitHub
 
 Urutan memindahkan frontend + backend ke satu folder utama lalu meng-upload ke GitHub
-(untuk presentasi/penyimpanan). Repo bersifat **private**.
+(untuk presentasi/penyimpanan). Repo saat ini bersifat **public** (`fadhilfaith48/dineflow-pos`).
 
 ```
 D:/laragon/www/resto_pos/          ← folder utama

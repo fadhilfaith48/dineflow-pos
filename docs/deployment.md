@@ -5,8 +5,13 @@ Runbook men-deploy **keduanya** ke production:
 - **Backend** (Laravel API + Reverb) → **Render**
 - Database & Redis → layanan managed (lihat §5)
 
-> Status: **panduan siap pakai** (sesuai keputusan user, akan benar-benar di-deploy).
+> Status: **deploy sedang berjalan** (Tahap 0 kode selesai `e0daf66`; provider disesuaikan saat eksekusi).
 > Repo: `github.com/fadhilfaith48/dineflow-pos` (branch `main`).
+>
+> **Penyesuaian saat eksekusi (sesi deploy):** Render mewajibkan kartu kredit untuk
+> membuat Redis & PostgreSQL (free sudah tidak tersedia untuk akun baru) → Redis dipakai
+> **Upstash** (gratis) dan PostgreSQL dipakai **Neon** (gratis). Storage foto = **Supabase**
+> (S3-compatible). Rincian di §5–§6.
 
 ---
 
@@ -20,11 +25,12 @@ Browser
   └─ (upload foto → https://<api>.onrender.com/api/menu-items)
 
 Render Web Service A (Laravel API)
-  ├─ MySQL / PostgreSQL (managed, eksternal)
-  └─ Redis (managed) — broadcast + cache + queue
+  ├─ PostgreSQL (Neon, external) — database
+  ├─ Redis (Upstash, external) — broadcast + cache + queue
+  └─ Foto menu → Supabase Storage (S3-compatible)
 
 Render Web Service B (Reverb WebSocket)
-  └─ Redis yang sama (Reverb memakai Redis channel)
+  └─ Redis yang sama (Upstash) — Reverb memakai Redis channel
 ```
 
 **Penting**: Reverb harus **service terpisah** yang selalu menyala (WebSocket bersifat
@@ -54,7 +60,7 @@ persisten). Jangan dijalankan di dalam proses `php artisan serve` API.
    php artisan migrate --force --no-interaction && php artisan serve --host 0.0.0.0 --port $PORT
    ```
    - Migrate dijalankan tiap start (idempotent) supaya skema selalu terkini.
-   - Foto menu: tambahkan `php artisan storage:link` bila memakai persistent disk (lihat §6).
+   - Foto menu via **Supabase S3** (lihat §6) — `storage:link` TIDAK diperlukan.
 
 ### 3.2 Env (tab Environment)
 | Var | Nilai produksi | Catatan |
@@ -63,18 +69,26 @@ persisten). Jangan dijalankan di dalam proses `php artisan serve` API.
 | `APP_DEBUG` | `false` | |
 | `APP_URL` | `https://<api>.onrender.com` | URL service ini |
 | `APP_KEY` | hasil `key:generate` | jangan bocor |
-| `DB_CONNECTION` | `mysql` atau `pgsql` | lihat §5.1 |
-| `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | dari penyedia DB | |
+| `DB_CONNECTION` | `pgsql` | via Neon (lihat §5.1) |
+| `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | dari Neon | |
 | `BROADCAST_CONNECTION` | `reverb` | |
 | `QUEUE_CONNECTION` | `sync` | prototype tanpa worker; `redis` bila pakai queue |
 | `CACHE_STORE` | `redis` | |
 | `SESSION_DRIVER` | `redis` (atau `database`) | |
 | `REDIS_CLIENT` | `predis` | |
-| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | dari Redis managed | |
+| `REDIS_URL` | `tls://default:<token>@<host>:<port>` | dari **Upstash** (menggantikan REDIS_HOST/PORT/PASSWORD) |
 | `REVERB_APP_ID` | mis. `dinflow-pos` | **sama** dengan service Reverb & `VITE_REVERB_APP_KEY` |
 | `REVERB_APP_KEY` | `dinflow-pos-key` | **sama** di semua service |
 | `REVERB_APP_SECRET` | rahasia | **sama** di semua service |
-| `FILESYSTEM_DISK` | `public` (persistent disk) atau `s3` | lihat §6 |
+| `FILESYSTEM_DISK` | `s3` | foto menu di Supabase |
+| `PHOTO_DISK` | `s3` | disk penyimpanan foto (`public` untuk lokal) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | dari Supabase S3 Access Keys | |
+| `AWS_DEFAULT_REGION` | region project Supabase | mis. `ap-southeast-1` |
+| `AWS_BUCKET` | `menu-photos` | nama bucket Supabase |
+| `AWS_ENDPOINT` | `https://<projectref>.supabase.co/storage/v1/s3` | endpoint S3 Supabase |
+| `AWS_URL` | `https://<projectref>.supabase.co/storage/v1/object/public/menu-photos` | URL publik foto |
+| `AWS_USE_PATH_STYLE_ENDPOINT` | `true` | wajib untuk Supabase S3 |
+| `FRONTEND_URL` | `https://<fe>.vercel.app` | origin CORS |
 | `TRUSTED_PROXIES` | `*` | Render di belakang proxy |
 
 ### 3.3 CORS (back-end → Vercel)
@@ -104,8 +118,8 @@ Lalu set env `FRONTEND_URL` = `https://<fe>.vercel.app` pada service API.
 | `APP_ENV` | `production` | |
 | `APP_KEY` | sama dengan API | Reverb butuh app key yang sama |
 | `BROADCAST_CONNECTION` | `reverb` | |
-| `REDIS_CLIENT` | `predis` | Redis yang sama dengan API |
-| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | dari Redis managed | |
+| `REDIS_CLIENT` | `predis` | Redis yang sama (Upstash) |
+| `REDIS_URL` | `tls://default:<token>@<host>:<port>` | dari **Upstash**, sama dengan API |
 | `REVERB_SERVER_HOST` | `0.0.0.0` | |
 | `REVERB_SERVER_PORT` | `$PORT` | Render memberi port acak |
 | `REVERB_SERVER_HOSTNAME` | `https://<reverb>.onrender.com` | hostname publik, **tanpa** `wss://` |
@@ -127,30 +141,51 @@ tambahkan domain Vercel, contoh:
 
 ## 5. Database & Redis
 
-### 5.1 Database
-Render **tidak menyediakan MySQL managed**. Pilih salah satu:
-- **Opsi 1 (disarankan) — PostgreSQL managed Render**: buat instance PostgreSQL di
-  Render, set `DB_CONNECTION=pgsql`. Migrasi proyek memakai tipe kolom standar
-  (string/integer/boolean/timestamps) → kompatibel. Verifikasi: `php artisan migrate`.
-- **Opsi 2 — MySQL eksternal**: penyedia MySQL terkelola (mis. Aiven, Railway,
-  Clever Cloud), isi `DB_CONNECTION=mysql` + kredensial dari sana.
+> **Catatan:** Render kini **mewajibkan kartu kredit** untuk membuat Redis/PostgreSQL
+> (free sudah tidak tersedia untuk akun baru) → pakai penyedia gratis berikut.
 
-### 5.2 Redis (broadcast Reverb + cache)
-Gunakan **Redis managed** (Render menyediakan Redis). Isi `REDIS_*` di **kedua** service
-(API & Reverb) dengan instance Redis yang **sama**.
+### 5.1 Database — PostgreSQL via Neon (gratis, tanpa kartu)
+1. Daftar di `neon.tech` → **New Project** `dineflow` → Region **Singapore**.
+2. Database pertama dibuat otomatis (`neondb`). Klik **Connect** → salin
+   **Connection String** (`postgres://user:password@host/neondb`).
+3. Set `DB_CONNECTION=pgsql` + pecah URL jadi `DB_HOST/PORT/DATABASE/USERNAME/PASSWORD`.
+   - Keunggulan Neon: free tier, **auto-wake** saat ada koneksi (tidak perlu resume manual).
+   - Alternatif bila ada kartu: PostgreSQL managed Render (`DB_CONNECTION=pgsql`).
+
+### 5.2 Redis — Upstash (gratis, tanpa kartu)
+1. Daftar di `upstash.com` → **Create Database** → type **Redis** → name `dineflow-redis`
+   → Region **Singapore**.
+2. Salin **host**, **port**, dan **token** dari halaman database.
+3. Set di **kedua** service (API & Reverb): `REDIS_CLIENT=predis` dan
+   `REDIS_URL=tls://default:<token>@<host>:<port>` (TLS via predis).
 
 ---
 
-## 6. Penyimpanan Foto Menu (penting)
+## 6. Penyimpanan Foto Menu — Supabase Storage (S3-compatible)
 
-Filesystem Render bersifat **ephemeral** (hilang saat restart/deploy). Untuk foto menu:
-- **Opsi A (sederhana) — Persistent Disk**: di Web Service A → **Disks** → tambah disk
-  (mis. mount ke `/var/www/storage`), lalu jalankan `php artisan storage:link` di Start
-  Command & set `FILESYSTEM_DISK=public`. Catatan: persistent disk hanya tersedia di
-  instance berbayar.
-- **Opsi B (skalabel) — Object Storage**: `FILESYSTEM_DISK=s3` (mis. S3 / Supabase /
-  Cloudflare R2) + install `composer require league/flysystem-aws-s3-v3`; env `AWS_*`
-  diisi kredensial penyedia. Foto tidak lagi bergantung pada disk server.
+Filesystem Render bersifat **ephemeral** (hilang saat restart/deploy), jadi foto menu
+disimpan di **Supabase Storage** (gratis 1GB):
+1. Buat project di `supabase.com` → menu **Storage** → bucket publik `menu-photos`.
+2. **Project Settings → Storage → S3 Access Keys** → buat access key → salin
+   **Access Key ID** & **Secret**.
+3. Catat **Project Reference** (`<projectref>`) & **Region** (mis. `ap-southeast-1`).
+4. Isi env service API:
+   | Var | Nilai |
+   |---|---|
+   | `FILESYSTEM_DISK` / `PHOTO_DISK` | `s3` |
+   | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | dari S3 Access Keys |
+   | `AWS_DEFAULT_REGION` | region project |
+   | `AWS_BUCKET` | `menu-photos` |
+   | `AWS_ENDPOINT` | `https://<projectref>.supabase.co/storage/v1/s3` |
+   | `AWS_URL` | `https://<projectref>.supabase.co/storage/v1/object/public/menu-photos` |
+   | `AWS_USE_PATH_STYLE_ENDPOINT` | `true` |
+5. Paket `league/flysystem-aws-s3-v3` sudah terpasang (Tahap 0, commit `e0daf66`).
+   `MenuItemController::resolveImageUrl` memakai disk dari `PHOTO_DISK`.
+   - **Catatan pause:** free tier Supabase di-pause setelah **7 hari tanpa aktivitas** →
+     sebelum demo buka dashboard & klik **Resume** (data aman).
+
+> Alternatif tidak pause: Cloudflare R2 (endpoint `https://<accountid>.r2.cloudflarestorage.com`,
+> `AWS_USE_PATH_STYLE_ENDPOINT=true`, bucket publik via custom domain).
 
 ---
 
@@ -189,8 +224,14 @@ Filesystem Render bersifat **ephemeral** (hilang saat restart/deploy). Untuk fot
 
 ## 9. Catatan & Batasan
 
+- **Render meminta kartu untuk Redis/PostgreSQL** (free sudah tidak tersedia untuk akun
+  baru) → dipakai **Upstash (Redis)** & **Neon (PostgreSQL)**. Web Service free biasanya
+  tetap bisa dibuat tanpa kartu; jika diminta kartu, gunakan alternatif gratis (mis. Koyeb).
 - **Free tier**: instance tidur saat idle (cold start beberapa detik); Reverb yang
   tidur akan memutus WebSocket — untuk demo live sebaiknya instance berbayar / keep-alive.
+- **Neon free**: compute auto-pause tapi **auto-wake** saat ada koneksi (aman).
+- **Supabase free**: project **di-pause setelah 7 hari tanpa aktivitas** → Resume manual
+  di dashboard sebelum demo (data aman).
 - **`php artisan serve`** dipakai karena satu root (bukan nginx virtual host) — cukup untuk
   prototype; untuk production lebih baik pakai nginx/octane (di luar scope).
 - **Migrate di Start Command** aman untuk prototype; untuk skala lebih besar gunakan
