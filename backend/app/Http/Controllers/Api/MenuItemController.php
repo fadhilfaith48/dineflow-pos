@@ -98,9 +98,10 @@ class MenuItemController extends Controller
             return null;
         }
 
-        $path = $request->file('image')->store('menu-items', 'public');
+        $disk = config('filesystems.photo_disk');
+        $path = $request->file('image')->store('menu-items', $disk);
 
-        return Storage::disk('public')->url($path);
+        return Storage::disk($disk)->url($path);
     }
 
     public function destroy(MenuItem $menuItem): JsonResponse

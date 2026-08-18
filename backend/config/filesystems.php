@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Photo Disk
+    |--------------------------------------------------------------------------
+    |
+    | Disk yang dipakai untuk menyimpan foto menu. Lokal memakai "public"
+    | (storage:link), production memakai "s3" (mis. Supabase Storage).
+    |
+    */
+
+    'photo_disk' => env('PHOTO_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
