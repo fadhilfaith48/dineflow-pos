@@ -50,17 +50,22 @@ persisten). Jangan dijalankan di dalam proses `php artisan serve` API.
 ## 3. Render — Web Service A (Laravel API)
 
 ### 3.1 Buat Web Service
+> **Penting:** Render **tidak menyediakan runtime PHP** di dropdown Language (hanya
+> Node/Python/Go/Ruby/dll + **Docker**). Laravel di-deploy via **runtime Docker**:
+> gunakan `backend/Dockerfile` (PHP 8.3-cli + `pdo_pgsql` untuk Neon + `pcntl` untuk
+> Reverb + composer).
+
 1. Render → **New** → **Web Service** → pilih repo GitHub `dineflow-pos`.
 2. **Root Directory**: `backend`
-3. **Environment**: `PHP` (Build Pack) → pilih versi PHP **8.3**.
-4. **Build Command**: `composer install --no-dev --optimize-autoloader`
-   (Render menjalankan ini otomatis; biarkan kosong bila memakai default).
+3. **Language / Environment**: **Docker** (Render membaca `Dockerfile`).
+4. **Build Command**: kosong (semua di `Dockerfile`).
 5. **Start Command**:
    ```
    php artisan migrate --force --no-interaction && php artisan serve --host 0.0.0.0 --port $PORT
    ```
    - Migrate dijalankan tiap start (idempotent) supaya skema selalu terkini.
    - Foto menu via **Supabase S3** (lihat §6) — `storage:link` TIDAK diperlukan.
+   - **Health Check Path**: kosongkan (app tidak punya route `/healthz`).
 
 ### 3.2 Env (tab Environment)
 | Var | Nilai produksi | Catatan |
@@ -106,8 +111,8 @@ Lalu set env `FRONTEND_URL` = `https://<fe>.vercel.app` pada service API.
 
 1. Render → **New** → **Web Service** → repo yang sama.
 2. **Root Directory**: `backend`
-3. **Environment**: `PHP` 8.3. **Build Command**: kosong (composer sudah di-install).
-4. **Start Command**:
+3. **Language / Environment**: **Docker** (image yang sama dengan API).
+4. **Build Command**: kosong. **Start Command**:
    ```
    php artisan reverb:start --host=0.0.0.0 --port=$PORT
    ```

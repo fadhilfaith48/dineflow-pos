@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+node_modules
+vendor
+tests
+*.md
+nul
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
