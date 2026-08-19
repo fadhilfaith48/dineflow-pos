@@ -13,7 +13,7 @@ class SalesSummaryController extends Controller
     {
         $period = $request->query('period', 'semua');
 
-        $query = Order::whereIn('status', ['selesai', 'diproses']);
+        $query = Order::where('status', 'selesai');
 
         if (in_array($period, ['harian', 'mingguan', 'bulanan'], true)) {
             $now = now();

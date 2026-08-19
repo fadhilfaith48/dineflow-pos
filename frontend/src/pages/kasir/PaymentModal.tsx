@@ -8,7 +8,7 @@ interface PaymentModalProps {
   open: boolean
   total: number
   onClose: () => void
-  onConfirm: (payload: { method: PaymentMethod; cashReceived?: number }) => void
+  onConfirm: (payload: { method: PaymentMethod; cashReceived?: number }) => Promise<void>
 }
 
 /** CRC-16/CCITT (0x1021) yang dipakai payload QRIS untuk tag 63 */
@@ -51,12 +51,14 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
   const [method, setMethod] = useState<PaymentMethod>('tunai')
   const [cash, setCash] = useState('')
   const [qrisPaid, setQrisPaid] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (open) {
       setMethod('tunai')
       setCash('')
       setQrisPaid(false)
+      setSubmitting(false)
     }
   }, [open])
 
@@ -68,11 +70,17 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
   const change = cashAmount - total
   const cashInvalid = method === 'tunai' && cashAmount < total
 
-  function handleConfirm() {
-    onConfirm({
-      method,
-      cashReceived: method === 'tunai' ? cashAmount : undefined,
-    })
+  async function handleConfirm() {
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      await onConfirm({
+        method,
+        cashReceived: method === 'tunai' ? cashAmount : undefined,
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -176,20 +184,20 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
             Batal
           </Button>
           {method === 'qris' ? (
-            <Button fullWidth onClick={() => setQrisPaid(true)}>
+            <Button fullWidth onClick={() => setQrisPaid(true)} disabled={submitting}>
               Simulasi Pembayaran Sukses
             </Button>
           ) : (
-            <Button fullWidth onClick={handleConfirm} disabled={cashInvalid}>
-              Konfirmasi Bayar
+            <Button fullWidth onClick={handleConfirm} disabled={cashInvalid || submitting}>
+              {submitting ? 'Memproses...' : 'Konfirmasi Bayar'}
             </Button>
           )}
         </div>
 
         {method === 'qris' && qrisPaid && (
           <div className="mt-4">
-            <Button variant="primary" fullWidth onClick={handleConfirm}>
-              Tandai Lunas
+            <Button variant="primary" fullWidth onClick={handleConfirm} disabled={submitting}>
+              {submitting ? 'Memproses...' : 'Tandai Lunas'}
             </Button>
           </div>
         )}

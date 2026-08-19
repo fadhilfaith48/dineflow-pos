@@ -24,13 +24,21 @@ import type {
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 const TOKEN_KEY = 'dineflow-token'
+const USER_KEY = 'dineflow-user'
 
-function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
+export const AUTH_UNAUTHORIZED_EVENT = 'dineflow:unauthorized'
 
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY)
+}
+
+export function clearAuth(): void {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+}
+
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
 }
 
 function setToken(token: string): void {
@@ -61,7 +69,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
 
   if (res.status === 401) {
-    clearToken()
+    clearAuth()
+    window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT))
   }
 
   if (!res.ok) {

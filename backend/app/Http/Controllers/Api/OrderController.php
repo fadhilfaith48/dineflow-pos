@@ -26,16 +26,19 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'tableId' => ['nullable', 'exists:tables,id'],
-            'source' => ['required', 'in:kasir,pelayan,self-order'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.menuItemId' => ['required', 'exists:menu_items,id'],
-            'items.*.name' => ['required', 'string'],
-            'items.*.price' => ['required', 'integer', 'min:0'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.note' => ['nullable', 'string'],
         ]);
 
-        $order = DB::transaction(function () use ($validated) {
+        $source = match ($request->user()?->role) {
+            'kasir' => 'kasir',
+            'pelayan' => 'pelayan',
+            default => 'self-order',
+        };
+
+        $order = DB::transaction(function () use ($validated, $source) {
             $table = $validated['tableId'] ? Table::lockForUpdate()->find($validated['tableId']) : null;
 
             $menuItems = MenuItem::whereIn('id', collect($validated['items'])->pluck('menuItemId'))->lockForUpdate()->get()->keyBy('id');
@@ -48,24 +51,26 @@ class OrderController extends Controller
                         'items' => ['Menu "'.($menuItem->name ?? '?').'" sedang tidak tersedia'],
                     ]);
                 }
-                $subtotal += $item['price'] * $item['quantity'];
+                $subtotal += $menuItem->price * $item['quantity'];
             }
 
-            $orderNumber = 'ORD-'.str_pad((string) ((Order::max('id') ?? 0) + 1), 4, '0', STR_PAD_LEFT);
+            $lastId = Order::lockForUpdate()->max('id') ?? 0;
+            $orderNumber = 'ORD-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
 
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'table_id' => $table?->id,
-                'source' => $validated['source'],
-                'status' => $validated['source'] === 'kasir' ? 'baru' : 'menunggu-konfirmasi',
+                'source' => $source,
+                'status' => $source === 'kasir' ? 'diproses' : 'menunggu-konfirmasi',
                 'total' => (int) round($subtotal * 1.1),
             ]);
 
             foreach ($validated['items'] as $item) {
+                $menuItem = $menuItems->get($item['menuItemId']);
                 $order->items()->create([
-                    'menu_item_id' => $item['menuItemId'],
-                    'name' => $item['name'],
-                    'price' => $item['price'],
+                    'menu_item_id' => $menuItem->id,
+                    'name' => $menuItem->name,
+                    'price' => $menuItem->price,
                     'quantity' => $item['quantity'],
                     'note' => $item['note'] ?? null,
                     'status' => 'baru',

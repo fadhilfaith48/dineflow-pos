@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DiningTable, MenuCategory, MenuItem, Order } from '@/types'
 import { api } from '@/services/httpApi'
+import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { TopNavBar } from '@/components/TopNavBar'
 import { TableSelect } from './TableSelect'
@@ -18,13 +19,18 @@ export function PelayanPage() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [selectedTable, setSelectedTable] = useState<DiningTable | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [error, setError] = useState('')
 
   function loadOrders() {
-    api.getOrders().then(setOrders)
+    api.getOrders().then(setOrders).catch(() => {
+      setError('Gagal memuat pesanan. Cek koneksi ke server.')
+    })
   }
 
   function loadTables() {
-    api.getTables().then(setTables)
+    api.getTables().then(setTables).catch(() => {
+      setError('Gagal memuat meja. Cek koneksi ke server.')
+    })
   }
 
   useEffect(() => {
@@ -35,6 +41,19 @@ export function PelayanPage() {
     })
     api.getMenuItems().then(setItems)
     loadOrders()
+
+    echo.channel('orders').listen('OrderStatusChanged', () => {
+      loadOrders()
+      loadTables()
+    })
+    echo.channel('menu').listen('MenuChanged', () => {
+      api.getMenuItems().then(setItems)
+    })
+
+    return () => {
+      echo.leaveChannel('orders')
+      echo.leaveChannel('menu')
+    }
   }, [])
 
   const visibleItems = useMemo(() => {
@@ -49,31 +68,42 @@ export function PelayanPage() {
 
   async function handleSubmitOrder() {
     if (!selectedTable || cart.lines.length === 0) return
-    await api.createOrder({
-      tableId: selectedTable.id,
-      source: 'pelayan',
-      items: cart.lines,
-    })
-    cart.clear()
-    setView('orders')
-    loadOrders()
-    loadTables()
+    try {
+      await api.createOrder({
+        tableId: selectedTable.id,
+        source: 'pelayan',
+        items: cart.lines,
+      })
+      cart.clear()
+      setView('orders')
+      loadOrders()
+      loadTables()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
+    }
   }
 
   async function handleDeliver(orderId: number) {
     const order = orders.find((o) => o.id === orderId)
     if (!order) return
-    for (const item of order.items) {
-      if (item.status !== 'diantar') {
-        await api.updateItemStatus(order.id, item.id, 'diantar')
+    try {
+      for (const item of order.items) {
+        if (item.status !== 'diantar') {
+          await api.updateItemStatus(order.id, item.id, 'diantar')
+        }
       }
+      loadOrders()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menandai diantar.')
     }
-    loadOrders()
   }
 
   return (
     <div className="flex h-screen flex-col bg-bg-secondary">
       <TopNavBar />
+      {error && (
+        <div className="bg-status-danger/15 px-4 py-2 text-center text-body font-semibold text-status-danger">{error}</div>
+      )}
       {view === 'order' && selectedTable ? (
         <WaiterOrder
           table={selectedTable}

@@ -30,9 +30,9 @@ export function KasirPage() {
     api.getCategories().then((cats) => {
       setCategories(cats)
       setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
-    })
-    api.getMenuItems().then(setItems)
-    api.getTables().then(setTables)
+    }).catch(() => setError('Gagal memuat kategori menu.'))
+    api.getMenuItems().then(setItems).catch(() => setError('Gagal memuat menu.'))
+    api.getTables().then(setTables).catch(() => setError('Gagal memuat meja.'))
   }, [])
 
   useEffect(() => {
@@ -104,41 +104,8 @@ export function KasirPage() {
   async function handleConfirmPayment(payload: { method: PaymentMethod; cashReceived?: number }) {
     setError('')
     try {
-      if (noteToPay) {
-        const order = noteToPay
-        const payment = await api.processPayment({
-          orderId: order.id,
-          method: payload.method,
-          cashReceived: payload.cashReceived,
-        })
-        setReceipt({
-          orderNumber: order.orderNumber,
-          tableLabel: `Meja ${order.tableNumber ?? '-'}`,
-          createdAt: order.createdAt,
-          items: order.items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            note: item.note,
-          })),
-          subtotal: order.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-          tax: Math.round(order.total - order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)),
-          total: order.total,
-          method: payment.method,
-          change: payment.change ?? undefined,
-        })
-        setNoteToPay(null)
-        setShowPayment(false)
-        setOrders(await api.getOrders())
-        setTables(await api.getTables())
-        return
-      }
-
-      const order = await api.createOrder({
-        tableId: selectedTable?.id ?? null,
-        source: 'kasir',
-        items: cart.lines,
-      })
+      if (!noteToPay) return
+      const order = noteToPay
       const payment = await api.processPayment({
         orderId: order.id,
         method: payload.method,
@@ -146,7 +113,7 @@ export function KasirPage() {
       })
       setReceipt({
         orderNumber: order.orderNumber,
-        tableLabel: selectedTable ? `Meja ${selectedTable.number}` : 'Take Away',
+        tableLabel: `Meja ${order.tableNumber ?? '-'}`,
         createdAt: order.createdAt,
         items: order.items.map((item) => ({
           name: item.name,
@@ -154,16 +121,35 @@ export function KasirPage() {
           price: item.price,
           note: item.note,
         })),
-        subtotal: cart.summary.subtotal,
-        tax: cart.summary.tax,
-        total: cart.summary.total,
+        subtotal: order.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        tax: Math.round(order.total - order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)),
+        total: order.total,
         method: payment.method,
         change: payment.change ?? undefined,
       })
+      setNoteToPay(null)
       setShowPayment(false)
-      cart.clear()
+      setOrders(await api.getOrders())
+      setTables(await api.getTables())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Transaksi gagal, coba lagi.')
+    }
+  }
+
+  async function handleSendToKitchen() {
+    if (cart.lines.length === 0) return
+    setError('')
+    try {
+      await api.createOrder({
+        tableId: selectedTable?.id ?? null,
+        source: 'kasir',
+        items: cart.lines,
+      })
+      cart.clear()
+      setOrders(await api.getOrders())
+      setTables(await api.getTables())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan ke dapur.')
     }
   }
 
@@ -199,7 +185,7 @@ export function KasirPage() {
           onRemove={cart.removeLine}
           onSetNote={cart.setNote}
           onHold={handleHold}
-          onPay={() => setShowPayment(true)}
+          onSendToKitchen={handleSendToKitchen}
         />
       </main>
 

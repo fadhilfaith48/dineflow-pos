@@ -24,10 +24,13 @@ export function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([])
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [tableId, setTableId] = useState<number | null>(null)
+  const [tableChecked, setTableChecked] = useState(false)
   const [tableNotFound, setTableNotFound] = useState(false)
   const [view, setView] = useState<View>('menu')
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null)
   const [orderNumber, setOrderNumber] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -48,6 +51,8 @@ export function MenuPage() {
 
   useEffect(() => {
     if (!table) return
+    setTableChecked(false)
+    setTableNotFound(false)
     api.getTables().then((tables) => {
       const found = tables.find((t) => t.number.toLowerCase() === table.toLowerCase())
       if (found) {
@@ -55,7 +60,7 @@ export function MenuPage() {
       } else {
         setTableNotFound(true)
       }
-    })
+    }).finally(() => setTableChecked(true))
   }, [table])
 
   useEffect(() => {
@@ -73,19 +78,27 @@ export function MenuPage() {
   }, [items, activeCategory])
 
   async function handleSubmitOrder() {
-    if (tableId === null || cart.lines.length === 0) return
-    const order = await api.createOrder({
-      tableId,
-      source: 'self-order',
-      items: cart.lines,
-    })
-    setOrderNumber(order.orderNumber)
-    setTrackedOrder(order)
-    cart.clear()
-    setView('tracking')
+    if (tableId === null || cart.lines.length === 0 || submitting) return
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const order = await api.createOrder({
+        tableId,
+        source: 'self-order',
+        items: cart.lines,
+      })
+      setOrderNumber(order.orderNumber)
+      setTrackedOrder(order)
+      cart.clear()
+      setView('tracking')
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  if (tableNotFound || tableId === null) {
+  if (tableNotFound || (tableChecked && tableId === null)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
         <div className="font-num text-heading text-status-danger">!</div>
@@ -274,11 +287,14 @@ export function MenuPage() {
             </div>
             <button
               onClick={handleSubmitOrder}
-              disabled={cart.lines.length === 0}
+              disabled={cart.lines.length === 0 || submitting}
               className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
             >
-              Kirim Pesanan
+              {submitting ? 'Mengirim...' : 'Kirim Pesanan'}
             </button>
+            {submitError && (
+              <p className="mt-2 text-center text-caption font-semibold text-status-danger">{submitError}</p>
+            )}
             <p className="mt-2 text-center text-caption text-text-secondary">
               Pembayaran dilakukan di kasir setelah menikmati hidangan.
             </p>

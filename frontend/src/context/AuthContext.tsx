@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User } from '@/types'
+import { AUTH_UNAUTHORIZED_EVENT } from '@/services/httpApi'
 import { api } from '@/services/httpApi'
 import { clearToken } from '@/services/httpApi'
 
@@ -37,6 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearToken()
     localStorage.removeItem(STORAGE_KEY)
     setUser(null)
+  }, [])
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem(STORAGE_KEY)
+      setUser(null)
+    }
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
   }, [])
 
   const value = useMemo(() => ({ user, login, logout }), [user, login, logout])

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -42,8 +43,31 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        if ($token = $request->user()?->currentAccessToken()) {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Logout berhasil']);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'currentPassword' => ['required', 'string'],
+            'newPassword' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($validated['currentPassword'], $user->password)) {
+            throw ValidationException::withMessages([
+                'currentPassword' => ['Password saat ini salah'],
+            ]);
+        }
+
+        $user->password = Hash::make($validated['newPassword']);
+        $user->save();
+
+        return response()->json(['message' => 'Password berhasil diubah']);
     }
 }

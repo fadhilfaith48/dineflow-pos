@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -25,6 +26,12 @@ class PaymentController extends Controller
 
             if ($order->payment()->exists()) {
                 abort(409, 'Pesanan sudah dibayar');
+            }
+
+            if ($validated['method'] === 'tunai' && ($validated['cashReceived'] ?? 0) < $order->total) {
+                throw ValidationException::withMessages([
+                    'cashReceived' => ['Uang yang diterima kurang dari total pembayaran'],
+                ]);
             }
 
             $order->status = 'selesai';

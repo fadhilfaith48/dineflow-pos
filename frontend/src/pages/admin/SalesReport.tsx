@@ -13,11 +13,19 @@ const periods: { value: SalesPeriod; label: string }[] = [
 export function SalesReport() {
   const [period, setPeriod] = useState<SalesPeriod>('semua')
   const [summary, setSummary] = useState<SalesSummary | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     setSummary(null)
-    api.getSalesSummary(period).then(setSummary)
+    setError('')
+    api.getSalesSummary(period).then(setSummary).catch(() => {
+      setError('Gagal memuat laporan penjualan. Periksa koneksi lalu coba lagi.')
+    })
   }, [period])
+
+  if (error) {
+    return <p className="py-12 text-center text-body text-status-danger">{error}</p>
+  }
 
   if (!summary) {
     return <p className="py-12 text-center text-body text-text-secondary">Memuat laporan...</p>

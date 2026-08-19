@@ -9,6 +9,7 @@ use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MenuItemController extends Controller
@@ -35,7 +36,9 @@ class MenuItemController extends Controller
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $last = MenuItem::query()->orderByDesc('id')->value('id') ?? 0;
+        $last = DB::transaction(function () {
+            return MenuItem::lockForUpdate()->orderByDesc('id')->value('id') ?? 0;
+        });
 
         $item = MenuItem::create([
             'code' => '#M'.str_pad((string) ($last + 1), 2, '0', STR_PAD_LEFT),

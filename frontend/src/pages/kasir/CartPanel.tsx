@@ -15,7 +15,7 @@ interface CartPanelProps {
   onRemove: (menuItemId: number) => void
   onSetNote: (menuItemId: number, note: string) => void
   onHold: () => void
-  onPay: () => void
+  onSendToKitchen: () => void
 }
 
 export function CartPanel({
@@ -31,7 +31,7 @@ export function CartPanel({
   onRemove,
   onSetNote,
   onHold,
-  onPay,
+  onSendToKitchen,
 }: CartPanelProps) {
   return (
     <aside className="flex w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
@@ -141,8 +141,8 @@ export function CartPanel({
           <Button variant="outline" onClick={onHold} disabled={lines.length === 0}>
             Hold
           </Button>
-          <Button onClick={onPay} disabled={lines.length === 0}>
-            Bayar
+          <Button onClick={onSendToKitchen} disabled={lines.length === 0}>
+            Kirim ke Dapur
           </Button>
         </div>
       </div>

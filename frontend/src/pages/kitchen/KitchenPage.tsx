@@ -7,9 +7,12 @@ import { OrderTicket } from './OrderTicket'
 
 export function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [error, setError] = useState('')
 
   const loadOrders = useCallback(() => {
-    api.getOrders().then(setOrders)
+    api.getOrders().then(setOrders).catch(() => {
+      setError('Gagal memuat pesanan. Cek koneksi ke server.')
+    })
   }, [])
 
   useEffect(() => {
@@ -21,8 +24,12 @@ export function KitchenPage() {
   }, [loadOrders])
 
   async function handleAdvanceItem(orderId: number, itemId: number, status: OrderItem['status']) {
-    await api.updateItemStatus(orderId, itemId, status)
-    loadOrders()
+    try {
+      await api.updateItemStatus(orderId, itemId, status)
+      loadOrders()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal memperbarui status item.')
+    }
   }
 
   const activeOrders = orders
@@ -34,6 +41,9 @@ export function KitchenPage() {
       <TopNavBar />
 
       <main className="flex-1 p-6">
+        {error && (
+          <div className="mb-4 rounded-lg bg-status-danger/15 px-4 py-2 text-body text-status-danger">{error}</div>
+        )}
         {activeOrders.length === 0 ? (
           <div className="flex h-full min-h-[60vh] items-center justify-center">
             <div className="text-center">

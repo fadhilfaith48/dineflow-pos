@@ -1,0 +1,15 @@
+# Program eksternal (bukan kode proyek)
+cloudflared.exe
+cloudflared-windows-amd64.exe
+
+# Backup lokal
+backup-pre-presentasi/
+
+# Node
+node_modules
+dist
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
