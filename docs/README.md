@@ -62,7 +62,7 @@ npm test           # vitest (18 tes: service layer & guard role)
   foto upload, race condition (`lockForUpdate`).
 - ✅ **Upload repo ke GitHub SELESAI** — repo public `github.com/fadhilfaith48/dineflow-pos`.
 - ✅ **Uji manual menyeluruh SELESAI** — `uji manual.md` §1–§7 semua lolos.
-- ➡️ **Deployment (Vercel + Render)** — panduan siap pakai di `deployment.md`.
+- ➡️ **Deployment (multi-jalur)** — panduan berjenjang di `deployment.md` (server sekolah → VPS IDCloudHost → Railway).
 - Detail: `frontend/PROGRESS.md` dan `todo.md`.
 
 ## Dokumen Referensi (folder `docs/`)

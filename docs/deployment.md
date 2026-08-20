@@ -1,245 +1,227 @@
-# Panduan Deployment DineFlow POS (Vercel + Render)
+# Panduan Deployment DineFlow POS (Multi-Jalur)
 
-Runbook men-deploy **keduanya** ke production:
-- **Frontend** (React SPA) → **Vercel**
-- **Backend** (Laravel API + Reverb) → **Render**
-- Database & Redis → layanan managed (lihat §5)
+Runbook men-deploy DineFlow POS ke production, disusun **berjenjang** sesuai kondisi
+pengguna (pelajar tanpa kartu kredit, tanpa penghasilan). Dokumen ini juga menjadi
+**acuan tetap** untuk proyek-proyek berikutnya: setup sekali, tinggal tambah proyek.
 
-> Status: **deploy sedang berjalan** (Tahap 0 kode selesai `e0daf66`; provider disesuaikan saat eksekusi).
-> Repo: `github.com/fadhilfaith48/dineflow-pos` (branch `main`).
+> Status: **sistem ±90% jalan lokal**; deploy online menunggu keputusan hosting
+> (tanya server sekolah dulu → baru VPS). Repo: `github.com/fadhilfaith48/dineflow-pos`
+> (branch `main`).
+
+---
+
+## §0 Tabel Keputusan Berjenjang
+
+Pilih jalur sesuai kondisi — urutan dari yang paling hemat:
+
+| # | Jalur | Biaya | Kartu? | Muat Reverb/Redis? | Keterangan |
+|---|---|---|---|---|---|
+| 1 | **Server Sekolah** | Rp0 | Tidak | ✅ | Tanya pembimbing dulu (lihat §2) |
+| 2 | **VPS IDCloudHost 2GB** | Rp87.000/bln | Tidak (GoPay/OVO) | ✅ | **Jalur produksi utama** (lihat §1) |
+| 3 | **Railway** (trial 30 hari) | $5 credit sekali | Tidak | ⚠️ sementara | Coba-coba / bukti deploy (lihat §3) |
+| ✗ | diskon.com / InfinityFree (backend) | Rp0 | Tidak | ❌ | Shared hosting: tanpa Reverb/Redis → KDS mati |
+| ✗ | Oracle / Render / AWS | Rp0 | **Wajib** | ✅ | Blokir tanpa kartu; AWS hanya 12 bln (lihat §4) |
+
+**Inti masalah:** DineFlow butuh **Reverb (WebSocket) + Redis** untuk Kitchen Display
+real-time. Itu hanya bisa di server dengan kontrol penuh (VPS / server sekolah) — bukan
+shared hosting. Bukan karena Laravel berat.
+
+---
+
+## §1 JALUR UTAMA — VPS IDCloudHost (Rp87.000/bln)
+
+**Spesifikasi:** 2 Core / 2GB RAM / 20GB NVMe, "Pay as You Grow" (billing per jam, cap
+bulanan ±Rp87.000). Bayar **GoPay/OVO** (tanpa kartu). Upgrade CPU/RAM **langsung dari
+console tanpa migrasi** (data aman).
+
+> **Estimasi kapasitas:** nyaman untuk **1–2 proyek skala DineFlow** (tiap proyek
+> ±700–900MB RAM) atau 2–3 proyek kecil. Untuk 3+ proyek, upgrade ke 4GB (±Rp225.000).
+> Biaya **flat** Rp87.000 — tidak naik per proyek selama muat di 2GB.
 >
-> **Penyesuaian saat eksekusi (sesi deploy):** Render mewajibkan kartu kredit untuk
-> membuat Redis & PostgreSQL (free sudah tidak tersedia untuk akun baru) → Redis dipakai
-> **Upstash** (gratis) dan PostgreSQL dipakai **Neon** (gratis). Storage foto = **Supabase**
-> (S3-compatible). Rincian di §5–§6.
+> **Alternatif lebih murah:** DomaiNesia Cloud VPS Lite 1GB — Rp43.200/bln (promo
+> `CLOUDVPSHEMAT`, wajib bayar 1 tahun ±Rp518rb, GoPay/OVO). Muat 1 proyek saja.
 
----
+### 1.1 Prasyarat
+- Akun [IDCloudHost](https://console.idcloudhost.com) (daftar, verifikasi, siapkan
+  GoPay/OVO) — harga final cek di console saat checkout.
+- Repo di-push ke GitHub `fadhilfaith48/dineflow-pos` (public).
+- `backend/.env` mencontoh produksi (`APP_KEY` via `php artisan key:generate`).
+- `frontend/.env` menyiapkan `VITE_API_URL`, `VITE_REVERB_HOST`, dst (lihat §1.5).
 
-## 1. Arsitektur Target
+### 1.2 Setup Server (sekali untuk banyak proyek)
+1. **Launch VPS** → OS **Ubuntu 24.04** → SSH ke server.
+2. **Instal dasar:** `nginx`, `php8.3-fpm` + ekstensi (`php8.3-mbstring xml curl
+   pgsql zip bcmath gd intl`), `composer`, `postgresql`, `redis-server`, `git`.
+3. **PostgreSQL:** buat database `dineflow_pos` + user khusus.
+4. **Redis:** aktifkan service; untuk broadcast dipakai channel default.
+5. **PHP-FPM + Nginx:** konfigurasi `server` untuk tiap proyek (lihat §1.3).
 
-```
-Browser
-  ├─ https://<fe>.vercel.app        → React SPA (Vercel)
-  │     ├─ API     → https://<api>.onrender.com   (Laravel, Render Web Service A)
-  │     └─ WS      → wss://<reverb>.onrender.com  (Reverb, Render Web Service B)
-  └─ (upload foto → https://<api>.onrender.com/api/menu-items)
-
-Render Web Service A (Laravel API)
-  ├─ PostgreSQL (Neon, external) — database
-  ├─ Redis (Upstash, external) — broadcast + cache + queue
-  └─ Foto menu → Supabase Storage (S3-compatible)
-
-Render Web Service B (Reverb WebSocket)
-  └─ Redis yang sama (Upstash) — Reverb memakai Redis channel
-```
-
-**Penting**: Reverb harus **service terpisah** yang selalu menyala (WebSocket bersifat
-persisten). Jangan dijalankan di dalam proses `php artisan serve` API.
-
----
-
-## 2. Prasyarat
-
-- Akun [Vercel](https://vercel.com) & [Render](https://render.com).
-- Repo sudah di-push ke GitHub `fadhilfaith48/dineflow-pos` (public).
-- Di `backend/`: `.env` mencontoh produksi (isi `APP_KEY` via `php artisan key:generate`).
-- Di `frontend/`: `package.json` (build script `vite build`) sudah benar.
-
----
-
-## 3. Render — Web Service A (Laravel API)
-
-### 3.1 Buat Web Service
-> **Penting:** Render **tidak menyediakan runtime PHP** di dropdown Language (hanya
-> Node/Python/Go/Ruby/dll + **Docker**). Laravel di-deploy via **runtime Docker**:
-> gunakan `backend/Dockerfile` (PHP 8.3-cli + `pdo_pgsql` untuk Neon + `pcntl` untuk
-> Reverb + composer).
-
-1. Render → **New** → **Web Service** → pilih repo GitHub `dineflow-pos`.
-2. **Root Directory**: `backend`
-3. **Language / Environment**: **Docker** (Render membaca `Dockerfile`).
-4. **Build Command**: kosong (semua di `Dockerfile`).
-5. **Start Command**:
+### 1.3 Deploy DineFlow di VPS
+1. `git clone https://github.com/fadhilfaith48/dineflow-pos.git` → `backend/`.
+2. `composer install --optimize-autoloader --no-dev`.
+3. Salin `.env.example` → `.env`; isi sesuai tabel env di Lampiran A.
+4. `php artisan key:generate`.
+5. `php artisan migrate --force && php artisan db:seed --force` (data demo: admin/1234,
+   19 menu, 8 meja).
+6. **Nginx** (root ke `backend/public`, `try_files` ke `index.php`, proxy PHP-FPM).
+7. **Reverb sebagai systemd service** (agar selalu jalan):
    ```
-   php artisan migrate --force --no-interaction && php artisan serve --host 0.0.0.0 --port $PORT
+   php artisan reverb:start --host=0.0.0.0 --port=8080
    ```
-   - Migrate dijalankan tiap start (idempotent) supaya skema selalu terkini.
-   - Foto menu via **Supabase S3** (lihat §6) — `storage:link` TIDAK diperlukan.
-   - **Health Check Path**: kosongkan (app tidak punya route `/healthz`).
+   Buat unit `systemd` dengan `Restart=always` (persis pola §2.7 di dokumen temanmu).
+8. **Foto menu:** simpan lokal di `storage/app/public` + `php artisan storage:link`
+   (VPS bersifat persisten, tidak ephemeral seperti PaaS).
+9. **Frontend:** build `npm run build` → arahkan Nginx (atau deploy ke Vercel/Cloudflare
+   Workers secara terpisah, lihat §1.5).
 
-### 3.2 Env (tab Environment)
-| Var | Nilai produksi | Catatan |
+### 1.4 Tambah Proyek Baru (5–10 menit)
+Tiap proyek berikutnya cukup:
+1. Upload/buka folder project baru di server.
+2. Buat config Nginx baru (`/etc/nginx/sites-available/<proyek>` → symlink ke
+   `sites-enabled`).
+3. Buat database PostgreSQL baru.
+4. `systemctl reload nginx`.
+> Redis, PHP, dan Nginx sudah terpasang — tidak perlu instal ulang.
+
+### 1.5 Frontend
+Frontend React bisa gratis di salah satu:
+- **Vercel** (build `npm run build`, preset Vite; env `VITE_*` dibaca saat build — set
+  sebelum build pertama), atau
+- **Cloudflare Workers** (butuh Wrangler), atau
+- **InfinityFree** (upload statis via FTP) — paling sederhana tapi manual.
+
+Env frontend (Vercel contoh):
+| Var | Nilai |
+|---|---|
+| `VITE_API_URL` | `https://<domain-vps>/api` |
+| `VITE_REVERB_APP_KEY` | `dinflow-pos-key` (sama dengan backend) |
+| `VITE_REVERB_HOST` | `<domain-vps>` |
+| `VITE_REVERB_PORT` | `443` |
+| `VITE_REVERB_SCHEME` | `https` |
+
+---
+
+## §2 JALUR SEKOLAH — Server Sekolah / Oracle Academy (Rp0)
+
+1. **Tanya pembimbing** (pertanyaan sudah ada di `docs/catatan-presentasi.md`): apakah
+   sekolah menyediakan server/VPS gratis, speknya, dan ada akses SSH/root?
+2. Kalau ya → setup sama persis dengan §1 (nginx + PHP + PostgreSQL + Redis + Reverb),
+   hanya di komputer sekolah.
+3. **URL publik tanpa IP statis/port forwarding:** pakai **cloudflared tunnel**
+   (gratis) → dapat URL `https://xxx.trycloudflare.com`. Syarat: server harus nyala
+   saat demo.
+4. **Oracle Academy:** kalau sekolah mau mendaftarkan kamu ke Oracle Academy, kamu bisa
+   dapat **Oracle Always Free tanpa kartu** (lihat §4.1) — server 24GB RAM gratis
+   selamanya, paling besar di antara semua opsi.
+
+---
+
+## §3 OPSI SEMENTARA — Railway (trial 30 hari, tanpa kartu)
+
+- Daftar **tanpa kartu**, dapat $5 credit untuk 30 hari.
+- Support Docker + PostgreSQL + Redis → DineFlow bisa jalan.
+- **Catatan penting:** credit $5 **tidak cukup** untuk 4 service permanen
+  (API + Reverb + DB + Redis) — habis dalam hitungan hari. Cocok untuk **uji coba /
+  bukti deploy di laporan**, bukan hosting tetap.
+
+---
+
+## §4 CATATAN "TIDAK BISA / BELUM"
+
+### 4.1 Oracle Always Free
+- Free tier **paling besar**: server Arm 4 OCPU / **24GB RAM** + 200GB storage, **gratis
+  selamanya** (tidak ada batas 12 bulan), muat banyak proyek.
+- **Penghalang:** wajib **kartu kredit** saat daftar (hanya verifikasi, tidak di-charge
+  selama dalam kuota free). Jangan sentuh layanan berbayar, jangan biarkan akun idle
+  >30 hari (bisa diterminasi).
+- **Tanpa kartu:** lewat **Oracle Academy** (kamu terdaftar sebagai siswa) → tanyakan ke
+  pembimbing.
+
+### 4.2 Render
+- Mewajibkan **kartu kredit** untuk akun baru (free tidak tersedia lagi) → **belum bisa**
+  untukmu. Dulu jalur utama dokumen ini adalah Vercel+Render+Neon+Upstash+Supabase —
+  detail teknisnya tetap dipakai sebagai referensi di Lampiran A.
+
+### 4.3 AWS (Free Tier)
+- Wajib **kartu kredit**; free tier **hanya 12 bulan**; setelah itu **tagihan otomatis**
+  ke kartu (±$15–25/bln per proyek). Proyek ke-2+ langsung berbayar sejak dibuat.
+  Tidak direkomendasikan untuk pelajar tanpa penghasilan.
+
+### 4.4 diskon.com / InfinityFree (dan shared hosting lain)
+- **Tidak bisa jadi backend DineFlow:** shared hosting **melarang proses jangka panjang**
+  → **Reverb/WebSocket tidak mungkin** dan **Redis tidak bisa di-install**. Tanpa
+  keduanya, Kitchen Display real-time mati.
+- **Bisa** dipakai untuk: **frontend statis** (upload build React via FTP), blog,
+  WordPress, landing page.
+- Catatan keamanan: tautan diskon.com yang beredar biasanya **link afiliasi** (kode
+  reseller orang lain).
+
+---
+
+## Lampiran A — Tabel Env Backend (berlaku untuk semua jalur VPS/server)
+
+| Var | Nilai | Catatan |
 |---|---|---|
 | `APP_ENV` | `production` | |
 | `APP_DEBUG` | `false` | |
-| `APP_URL` | `https://<api>.onrender.com` | URL service ini |
+| `APP_URL` | `https://<domain>` | URL backend |
 | `APP_KEY` | hasil `key:generate` | jangan bocor |
-| `DB_CONNECTION` | `pgsql` | via Neon (lihat §5.1) |
-| `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | dari Neon | |
+| `DB_CONNECTION` | `pgsql` | PostgreSQL |
+| `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | dari server | |
 | `BROADCAST_CONNECTION` | `reverb` | |
-| `QUEUE_CONNECTION` | `sync` | prototype tanpa worker; `redis` bila pakai queue |
+| `QUEUE_CONNECTION` | `sync` | prototype; `redis` bila pakai queue |
 | `CACHE_STORE` | `redis` | |
 | `SESSION_DRIVER` | `redis` (atau `database`) | |
-| `REDIS_CLIENT` | `predis` | |
-| `REDIS_URL` | `tls://default:<token>@<host>:<port>` | dari **Upstash** (menggantikan REDIS_HOST/PORT/PASSWORD) |
-| `REVERB_APP_ID` | mis. `dinflow-pos` | **sama** dengan service Reverb & `VITE_REVERB_APP_KEY` |
+| `REDIS_CLIENT` | `phpredis` / `predis` | sesuaikan instalasi |
+| `REDIS_HOST` / `REDIS_PORT` | `127.0.0.1` / `6379` | Redis lokal VPS |
+| `REVERB_APP_ID` | `dinflow-pos` | **sama** dengan `VITE_REVERB_APP_KEY` |
 | `REVERB_APP_KEY` | `dinflow-pos-key` | **sama** di semua service |
-| `REVERB_APP_SECRET` | rahasia | **sama** di semua service |
-| `FILESYSTEM_DISK` | `s3` | foto menu di Supabase |
-| `PHOTO_DISK` | `s3` | disk penyimpanan foto (`public` untuk lokal) |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | dari Supabase S3 Access Keys | |
-| `AWS_DEFAULT_REGION` | region project Supabase | mis. `ap-southeast-1` |
-| `AWS_BUCKET` | `menu-photos` | nama bucket Supabase |
-| `AWS_ENDPOINT` | `https://<projectref>.supabase.co/storage/v1/s3` | endpoint S3 Supabase |
-| `AWS_URL` | `https://<projectref>.supabase.co/storage/v1/object/public/menu-photos` | URL publik foto |
-| `AWS_USE_PATH_STYLE_ENDPOINT` | `true` | wajib untuk Supabase S3 |
+| `REVERB_APP_SECRET` | rahasia | |
+| `REVERB_SERVER_HOST` | `0.0.0.0` | |
+| `REVERB_SERVER_PORT` | `8080` | |
+| `REVERB_SERVER_HOSTNAME` | domain VPS, **tanpa** `wss://` | |
+| `REVERB_SERVER_SCHEME` | `https` | |
+| `FILESYSTEM_DISK` / `PHOTO_DISK` | `public` (VPS) atau `s3` | lokal VPS = `public` + `storage:link` |
 | `FRONTEND_URL` | `https://<fe>.vercel.app` | origin CORS |
-| `TRUSTED_PROXIES` | `*` | Render di belakang proxy |
+| `TRUSTED_PROXIES` | `*` | bila di belakang proxy/cloudflare |
 
-### 3.3 CORS (back-end → Vercel)
-Di `backend/config/cors.php`, pastikan `allowed_origins` berisi URL Vercel:
+### CORS (back-end → frontend)
+Di `backend/config/cors.php`, pastikan `allowed_origins` berisi URL frontend:
 ```php
 'allowed_origins' => [
     env('FRONTEND_URL', 'http://localhost:5173'),
 ],
 ```
-Lalu set env `FRONTEND_URL` = `https://<fe>.vercel.app` pada service API.
 
----
-
-## 4. Render — Web Service B (Reverb WebSocket)
-
-1. Render → **New** → **Web Service** → repo yang sama.
-2. **Root Directory**: `backend`
-3. **Language / Environment**: **Docker** (image yang sama dengan API).
-4. **Build Command**: kosong. **Start Command**:
-   ```
-   php artisan reverb:start --host=0.0.0.0 --port=$PORT
-   ```
-
-### 4.1 Env
-| Var | Nilai | Catatan |
-|---|---|---|
-| `APP_ENV` | `production` | |
-| `APP_KEY` | sama dengan API | Reverb butuh app key yang sama |
-| `BROADCAST_CONNECTION` | `reverb` | |
-| `REDIS_CLIENT` | `predis` | Redis yang sama (Upstash) |
-| `REDIS_URL` | `tls://default:<token>@<host>:<port>` | dari **Upstash**, sama dengan API |
-| `REVERB_SERVER_HOST` | `0.0.0.0` | |
-| `REVERB_SERVER_PORT` | `$PORT` | Render memberi port acak |
-| `REVERB_SERVER_HOSTNAME` | `https://<reverb>.onrender.com` | hostname publik, **tanpa** `wss://` |
-| `REVERB_SERVER_SCHEME` | `https` | |
-| `REVERB_SERVER_DEBUG` | `false` | |
-| `REVERB_SERVER_ID` | `reverb` | |
-| `REVERB_APP_ID` | sama dengan API | |
-| `REVERB_APP_KEY` / `REVERB_APP_SECRET` | sama dengan API | |
-
-### 4.2 Origin WebSocket
+### Origin WebSocket
 Di `backend/config/reverb.php`, bagian `apps[0].allowed_origins` / `allowed_hosts`
-tambahkan domain Vercel, contoh:
-```php
-'allowed_origins' => ['https://<fe>.vercel.app'],
-'allowed_hosts' => ['localhost:8080', '<reverb>.onrender.com'],
-```
+tambahkan domain frontend + hostname reverb.
 
 ---
 
-## 5. Database & Redis
+## Lampiran B — Referensi Lama (Vercel + Render + Neon + Upstash + Supabase)
 
-> **Catatan:** Render kini **mewajibkan kartu kredit** untuk membuat Redis/PostgreSQL
-> (free sudah tidak tersedia untuk akun baru) → pakai penyedia gratis berikut.
-
-### 5.1 Database — PostgreSQL via Neon (gratis, tanpa kartu)
-1. Daftar di `neon.tech` → **New Project** `dineflow` → Region **Singapore**.
-2. Database pertama dibuat otomatis (`neondb`). Klik **Connect** → salin
-   **Connection String** (`postgres://user:password@host/neondb`).
-3. Set `DB_CONNECTION=pgsql` + pecah URL jadi `DB_HOST/PORT/DATABASE/USERNAME/PASSWORD`.
-   - Keunggulan Neon: free tier, **auto-wake** saat ada koneksi (tidak perlu resume manual).
-   - Alternatif bila ada kartu: PostgreSQL managed Render (`DB_CONNECTION=pgsql`).
-
-### 5.2 Redis — Upstash (gratis, tanpa kartu)
-1. Daftar di `upstash.com` → **Create Database** → type **Redis** → name `dineflow-redis`
-   → Region **Singapore**.
-2. Salin **host**, **port**, dan **token** dari halaman database.
-3. Set di **kedua** service (API & Reverb): `REDIS_CLIENT=predis` dan
-   `REDIS_URL=tls://default:<token>@<host>:<port>` (TLS via predis).
+Runbook lama untuk jalur multi-layanan gratis **tetap valid secara teknis** (Dockerfile
+`backend/Dockerfile`: PHP 8.3 + `pdo_pgsql` + `pcntl`; env tabel di atas; Neon §5.1,
+Upstash §5.2, Supabase §6, Vercel §7, checklist verifikasi §8). Referensi tersebut
+tersimpan di riwayat commit repo. Halangan utamanya: **Render kini wajib kartu kredit**
+untuk akun baru → jalur ini tidak lagi "tanpa kartu".
 
 ---
 
-## 6. Penyimpanan Foto Menu — Supabase Storage (S3-compatible)
+## §9 Checklist Verifikasi Pasca-Deploy (universal)
 
-Filesystem Render bersifat **ephemeral** (hilang saat restart/deploy), jadi foto menu
-disimpan di **Supabase Storage** (gratis 1GB):
-1. Buat project di `supabase.com` → menu **Storage** → bucket publik `menu-photos`.
-2. **Project Settings → Storage → S3 Access Keys** → buat access key → salin
-   **Access Key ID** & **Secret**.
-3. Catat **Project Reference** (`<projectref>`) & **Region** (mis. `ap-southeast-1`).
-4. Isi env service API:
-   | Var | Nilai |
-   |---|---|
-   | `FILESYSTEM_DISK` / `PHOTO_DISK` | `s3` |
-   | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | dari S3 Access Keys |
-   | `AWS_DEFAULT_REGION` | region project |
-   | `AWS_BUCKET` | `menu-photos` |
-   | `AWS_ENDPOINT` | `https://<projectref>.supabase.co/storage/v1/s3` |
-   | `AWS_URL` | `https://<projectref>.supabase.co/storage/v1/object/public/menu-photos` |
-   | `AWS_USE_PATH_STYLE_ENDPOINT` | `true` |
-5. Paket `league/flysystem-aws-s3-v3` sudah terpasang (Tahap 0, commit `e0daf66`).
-   `MenuItemController::resolveImageUrl` memakai disk dari `PHOTO_DISK`.
-   - **Catatan pause:** free tier Supabase di-pause setelah **7 hari tanpa aktivitas** →
-     sebelum demo buka dashboard & klik **Resume** (data aman).
-
-> Alternatif tidak pause: Cloudflare R2 (endpoint `https://<accountid>.r2.cloudflarestorage.com`,
-> `AWS_USE_PATH_STYLE_ENDPOINT=true`, bucket publik via custom domain).
-
----
-
-## 7. Vercel — Frontend
-
-1. Vercel → **Add New** → **Project** → import repo `dineflow-pos`.
-2. **Root Directory**: `frontend`
-3. **Framework Preset**: `Vite` (otomatis: build `npm run build`, output `dist`).
-4. **Env Vars** (Project Settings → Environment Variables):
-   | Var | Nilai |
-   |---|---|
-   | `VITE_API_URL` | `https://<api>.onrender.com/api` |
-   | `VITE_REVERB_APP_KEY` | `dinflow-pos-key` (sama dengan backend) |
-   | `VITE_REVERB_HOST` | `<reverb>.onrender.com` |
-   | `VITE_REVERB_PORT` | `443` |
-   | `VITE_REVERB_SCHEME` | `https` |
-5. Deploy → URL `https://<fe>.vercel.app`.
-
-> `VITE_*` dibaca saat build — set env **sebelum** build pertama. Perubahan env → rebuild.
-
----
-
-## 8. Verifikasi Pasca-Deploy
-
-1. **API**: `curl https://<api>.onrender.com/api/categories` → 200 JSON.
+1. **API**: `curl https://<domain>/api/categories` → 200 JSON.
 2. **Login**: POST `/api/login` (admin/1234) → dapat token.
 3. **Akses publik**: GET `/api/menu-items` tanpa token → 200.
-4. **Foto**: upload menu → URL `/storage/...` dapat diakses (200).
-5. **WebSocket real-time**:
-   - Buka `/menu/T1` (Vercel) di browser, buka DevTools → Network → WS.
-   - Koneksi ke `wss://<reverb>.onrender.com` harus `connected`, subscribe channel `orders`.
-   - Tab lain: Kasir Konfirmasi order → KDS tampil tanpa refresh.
-6. **CORS**: request dari domain Vercel tidak error CORS.
+4. **Foto**: upload menu → URL foto dapat diakses (200).
+5. **WebSocket real-time**: buka Menu Pesan Mandiri di browser, DevTools → Network → WS
+   koneksi `connected`; tab lain: Kasir Konfirmasi order → KDS tampil tanpa refresh.
+6. **CORS**: request dari domain frontend tidak error CORS.
 
----
+## Catatan Umum
 
-## 9. Catatan & Batasan
-
-- **Render meminta kartu untuk Redis/PostgreSQL** (free sudah tidak tersedia untuk akun
-  baru) → dipakai **Upstash (Redis)** & **Neon (PostgreSQL)**. Web Service free biasanya
-  tetap bisa dibuat tanpa kartu; jika diminta kartu, gunakan alternatif gratis (mis. Koyeb).
-- **Free tier**: instance tidur saat idle (cold start beberapa detik); Reverb yang
-  tidur akan memutus WebSocket — untuk demo live sebaiknya instance berbayar / keep-alive.
-- **Neon free**: compute auto-pause tapi **auto-wake** saat ada koneksi (aman).
-- **Supabase free**: project **di-pause setelah 7 hari tanpa aktivitas** → Resume manual
-  di dashboard sebelum demo (data aman).
-- **`php artisan serve`** dipakai karena satu root (bukan nginx virtual host) — cukup untuk
-  prototype; untuk production lebih baik pakai nginx/octane (di luar scope).
-- **Migrate di Start Command** aman untuk prototype; untuk skala lebih besar gunakan
-  satu-off job migrasi.
-- **Jangan pernah** menaruh `.env` di repo; semua rahasia lewat env vars platform.
-- Setelah deploy, update `frontend/PROGRESS.md` & `docs/jurnal-pkl.md` dengan hasilnya.
+- **Jangan pernah** menaruh `.env` di repo; semua rahasia lewat env vars platform/file
+  server.
+- **Demo lokal dulu, deploy setelah presentasi.** Sistem ±90% jalan lokal.
+- Setelah deploy, update `frontend/PROGRESS.md` & `docs/jurnal-pkl.md`.

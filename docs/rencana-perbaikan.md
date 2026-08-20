@@ -42,7 +42,7 @@
 
 ## Setelah Langkah 1–5 (masih kurang)
 - [ ] Deploy C2: Vercel + VPS (DuckDNS/Let's Encrypt) + Neon/Upstash/Supabase
-- [ ] Putuskan jalur: A (VPS Rp53rb), B (server sekolah), C (tunnel)
+- [ ] Putuskan jalur: A (VPS IDCloudHost Rp87rb), B (server sekolah), C (tunnel)
 - [ ] Isi 7 rahasia di backend/.env
 - [ ] Tes backend & frontend lebih lengkap
 - [ ] Sinkronkan PROGRESS.md, todo.md, frontend/.env.example

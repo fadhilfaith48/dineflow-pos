@@ -26,7 +26,7 @@
 > 2. **Persiapan deployment** — supaya bisa diakses online untuk demo, bukan cuma di komputer lokal."
 
 **3. Kendala & rencana (1 menit)**
-> "Kendala utama saya di deployment: hosting yang bisa dipakai **tanpa kartu kredit**, karena saya belum punya kartu. Saya sudah riset: pilihan paling cocok **VPS Indonesia yang bisa bayar pakai e-wallet** (mis. DomaiNesia, sekitar Rp53 ribu/bulan), atau memanfaatkan **server sekolah** kalau bapak/ibu ada yang bisa dibantu. Rencana saya: frontend di Vercel, backend di VPS, database & real-time pakai layanan gratis (Neon + Upstash + Supabase).
+> "Kendala utama saya di deployment: hosting yang bisa dipakai **tanpa kartu kredit**, karena saya belum punya kartu. Saya sudah riset: pilihan paling cocok **VPS Indonesia yang bisa bayar pakai e-wallet** (mis. IDCloudHost, sekitar Rp87 ribu/bulan — atau DomaiNesia mulai Rp43 ribu/bulan), atau memanfaatkan **server sekolah** kalau bapak/ibu ada yang bisa dibantu. Frontend gratis di Vercel, backend di VPS.
 > Target: sistem online siap demo di sesi berikutnya."
 
 **Penutup (30 detik)**
@@ -57,12 +57,18 @@
 
 ### 2. Deployment — VPS gratis atau bayar?
 5. "Apakah sekolah bisa menyediakan **server/VPS gratis**? Kalau iya, speknya bagaimana dan ada akses SSH/root?"
-6. "Kalau tidak ada, apakah boleh saya **sewa VPS DomaiNesia (±Rp53 rb/bln, bayar e-wallet)** untuk sisa masa PKL? Biaya pribadi atau dibantu sekolah?"
+6. "Kalau tidak ada, apakah boleh saya **sewa VPS IDCloudHost (Rp87 ribu/bln, bayar e-wallet)** untuk sisa masa PKL? Biaya pribadi atau dibantu sekolah?"
 7. "Apakah ada alternatif **hosting gratis** yang direkomendasikan sekolah (server lab, akun educational)?"
 8. "Apakah **port 80/443** terbuka dan boleh pakai **domain + SSL**? Berapa lama server bisa dipakai (sampai PKL selesai)?"
+8b. "Apakah sekolah bisa mendaftarkan saya ke **Oracle Academy**? Kalau bisa, saya bisa dapat server Oracle Always Free **tanpa kartu** (24GB RAM, gratis selamanya) untuk semua proyek saya."
+8c. "Salah satu teman saya memakai AWS Free Tier untuk deploy Laravel. Apakah sekolah menyarankan pakai AWS, atau ada aturan khusus untuk itu?"
 
 ### 3. Penilaian/arahan tugas
 9. "Apakah ada fitur/prioritas yang perlu diperbaiki atau ditambah sebelum selesai PKL?"
 10. "Kapan batas akhir PKL dan target minimal yang harus tercapai?"
 
-> **Catatan:** server sekolah = paling murah (Rp0); VPS DomaiNesia = paling stabil (Rp53 rb/bln, bayar e-wallet, tanpa kartu kredit). Vercel/Neon/Upstash/Supabase sudah gratis tanpa kartu. Sistem ±90% jalan lokal; yang kurang hanya deploy online + keputusan hosting.
+> **Catatan:** server sekolah = paling murah (Rp0); VPS IDCloudHost = paling stabil
+> (Rp87 ribu/bln, bayar e-wallet, tanpa kartu kredit, muat 1–2 proyek); Oracle Always
+> Free via Oracle Academy = paling besar & gratis selamanya (24GB RAM). Frontend gratis
+> di Vercel/Cloudflare. Sistem ±90% jalan lokal; yang kurang hanya deploy online +
+> keputusan hosting. Rincian lengkap: `docs/deployment.md`.

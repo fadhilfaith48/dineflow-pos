@@ -1,6 +1,7 @@
-# Catatan Deployment DineFlow POS (18 Agustus 2026)
+# Catatan Deployment DineFlow POS (18 Agustus 2026, diperbarui 20 Agustus)
 
-> Catatan ringkas keputusan & rencana deployment. Baca sebelum lanjut sesi berikutnya.
+> Catatan ringkas keputusan & rencana deployment. **Rujukan final ada di `docs/deployment.md`**
+> (panduan berjenjang). Catatan ini hanya histori/checklist eksekusi.
 
 ## 1. Status proyek
 - **Aplikasi:** DineFlow POS (Kasir, Pelayan, KDS/dapur, Menu QR self-order, Admin).
@@ -16,10 +17,12 @@
 
 | Jalur | Biaya | Plus | Minus | Status |
 |---|---|---|---|---|
-| **A. VPS Indonesia** (DomaiNesia 1GB) | **Rp53.280/bln** (bayar OVO/GoPay) | Cloud murni, 24 jam, seperti teman | bayar tiap bulan | **≈ terpilih** |
+| **A. VPS Indonesia** (IDCloudHost 2GB) | **Rp87.000/bln** (bayar OVO/GoPay) | Cloud murni, 24 jam, muat 1–2 proyek, upgrade mudah | bayar tiap bulan | **jalur produksi utama** |
+| **A2. VPS murah** (DomaiNesia Lite 1GB) | **Rp43.200/bln** (promo, bayar 1 tahun) | paling murah | muat 1 proyek saja | alternatif hemat |
 | **B. Server sekolah** (guru nawarin VPS) | gratis | 24 jam, gratis | tergantung sekolah | tanya guru dulu |
 | **C. Jalur B (PC + tunnel)** | gratis | sudah 50% siap | PC harus nyala | cadangan |
-| **D. Laravel Cloud** | gratis 14 hari | cloud murni, no kartu | kredit habis 14 hari → mati | dicoret |
+| **D. Railway trial** | gratis $5/30 hari | no kartu | cuma sementara | uji coba |
+| **E. Laravel Cloud** | gratis 14 hari | cloud murni, no kartu | kredit habis 14 hari → mati | dicoret |
 
 ## 4. Penjelasan "kok teman bisa" (DeltaJalan)
 - Teman punya **VPS sendiri** → backend Laravel di `/var/www/deltajalan` via **GitHub Actions** (`deploy-backend.yml`), frontend di **Vercel** (`delta-jalan.vercel.app`).
@@ -27,7 +30,7 @@
 - Kita akan **meniru pola ini 100%**.
 
 ## 5. Rencana jalur A (VPS) — sudah disusun
-1. **Beli VPS**: DomaiNesia Lite 1GB, bulanan Rp53.280, Jakarta, **Ubuntu 24.04** (jangan pilih template), daftar pakai NIK.
+1. **Beli VPS**: IDCloudHost 2 Core/2GB/20GB (Rp87.000/bln, billing per jam, bayar OVO/GoPay — tanpa kartu). Alternatif hemat: DomaiNesia Lite 1GB Rp43.200/bln (promo `CLOUDVPSHEMAT`, bayar 1 tahun). OS **Ubuntu 24.04**.
 2. **Domain gratis**: `dineflow.duckdns.org` → A record ke IP VPS. (Domain `fadhilfaith.my.id` **tidak dipakai** — sudah untuk proyek lain.)
 3. **Setup server** via SSH (puTTY): Nginx + PHP-FPM + Redis + supervisor (Reverb).
 4. **Deploy**: `/var/www/dineflow-pos` + GitHub Actions `deploy-backend.yml` (persis temanmu); frontend ke Vercel (`dineflow-pos.vercel.app`).
@@ -36,10 +39,8 @@
 7. **Verifikasi + update docs** (`deployment.md`, `PROGRESS.md`, `workflow.md`).
 
 ## 6. Hal yang masih menggantung (belum dijawab)
-- [ ] Apakah setuju daftar DomaiNesia pakai **NIK**?
-- [ ] Setelah VPS aktif: kirim **IP + password root** ke saya, atau user yang jalanin pakai panduan?
-- [ ] Sudah **tanya guru** soal penawaran VPS sekolah? (nyala 24 jam? boleh install? OS apa?)
-- [ ] Sudah **pilih** jalur final: A (VPS sewa) / B (server sekolah) / C (tunnel)?
+- [ ] Sudah **tanya guru** soal penawaran VPS sekolah? (nyala 24 jam? boleh install? OS apa? + daftarkan ke **Oracle Academy**?)
+- [ ] Sudah **pilih** jalur final: A (VPS IDCloudHost Rp87rb) / B (server sekolah) / C (tunnel)?
 - [ ] Isi 7 nilai rahasia di `backend/.env` (Neon `DB_URL`, Upstash `REDIS_URL`, Supabase `AWS_*`) — tersimpan di password manager.
 
 ## 7. Yang SUDAH selesai disiapkan
