@@ -17,7 +17,7 @@ const STORAGE_KEY = 'dineflow-user'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     try {
       return JSON.parse(raw) as User
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (username: string, password: string) => {
     const loggedIn = await api.login(username, password)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedIn))
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(loggedIn))
     setUser(loggedIn)
     return loggedIn
   }, [])
@@ -36,13 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     api.logout().catch(() => {})
     clearToken()
-    localStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem(STORAGE_KEY)
     setUser(null)
   }, [])
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      localStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem(STORAGE_KEY)
       setUser(null)
     }
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)

@@ -38,6 +38,9 @@
 ## Langkah 5 — Verifikasi
 - [x] php artisan test (3/3 lolos)
 - [x] npm run build + npm run lint (lolos)
+- [x] Real-time Laporan Penjualan: `SalesReport` subscribe `orders`, refetch saat `action=paid` (fix sesi uji manual)
+- [x] Cart Menu QR konsisten mobile: overlay + panel `max-w-md` (fix sesi uji manual)
+- [x] Sesi login per-tab: `localStorage` → `sessionStorage` agar 4 role bisa login serentak (fix sesi uji manual)
 - [ ] Uji manual alur kasir→dapur (server lokal: MySQL + serve + Reverb + dev)
 
 ## Setelah Langkah 1–5 (masih kurang)

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { SalesPeriod, SalesSummary } from '@/types'
 import { api } from '@/services/httpApi'
+import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
 
 const periods: { value: SalesPeriod; label: string }[] = [
@@ -15,13 +16,28 @@ export function SalesReport() {
   const [summary, setSummary] = useState<SalesSummary | null>(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    setSummary(null)
-    setError('')
+  const loadSummary = useCallback((showLoading: boolean) => {
+    if (showLoading) {
+      setSummary(null)
+      setError('')
+    }
     api.getSalesSummary(period).then(setSummary).catch(() => {
       setError('Gagal memuat laporan penjualan. Periksa koneksi lalu coba lagi.')
     })
   }, [period])
+
+  useEffect(() => {
+    loadSummary(true)
+  }, [loadSummary])
+
+  useEffect(() => {
+    echo.channel('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
+      if (event.action === 'paid') loadSummary(false)
+    })
+    return () => {
+      echo.leaveChannel('orders')
+    }
+  }, [loadSummary])
 
   if (error) {
     return <p className="py-12 text-center text-body text-status-danger">{error}</p>

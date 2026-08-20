@@ -11,8 +11,8 @@ import type { User } from '@/types'
 const STORAGE_KEY = 'dineflow-user'
 
 function seedUser(user: User | null) {
-  if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
-  else localStorage.removeItem(STORAGE_KEY)
+  if (user) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+  else sessionStorage.removeItem(STORAGE_KEY)
 }
 
 function mockFetchLogin(role: User['role']) {

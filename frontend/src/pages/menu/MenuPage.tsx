@@ -221,83 +221,85 @@ export function MenuPage() {
       </div>
 
       {view === 'cart' && (
-        <div className="fixed inset-0 z-30 flex flex-col bg-bg-surface">
-          <header className="flex items-center justify-between border-b border-border-subtle px-4 py-4">
-            <h2 className="text-heading font-semibold text-text-primary">Pesanan Anda</h2>
-            <button
-              onClick={() => setView('menu')}
-              aria-label="Tutup"
-              className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </header>
+        <div className="fixed inset-0 z-30 flex justify-center bg-slate-900/40">
+          <div className="flex w-full max-w-md flex-col bg-bg-surface">
+            <header className="flex items-center justify-between border-b border-border-subtle px-4 py-4">
+              <h2 className="text-heading font-semibold text-text-primary">Pesanan Anda</h2>
+              <button
+                onClick={() => setView('menu')}
+                aria-label="Tutup"
+                className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </header>
 
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            {cart.lines.length === 0 ? (
-              <p className="py-10 text-center text-body text-text-secondary">Keranjang kosong.</p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {cart.lines.map((line) => (
-                  <li key={line.menuItemId} className="flex items-center justify-between gap-2 rounded-xl border border-border-subtle p-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-body font-semibold text-text-primary">{line.name}</div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <button
-                          onClick={() => cart.decrement(line.menuItemId)}
-                          aria-label="Kurangi"
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
-                        >
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <path d="M5 12h14" />
-                          </svg>
-                        </button>
-                        <span className="w-6 text-center font-num text-body font-bold">{line.quantity}</span>
-                        <button
-                          onClick={() => cart.increment(line.menuItemId)}
-                          aria-label="Tambah"
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
-                        >
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <path d="M12 5v14M5 12h14" />
-                          </svg>
-                        </button>
+            <div className="flex-1 overflow-y-auto px-4 py-3">
+              {cart.lines.length === 0 ? (
+                <p className="py-10 text-center text-body text-text-secondary">Keranjang kosong.</p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {cart.lines.map((line) => (
+                    <li key={line.menuItemId} className="flex items-center justify-between gap-2 rounded-xl border border-border-subtle p-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-body font-semibold text-text-primary">{line.name}</div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <button
+                            onClick={() => cart.decrement(line.menuItemId)}
+                            aria-label="Kurangi"
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M5 12h14" />
+                            </svg>
+                          </button>
+                          <span className="w-6 text-center font-num text-body font-bold">{line.quantity}</span>
+                          <button
+                            onClick={() => cart.increment(line.menuItemId)}
+                            aria-label="Tambah"
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
+                          >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M12 5v14M5 12h14" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="font-num text-body font-bold text-text-primary">
-                        {formatRupiah(line.price * line.quantity)}
+                      <div className="shrink-0 text-right">
+                        <div className="font-num text-body font-bold text-text-primary">
+                          {formatRupiah(line.price * line.quantity)}
+                        </div>
+                        <div className="font-num text-caption text-text-secondary">
+                          {formatRupiah(line.price)} × {line.quantity}
+                        </div>
                       </div>
-                      <div className="font-num text-caption text-text-secondary">
-                        {formatRupiah(line.price)} × {line.quantity}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="border-t border-border-subtle bg-bg-surface p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-body text-text-secondary">Total</span>
-              <span className="font-num text-heading font-bold text-text-primary">{formatRupiah(cart.summary.total)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <button
-              onClick={handleSubmitOrder}
-              disabled={cart.lines.length === 0 || submitting}
-              className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
-            >
-              {submitting ? 'Mengirim...' : 'Kirim Pesanan'}
-            </button>
-            {submitError && (
-              <p className="mt-2 text-center text-caption font-semibold text-status-danger">{submitError}</p>
-            )}
-            <p className="mt-2 text-center text-caption text-text-secondary">
-              Pembayaran dilakukan di kasir setelah menikmati hidangan.
-            </p>
+
+            <div className="border-t border-border-subtle bg-bg-surface p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-body text-text-secondary">Total</span>
+                <span className="font-num text-heading font-bold text-text-primary">{formatRupiah(cart.summary.total)}</span>
+              </div>
+              <button
+                onClick={handleSubmitOrder}
+                disabled={cart.lines.length === 0 || submitting}
+                className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
+              >
+                {submitting ? 'Mengirim...' : 'Kirim Pesanan'}
+              </button>
+              {submitError && (
+                <p className="mt-2 text-center text-caption font-semibold text-status-danger">{submitError}</p>
+              )}
+              <p className="mt-2 text-center text-caption text-text-secondary">
+                Pembayaran dilakukan di kasir setelah menikmati hidangan.
+              </p>
+            </div>
           </div>
         </div>
       )}
