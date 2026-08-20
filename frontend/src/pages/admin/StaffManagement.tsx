@@ -8,11 +8,12 @@ interface StaffManagementProps {
   onCreate: (input: { name: string; username: string; role: Role }) => Promise<void>
   onUpdateRole: (id: number, role: Role) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  onResetPassword: (id: number) => Promise<void>
 }
 
 const roles: Role[] = ['admin', 'kasir', 'pelayan', 'dapur']
 
-export function StaffManagement({ users, onCreate, onUpdateRole, onDelete }: StaffManagementProps) {
+export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onResetPassword }: StaffManagementProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
@@ -120,14 +121,24 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete }: Sta
                   </select>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Hapus staf ${user.name}?`)) onDelete(user.id)
-                    }}
-                    className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-status-danger hover:bg-status-danger/10"
-                  >
-                    Hapus
-                  </button>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Reset password ${user.name} ke 1234?`)) onResetPassword(user.id)
+                      }}
+                      className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-accent-primary hover:bg-accent-tint"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Hapus staf ${user.name}?`)) onDelete(user.id)
+                      }}
+                      className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-status-danger hover:bg-status-danger/10"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

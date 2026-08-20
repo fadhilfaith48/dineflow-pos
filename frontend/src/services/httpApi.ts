@@ -115,6 +115,13 @@ export class HttpApi implements Api {
     }
   }
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await request('/change-password', {
+      method: 'POST',
+      ...jsonBody({ currentPassword, newPassword, newPassword_confirmation: newPassword }),
+    })
+  }
+
   async getCategories(): Promise<MenuCategory[]> {
     return request<{ data: MenuCategory[] }>('/categories').then(unwrap)
   }
@@ -253,6 +260,10 @@ export class HttpApi implements Api {
 
   async deleteUser(id: number): Promise<void> {
     await request(`/users/${id}`, { method: 'DELETE' })
+  }
+
+  async resetUserPassword(id: number): Promise<void> {
+    await request(`/users/${id}/reset-password`, { method: 'POST' })
   }
 
   async getSalesSummary(period?: SalesPeriod): Promise<SalesSummary> {

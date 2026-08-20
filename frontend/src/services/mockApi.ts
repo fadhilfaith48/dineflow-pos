@@ -26,6 +26,10 @@ export class MockApi implements Api {
     // No-op: MockApi tidak memakai token server.
   }
 
+  async changePassword(): Promise<void> {
+    // No-op: MockApi tidak memakai password server.
+  }
+
   async getCategories(): Promise<MenuCategory[]> {
     return [...mockCategories]
   }
@@ -204,6 +208,10 @@ export class MockApi implements Api {
 
   async deleteUser(id: number): Promise<void> {
     users = users.filter((u) => u.id !== id)
+  }
+
+  async resetUserPassword(): Promise<void> {
+    // No-op: MockApi tidak memakai password per-user.
   }
 
   async getSalesSummary(period: SalesPeriod = 'semua'): Promise<SalesSummary> {

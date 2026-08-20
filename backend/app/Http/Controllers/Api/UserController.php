@@ -66,4 +66,12 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Staf dihapus']);
     }
+
+    public function resetPassword(User $user): JsonResponse
+    {
+        $user->password = Hash::make('1234');
+        $user->save();
+
+        return response()->json(['message' => 'Password staf berhasil direset ke 1234']);
+    }
 }

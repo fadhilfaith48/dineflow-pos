@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{user}', [UserController::class, 'update']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
+        Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
         Route::get('/sales-summary', [SalesSummaryController::class, 'index']);
     });

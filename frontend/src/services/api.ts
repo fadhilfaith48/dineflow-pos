@@ -8,6 +8,7 @@ import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, DiningTable
 export interface Api {
   login(username: string, password: string): Promise<User>
   logout(): Promise<void>
+  changePassword(currentPassword: string, newPassword: string): Promise<void>
   getCategories(): Promise<MenuCategory[]>
   getMenuItems(categoryId?: number): Promise<MenuItem[]>
   getTables(): Promise<DiningTable[]>
@@ -26,6 +27,7 @@ export interface Api {
   createUser(input: { name: string; username: string; role: Role }): Promise<User>
   updateUser(id: number, data: Partial<User>): Promise<User>
   deleteUser(id: number): Promise<void>
+  resetUserPassword(id: number): Promise<void>
   getSalesSummary(period?: SalesPeriod): Promise<SalesSummary>
 }
 

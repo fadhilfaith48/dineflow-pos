@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate, NavLink } from 'react-router-dom'
 import type { Role } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import { roleLabel } from '@/lib/roles'
+import { ChangePasswordModal } from './ChangePasswordModal'
 
 const navItems: { to: string; label: string; roles: Role[] }[] = [
   { to: '/kasir', label: 'Kasir', roles: ['kasir', 'admin'] },
@@ -13,6 +15,7 @@ const navItems: { to: string; label: string; roles: Role[] }[] = [
 export function TopNavBar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const visible = navItems.filter((item) => user && item.roles.includes(user.role))
 
   function handleLogout() {
@@ -52,6 +55,12 @@ export function TopNavBar() {
             </div>
           </div>
           <button
+            onClick={() => setShowChangePassword(true)}
+            className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
+          >
+            Ganti Password
+          </button>
+          <button
             onClick={handleLogout}
             className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
           >
@@ -59,6 +68,11 @@ export function TopNavBar() {
           </button>
         </div>
       )}
+      <ChangePasswordModal
+        open={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onChanged={() => {}}
+      />
     </header>
   )
 }

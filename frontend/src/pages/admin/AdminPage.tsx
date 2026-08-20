@@ -197,6 +197,14 @@ export function AdminPage() {
                 setError(e instanceof Error ? e.message : 'Gagal menghapus staf.')
               }
             }}
+            onResetPassword={async (id) => {
+              try {
+                await api.resetUserPassword(id)
+                loadUsers()
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Gagal mereset password staf.')
+              }
+            }}
           />
         )}
         {tab === 'laporan' && <SalesReport />}

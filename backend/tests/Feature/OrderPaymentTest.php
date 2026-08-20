@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Table;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -54,5 +55,29 @@ class OrderPaymentTest extends TestCase
 
         $this->postJson("/api/orders/{$order->id}/payments", $payload)->assertStatus(201);
         $this->postJson("/api/orders/{$order->id}/payments", $payload)->assertStatus(409);
+    }
+
+    public function test_admin_can_reset_staff_password(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        $staff = User::factory()->create(['role' => 'kasir', 'password' => Hash::make('rahasia')]);
+
+        $this->postJson("/api/users/{$staff->id}/reset-password")
+            ->assertOk()
+            ->assertJson(['message' => 'Password staf berhasil direset ke 1234']);
+
+        $this->assertTrue(Hash::check('1234', $staff->fresh()->password));
+    }
+
+    public function test_non_admin_cannot_reset_staff_password(): void
+    {
+        $kasir = User::factory()->create(['role' => 'kasir']);
+        Sanctum::actingAs($kasir);
+
+        $staff = User::factory()->create(['role' => 'pelayan']);
+
+        $this->postJson("/api/users/{$staff->id}/reset-password")->assertForbidden();
     }
 }
