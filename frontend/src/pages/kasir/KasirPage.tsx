@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod, Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
@@ -12,7 +12,8 @@ import { ReceiptModal, type ReceiptData } from './ReceiptModal'
 import { KasirQueuePanel } from './KasirQueuePanel'
 
 export function KasirPage() {
-  const cart = useCart()
+  const [settings, setSettings] = useState<Settings | null>(null)
+  const cart = useCart(settings?.taxRate)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
@@ -33,6 +34,7 @@ export function KasirPage() {
     }).catch(() => setError('Gagal memuat kategori menu.'))
     api.getMenuItems().then(setItems).catch(() => setError('Gagal memuat menu.'))
     api.getTables().then(setTables).catch(() => setError('Gagal memuat meja.'))
+    api.getSettings().then(setSettings).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -126,6 +128,10 @@ export function KasirPage() {
         total: order.total,
         method: payment.method,
         change: payment.change ?? undefined,
+        taxRate: settings?.taxRate ?? 10,
+        restaurantName: settings?.restaurantName,
+        restaurantAddress: settings?.restaurantAddress,
+        logoUrl: settings?.logoUrl,
       })
       setNoteToPay(null)
       setShowPayment(false)

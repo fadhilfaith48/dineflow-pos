@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Setting;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -57,12 +58,14 @@ class OrderController extends Controller
             $lastId = Order::lockForUpdate()->max('id') ?? 0;
             $orderNumber = 'ORD-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
 
+            $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
+
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'table_id' => $table?->id,
                 'source' => $source,
                 'status' => $source === 'kasir' ? 'diproses' : 'menunggu-konfirmasi',
-                'total' => (int) round($subtotal * 1.1),
+                'total' => (int) round($subtotal * (1 + $taxRate)),
             ]);
 
             foreach ($validated['items'] as $item) {

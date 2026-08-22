@@ -10,8 +10,9 @@ export interface CartLine {
   note?: string
 }
 
-export function useCart() {
+export function useCart(taxRatePercent?: number) {
   const [lines, setLines] = useState<CartLine[]>([])
+  const rate = (taxRatePercent ?? TAX_RATE * 100) / 100
 
   function addItem(item: MenuItem) {
     setLines((prev) => {
@@ -59,9 +60,9 @@ export function useCart() {
 
   const summary = useMemo(() => {
     const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0)
-    const tax = Math.round(subtotal * TAX_RATE)
+    const tax = Math.round(subtotal * rate)
     return { subtotal, tax, total: subtotal + tax }
-  }, [lines])
+  }, [lines, rate])
 
   const itemCount = useMemo(() => lines.reduce((sum, l) => sum + l.quantity, 0), [lines])
 

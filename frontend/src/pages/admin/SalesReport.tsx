@@ -3,6 +3,7 @@ import type { SalesPeriod, SalesSummary } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
+import { Button } from '@/components/Button'
 
 const periods: { value: SalesPeriod; label: string }[] = [
   { value: 'harian', label: 'Hari ini' },
@@ -15,6 +16,7 @@ export function SalesReport() {
   const [period, setPeriod] = useState<SalesPeriod>('semua')
   const [summary, setSummary] = useState<SalesSummary | null>(null)
   const [error, setError] = useState('')
+  const [exporting, setExporting] = useState(false)
 
   const loadSummary = useCallback((showLoading: boolean) => {
     if (showLoading) {
@@ -39,6 +41,23 @@ export function SalesReport() {
     }
   }, [loadSummary])
 
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const blob = await api.exportSalesReport(period)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `laporan-penjualan-${period}-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('Gagal export laporan. Coba lagi.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (error) {
     return <p className="py-12 text-center text-body text-status-danger">{error}</p>
   }
@@ -49,18 +68,23 @@ export function SalesReport() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        {periods.map((p) => (
-          <button
-            key={p.value}
-            onClick={() => setPeriod(p.value)}
-            className={`rounded-lg px-4 py-2 text-body font-semibold transition-colors ${
-              period === p.value ? 'bg-accent-primary text-text-on-accent' : 'bg-bg-surface text-text-secondary'
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <div className="flex gap-2">
+          {periods.map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPeriod(p.value)}
+              className={`rounded-lg px-4 py-2 text-body font-semibold transition-colors ${
+                period === p.value ? 'bg-accent-primary text-text-on-accent' : 'bg-bg-surface text-text-secondary'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <Button variant="outline" onClick={handleExport} disabled={exporting}>
+          {exporting ? 'Export...' : 'Export CSV'}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

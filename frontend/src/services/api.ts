@@ -1,4 +1,4 @@
-import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, DiningTable, SalesSummary, SalesPeriod, User, Role } from '@/types'
+import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, DiningTable, SalesSummary, SalesPeriod, User, Role, Settings } from '@/types'
 
 /**
  * Kontrak API yang dipakai seluruh halaman.
@@ -29,6 +29,10 @@ export interface Api {
   deleteUser(id: number): Promise<void>
   resetUserPassword(id: number): Promise<void>
   getSalesSummary(period?: SalesPeriod): Promise<SalesSummary>
+  getSettings(): Promise<Settings>
+  updateSettings(data: Partial<Settings>): Promise<Settings>
+  uploadLogo(file: File): Promise<{ logoUrl: string }>
+  exportSalesReport(period?: SalesPeriod): Promise<Blob>
 }
 
 export interface CreateMenuItemInput {

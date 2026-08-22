@@ -12,6 +12,10 @@ export interface ReceiptData {
   total: number
   method: PaymentMethod
   change?: number
+  taxRate?: number
+  restaurantName?: string
+  restaurantAddress?: string
+  logoUrl?: string
 }
 
 interface ReceiptModalProps {
@@ -22,7 +26,7 @@ interface ReceiptModalProps {
 export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
   function handleCopy() {
     const lines = [
-      'DINEFLOW RESTAURANT',
+      receipt.restaurantName || 'DINEFLOW RESTAURANT',
       receipt.orderNumber,
       receipt.tableLabel,
       new Date(receipt.createdAt).toLocaleString('id-ID'),
@@ -32,7 +36,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
       ),
       '------------------------------',
       `Subtotal\t${formatRupiah(receipt.subtotal)}`,
-      `Pajak 10%\t${formatRupiah(receipt.tax)}`,
+      `Pajak ${receipt.taxRate ?? 10}%\t${formatRupiah(receipt.tax)}`,
       `TOTAL\t${formatRupiah(receipt.total)}`,
       `Bayar\t${receipt.method === 'tunai' ? 'Tunai' : 'QRIS'}`,
       ...(receipt.change != null ? [`Kembalian\t${formatRupiah(receipt.change)}`] : []),
@@ -47,8 +51,11 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
       <div className="w-full max-w-sm overflow-hidden rounded-xl bg-bg-surface shadow-modal">
         <div id="print-area" className="bg-white p-5 font-mono text-[12px] text-black">
           <div className="text-center">
-            <div className="text-[15px] font-bold tracking-wide">DINEFLOW RESTAURANT</div>
-            <div className="mt-0.5">Jl. Raya No. 1, Jakarta</div>
+            {receipt.logoUrl && (
+              <img src={receipt.logoUrl} alt="Logo" className="mx-auto mb-2 h-12 w-12 object-contain" />
+            )}
+            <div className="text-[15px] font-bold tracking-wide">{receipt.restaurantName || 'DINEFLOW RESTAURANT'}</div>
+            <div className="mt-0.5">{receipt.restaurantAddress || 'Jl. Raya No. 1, Jakarta'}</div>
             <div className="mt-2">{receipt.orderNumber}</div>
             <div>{receipt.tableLabel}</div>
             <div>{new Date(receipt.createdAt).toLocaleString('id-ID')}</div>
@@ -73,7 +80,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
             <span>{formatRupiah(receipt.subtotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Pajak 10%</span>
+            <span>Pajak {receipt.taxRate ?? 10}%</span>
             <span>{formatRupiah(receipt.tax)}</span>
           </div>
           <div className="mt-1 flex justify-between font-bold">

@@ -1,5 +1,5 @@
 import type { Api, CartItemInput, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
-import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesSummary, User } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesSummary, Settings, User } from '@/types'
 import { MOCK_PASSWORD, TAX_RATE, mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
 
 let orders: Order[] = [...mockOrders]
@@ -247,6 +247,22 @@ export class MockApi implements Api {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
     return { totalRevenue, orderCount: settled.length, topItems }
+  }
+
+  async getSettings(): Promise<Settings> {
+    return { taxRate: TAX_RATE * 100, restaurantName: 'DINEFLOW RESTAURANT', restaurantAddress: 'Jl. Raya No. 1, Jakarta' }
+  }
+
+  async updateSettings(_data: Partial<Settings>): Promise<Settings> {
+    return this.getSettings()
+  }
+
+  async uploadLogo(): Promise<{ logoUrl: string }> {
+    return { logoUrl: '' }
+  }
+
+  async exportSalesReport(): Promise<Blob> {
+    return new Blob(['mock export'], { type: 'text/csv' })
   }
 }
 

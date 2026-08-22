@@ -6,6 +6,7 @@ use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Setting;
 use App\Models\Table;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -15,10 +16,18 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->seedSettings();
         $this->seedUsers();
         $this->seedMenu();
         $this->seedTables();
         $this->seedOrders();
+    }
+
+    private function seedSettings(): void
+    {
+        Setting::setValue('tax_rate', '10');
+        Setting::setValue('restaurant_name', 'DINEFLOW RESTAURANT');
+        Setting::setValue('restaurant_address', 'Jl. Raya No. 1, Jakarta');
     }
 
     private function seedUsers(): void

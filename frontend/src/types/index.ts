@@ -89,3 +89,10 @@ export interface SalesSummary {
   orderCount: number
   topItems: TopSellingItem[]
 }
+
+export interface Settings {
+  taxRate: number
+  restaurantName: string
+  restaurantAddress: string
+  logoUrl?: string
+}

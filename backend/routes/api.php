@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SalesSummaryController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
         Route::get('/sales-summary', [SalesSummaryController::class, 'index']);
+        Route::get('/sales-summary/export', [SalesSummaryController::class, 'export']);
+
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::put('/settings', [SettingController::class, 'update']);
+        Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
     });
 
     Route::get('/orders', [OrderController::class, 'index'])->middleware('role:kasir,pelayan,dapur,admin');

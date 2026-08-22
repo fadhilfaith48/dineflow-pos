@@ -13,6 +13,7 @@ import type {
   Role,
   SalesPeriod,
   SalesSummary,
+  Settings,
   User,
 } from '@/types'
 
@@ -269,6 +270,37 @@ export class HttpApi implements Api {
   async getSalesSummary(period?: SalesPeriod): Promise<SalesSummary> {
     const query = period ? `?period=${period}` : ''
     return request<SalesSummary>(`/sales-summary${query}`)
+  }
+
+  async getSettings(): Promise<Settings> {
+    return request<Settings>('/settings')
+  }
+
+  async updateSettings(data: Partial<Settings>): Promise<Settings> {
+    return request<Settings>('/settings', {
+      method: 'PUT',
+      ...jsonBody(data),
+    })
+  }
+
+  async uploadLogo(file: File): Promise<{ logoUrl: string }> {
+    const formData = new FormData()
+    formData.append('logo', file)
+    return request<{ logoUrl: string }>('/settings/logo', {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
+  async exportSalesReport(period?: SalesPeriod): Promise<Blob> {
+    const query = period ? `?period=${period}` : ''
+    const headers = new Headers()
+    headers.set('Accept', 'text/csv')
+    const token = getToken()
+    if (token) headers.set('Authorization', `Bearer ${token}`)
+    const res = await fetch(`${BASE_URL}/sales-summary/export${query}`, { headers })
+    if (!res.ok) throw new Error('Gagal export laporan')
+    return res.blob()
   }
 }
 
