@@ -221,7 +221,7 @@ export function MenuPage() {
       </div>
 
       {view === 'cart' && (
-        <div className="fixed inset-0 z-30 flex justify-center bg-slate-900/40">
+        <div className="fixed inset-0 z-30 flex justify-center bg-text-primary/40">
           <div className="flex w-full max-w-md flex-col bg-bg-surface">
             <header className="flex items-center justify-between border-b border-border-subtle px-4 py-4">
               <h2 className="text-heading font-semibold text-text-primary">Pesanan Anda</h2>

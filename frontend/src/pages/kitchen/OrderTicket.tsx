@@ -82,7 +82,7 @@ export function OrderTicket({ order, onAdvanceItem }: OrderTicketProps) {
                   {next && (
                     <button
                       onClick={() => onAdvanceItem(order.id, item.id, next)}
-                      className="mt-2 block rounded-md bg-accent-primary px-4 py-2 text-[16px] font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+                      className="mt-2 block rounded-lg bg-accent-primary px-4 py-2 text-[16px] font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
                     >
                       {next === 'dimasak' ? 'Mulai Masak' : 'Siap Saji'}
                     </button>

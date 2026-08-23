@@ -150,7 +150,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
       </div>
 
       {qrTable && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
           <div className="w-full max-w-sm rounded-xl bg-bg-surface p-6 text-center shadow-modal">
             <h3 className="text-heading font-semibold text-text-primary">QR Meja {qrTable.number}</h3>
             <p className="mt-1 text-caption text-text-secondary">Scan untuk pesan mandiri di meja ini</p>

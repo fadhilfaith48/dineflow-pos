@@ -20,8 +20,10 @@
   --color-status-new: #64748b;
   --color-status-cooking: #f59e0b;
   --color-status-ready: #16a34a;
+  --color-status-ready-hover: #15803d;
   --color-status-done: #2563eb;
   --color-status-danger: #dc2626;
+  --color-status-danger-hover: #b91c1c;
 
   --color-text-primary: #0f172a;
   --color-text-secondary: #64748b;

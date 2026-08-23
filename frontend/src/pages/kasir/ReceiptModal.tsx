@@ -47,7 +47,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
       <div className="w-full max-w-sm overflow-hidden rounded-xl bg-bg-surface shadow-modal">
         <div id="print-area" className="bg-white p-5 font-mono text-[12px] text-black">
           <div className="text-center">

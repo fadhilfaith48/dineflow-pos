@@ -214,7 +214,7 @@ export function KasirPage() {
       />
 
       {error && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-status-danger px-4 py-2 text-body text-white shadow-modal">
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-status-danger px-4 py-2 text-body text-text-on-accent shadow-dropdown">
           {error}
         </div>
       )}

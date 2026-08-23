@@ -71,7 +71,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
       <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal">
         <div className="flex items-center justify-between">
           <h3 className="text-heading font-semibold text-text-primary">{title}</h3>
@@ -309,7 +309,9 @@ export function MenuManagement({
                       <button
                         onClick={() => onToggleAvailable(item)}
                         className={`rounded-lg px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-on-accent ${
-                          item.available ? 'bg-status-danger hover:bg-red-700' : 'bg-status-ready hover:bg-green-700'
+                          item.available
+                            ? 'bg-status-danger hover:bg-status-danger-hover'
+                            : 'bg-status-ready hover:bg-status-ready-hover'
                         }`}
                       >
                         {item.available ? 'Habis' : 'Tersedia'}

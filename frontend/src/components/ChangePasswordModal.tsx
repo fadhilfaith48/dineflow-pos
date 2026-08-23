@@ -53,7 +53,7 @@ export function ChangePasswordModal({ open, onClose, onChanged }: ChangePassword
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
       <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal">
         <div className="flex items-center justify-between">
           <h2 className="text-heading font-semibold text-text-primary">Ganti Password</h2>

@@ -19,7 +19,7 @@ export function Button({
   const variants = {
     primary: 'bg-accent-primary text-text-on-accent hover:bg-accent-primary-hover',
     outline: 'bg-transparent border border-border-subtle text-text-primary hover:bg-bg-secondary',
-    danger: 'bg-status-danger text-white hover:bg-red-700',
+    danger: 'bg-status-danger text-text-on-accent hover:bg-status-danger-hover',
   }
   const sizes = {
     sm: 'px-3 py-1.5 text-caption',
