@@ -7,7 +7,7 @@ use App\Models\Order;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SalesSummaryController extends Controller
 {
@@ -62,7 +62,7 @@ class SalesSummaryController extends Controller
         ]);
     }
 
-    public function export(Request $request): Response
+    public function export(Request $request): StreamedResponse
     {
         $query = Order::where('status', 'selesai')->with(['items', 'payment', 'table']);
         $this->applyFilters($request, $query);

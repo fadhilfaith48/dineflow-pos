@@ -67,4 +67,14 @@ class SalesSummaryTest extends TestCase
             ->assertJsonPath('paymentBreakdown.qris.revenue', 40000)
             ->assertJsonPath('paymentBreakdown.tunai.revenue', 0);
     }
+
+    public function test_export_returns_csv_stream(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+        $response = $this->get('/api/sales-summary/export?period=semua&startDate=2026-08-01&endDate=2026-08-31');
+
+        $response->assertOk();
+        $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+    }
 }

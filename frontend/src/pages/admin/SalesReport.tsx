@@ -3,7 +3,6 @@ import type { SalesPeriod, SalesSummary } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
-import { Button } from '@/components/Button'
 
 const periods: { value: SalesPeriod; label: string }[] = [
   { value: 'harian', label: 'Hari ini' },
@@ -12,9 +11,35 @@ const periods: { value: SalesPeriod; label: string }[] = [
   { value: 'semua', label: 'Semua' },
 ]
 
+/** 12 bulan terakhir untuk dropdown pilih bulan (label bahasa Indonesia). */
+const monthOptions = (() => {
+  const fmt = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+  const now = new Date()
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return {
+      value: `${d.getFullYear()}-${pad(d.getMonth() + 1)}`,
+      label: fmt.format(d),
+    }
+  })
+})()
+
+/** Konversi "2026-08" → { start: "2026-08-01", end: "2026-08-31" } memakai waktu lokal (aman WIB). */
+function monthBounds(value: string): { start: string; end: string } {
+  const [y, m] = value.split('-').map(Number)
+  const lastDay = new Date(y, m, 0)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return {
+    start: `${y}-${pad(m)}-01`,
+    end: `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`,
+  }
+}
+
 export function SalesReport() {
   const [period, setPeriod] = useState<SalesPeriod>('semua')
   const [range, setRange] = useState({ start: '', end: '' })
+  const [selectedMonth, setSelectedMonth] = useState('')
   const [summary, setSummary] = useState<SalesSummary | null>(null)
   const [error, setError] = useState('')
   const [exporting, setExporting] = useState(false)
@@ -47,6 +72,18 @@ export function SalesReport() {
       echo.leaveChannel('orders')
     }
   }, [loadSummary])
+
+  function pickMonth(value: string) {
+    setSelectedMonth(value)
+    if (!value) return
+    setPeriod('semua')
+    setRange(monthBounds(value))
+  }
+
+  function clearRange() {
+    setRange({ start: '', end: '' })
+    setSelectedMonth('')
+  }
 
   async function handleExport() {
     setExporting(true)
@@ -89,11 +126,27 @@ export function SalesReport() {
             </button>
           ))}
         </div>
+        <select
+          aria-label="Pilih bulan"
+          value={selectedMonth}
+          onChange={(e) => pickMonth(e.target.value)}
+          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
+        >
+          <option value="">Pilih bulan…</option>
+          {monthOptions.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
         <input
           type="date"
           aria-label="Tanggal mulai"
           value={range.start}
-          onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
+          onChange={(e) => {
+            setSelectedMonth('')
+            setRange((r) => ({ ...r, start: e.target.value }))
+          }}
           className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
         />
         <span className="text-caption text-text-secondary">s/d</span>
@@ -101,20 +154,27 @@ export function SalesReport() {
           type="date"
           aria-label="Tanggal akhir"
           value={range.end}
-          onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
+          onChange={(e) => {
+            setSelectedMonth('')
+            setRange((r) => ({ ...r, end: e.target.value }))
+          }}
           className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
         />
         {(range.start || range.end) && (
           <button
-            onClick={() => setRange({ start: '', end: '' })}
+            onClick={clearRange}
             className="rounded-lg bg-bg-surface px-3 py-2 text-caption font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
           >
             Reset tanggal
           </button>
         )}
-        <Button variant="outline" onClick={handleExport} disabled={exporting}>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="rounded-lg bg-bg-surface px-4 py-2 text-body font-semibold text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none"
+        >
           {exporting ? 'Export...' : 'Export CSV'}
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
