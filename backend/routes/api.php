@@ -43,10 +43,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sales-summary', [SalesSummaryController::class, 'index']);
         Route::get('/sales-summary/export', [SalesSummaryController::class, 'export']);
 
-        Route::get('/settings', [SettingController::class, 'index']);
         Route::put('/settings', [SettingController::class, 'update']);
         Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
     });
+
+    Route::get('/settings', [SettingController::class, 'index'])->middleware('role:kasir,admin');
 
     Route::get('/orders', [OrderController::class, 'index'])->middleware('role:kasir,pelayan,dapur,admin');
     Route::patch('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware('role:kasir,admin');

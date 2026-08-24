@@ -411,5 +411,46 @@ Atau pasang **semua di VPS** (PostgreSQL + Redis + Laravel + Reverb) → hemat b
 
 ---
 
+## §7. Catatan Keamanan (hasil audit 24 Agustus 2026)
+
+Audit menyeluruh telah dilakukan dan hasilnya bersih: `npm audit` 0 kerentanan,
+`composer audit` "No security vulnerability advisories found", tidak ada raw SQL
+(Eloquent binding), login & order dilindungi `throttle`, upload foto divalidasi
+(`image`, maks 2 MB), semua model memakai `#[Fillable([...])]` eksplisit, password
+bcrypt, otorisasi per role via middleware. `.env` & database **tidak pernah**
+ter-commit sejak komit pertama (terverifikasi `git log --all`). Jaga pola ini.
+
+### Aturan wajib bila secret produksi tidak sengaja ter-push ke GitHub
+
+Jangan berhenti pada menghapus file — anggap secret sudah bocor dan **WAJIB di-rotate**:
+
+1. Regenerate `APP_KEY` (`php artisan key:generate`) → data terenkripsi lama tidak terbaca, sesi hangus.
+2. Ganti `DB_PASSWORD` di database & `.env`.
+3. Buat ulang `REVERB_APP_ID/KEY/SECRET` acak.
+4. Ganti credential layanan pihak ketiga (Neon/Upstash/Supabase/AWS).
+5. Hapus file dari git + riwayat (`git filter-repo`) atau privatkan repo sementara.
+
+### Audit berkala
+
+- Jalankan `npm audit` (frontend) dan `composer audit` (backend) **sebelum deploy**,
+  lalu sesekali saat maintenance. Catat hasilnya di jurnal.
+
+### Hardening WebSocket untuk production online publik
+
+Channel broadcast saat ini masih **publik** (`new Channel('orders')`, `'menu'`,
+`trackChannel`) — cukup untuk demo lokal karena datanya non-sensitif (nomor order,
+status, nama menu; tanpa data pembayaran). Sebelum dipakai publik sungguhan:
+
+- [ ] Ganti `OrderStatusChanged`/`MenuChanged` ke `PrivateChannel` / `PresenceChannel`.
+- [ ] Tambah route `channels.php` + otorisasi Sanctum per channel.
+- [ ] Sesuaikan subscribe di `echo.ts` menjadi `.private('...')`.
+
+### Lain-lain
+
+- [ ] Pastikan `APP_DEBUG=false` di produksi (sudah ada di langkah §1).
+- [ ] Jangan pernah commit file semacam `.env.production`; pola ignore yang ada sudah menutupinya.
+
+---
+
 > **Status**: Dokumen ini disusun ulang pada 20 Agustus 2026. Pilih jalur sesuai kondisi
 > Anda di §0. Jika ada pertanyaan, tanyakan ke pembimbing PKL.
