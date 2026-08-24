@@ -14,19 +14,26 @@ const periods: { value: SalesPeriod; label: string }[] = [
 
 export function SalesReport() {
   const [period, setPeriod] = useState<SalesPeriod>('semua')
+  const [range, setRange] = useState({ start: '', end: '' })
   const [summary, setSummary] = useState<SalesSummary | null>(null)
   const [error, setError] = useState('')
   const [exporting, setExporting] = useState(false)
+
+  const dateRange = {
+    startDate: range.start || undefined,
+    endDate: range.end || undefined,
+  }
 
   const loadSummary = useCallback((showLoading: boolean) => {
     if (showLoading) {
       setSummary(null)
       setError('')
     }
-    api.getSalesSummary(period).then(setSummary).catch(() => {
+    api.getSalesSummary(period, dateRange).then(setSummary).catch(() => {
       setError('Gagal memuat laporan penjualan. Periksa koneksi lalu coba lagi.')
     })
-  }, [period])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, range.start, range.end])
 
   useEffect(() => {
     loadSummary(true)
@@ -44,7 +51,7 @@ export function SalesReport() {
   async function handleExport() {
     setExporting(true)
     try {
-      const blob = await api.exportSalesReport(period)
+      const blob = await api.exportSalesReport(period, dateRange)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -68,7 +75,7 @@ export function SalesReport() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-2">
           {periods.map((p) => (
             <button
@@ -82,6 +89,29 @@ export function SalesReport() {
             </button>
           ))}
         </div>
+        <input
+          type="date"
+          aria-label="Tanggal mulai"
+          value={range.start}
+          onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+        />
+        <span className="text-caption text-text-secondary">s/d</span>
+        <input
+          type="date"
+          aria-label="Tanggal akhir"
+          value={range.end}
+          onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+        />
+        {(range.start || range.end) && (
+          <button
+            onClick={() => setRange({ start: '', end: '' })}
+            className="rounded-lg bg-bg-surface px-3 py-2 text-caption font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
+          >
+            Reset tanggal
+          </button>
+        )}
         <Button variant="outline" onClick={handleExport} disabled={exporting}>
           {exporting ? 'Export...' : 'Export CSV'}
         </Button>
@@ -112,6 +142,28 @@ export function SalesReport() {
             {formatRupiah(summary.orderCount > 0 ? Math.round(summary.totalRevenue / summary.orderCount) : 0)}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border-subtle bg-bg-surface shadow-card">
+        <div className="border-b border-border-subtle px-4 py-3 text-body font-semibold text-text-primary">
+          Per Metode Bayar
+        </div>
+        <ul className="divide-y divide-border-subtle">
+          {(['tunai', 'qris'] as const).map((method) => {
+            const stat = summary.paymentBreakdown[method]
+            return (
+              <li key={method} className="flex items-center gap-4 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-body font-semibold capitalize text-text-primary">{method}</div>
+                  <div className="font-num text-caption text-text-secondary">{stat.count} transaksi</div>
+                </div>
+                <span className="font-num text-body font-semibold text-text-primary">
+                  {formatRupiah(stat.revenue)}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
       </div>
 
       <div className="rounded-xl border border-border-subtle bg-bg-surface shadow-card">

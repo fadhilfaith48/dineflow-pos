@@ -12,6 +12,7 @@ import type {
   Payment,
   Role,
   SalesPeriod,
+  SalesDateRange,
   SalesSummary,
   Settings,
   User,
@@ -88,6 +89,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 function jsonBody(data: unknown): RequestInit {
   return { body: JSON.stringify(data) }
+}
+
+function salesQuery(period?: SalesPeriod, range?: SalesDateRange): string {
+  const params = new URLSearchParams()
+  if (period) params.set('period', period)
+  if (range?.startDate) params.set('startDate', range.startDate)
+  if (range?.endDate) params.set('endDate', range.endDate)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
 }
 
 function appendScalar(formData: FormData, data: Record<string, unknown>): void {
@@ -267,8 +277,8 @@ export class HttpApi implements Api {
     await request(`/users/${id}/reset-password`, { method: 'POST' })
   }
 
-  async getSalesSummary(period?: SalesPeriod): Promise<SalesSummary> {
-    const query = period ? `?period=${period}` : ''
+  async getSalesSummary(period?: SalesPeriod, range?: SalesDateRange): Promise<SalesSummary> {
+    const query = salesQuery(period, range)
     return request<SalesSummary>(`/sales-summary${query}`)
   }
 
@@ -292,8 +302,8 @@ export class HttpApi implements Api {
     })
   }
 
-  async exportSalesReport(period?: SalesPeriod): Promise<Blob> {
-    const query = period ? `?period=${period}` : ''
+  async exportSalesReport(period?: SalesPeriod, range?: SalesDateRange): Promise<Blob> {
+    const query = salesQuery(period, range)
     const headers = new Headers()
     headers.set('Accept', 'text/csv')
     const token = getToken()

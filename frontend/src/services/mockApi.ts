@@ -1,5 +1,5 @@
 import type { Api, CartItemInput, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
-import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesSummary, Settings, User } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
 import { MOCK_PASSWORD, TAX_RATE, mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
 
 let orders: Order[] = [...mockOrders]
@@ -214,7 +214,7 @@ export class MockApi implements Api {
     // No-op: MockApi tidak memakai password per-user.
   }
 
-  async getSalesSummary(period: SalesPeriod = 'semua'): Promise<SalesSummary> {
+  async getSalesSummary(period: SalesPeriod = 'semua', _range?: SalesDateRange): Promise<SalesSummary> {
     const now = new Date()
     const settled = orders.filter((o) => {
       if (o.status !== 'selesai' && o.status !== 'diproses') return false
@@ -246,7 +246,15 @@ export class MockApi implements Api {
       .map(([name, v]) => ({ name, ...v }))
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
-    return { totalRevenue, orderCount: settled.length, topItems }
+    return {
+      totalRevenue,
+      orderCount: settled.length,
+      topItems,
+      paymentBreakdown: {
+        tunai: { revenue: 0, count: 0 },
+        qris: { revenue: 0, count: 0 },
+      },
+    }
   }
 
   async getSettings(): Promise<Settings> {

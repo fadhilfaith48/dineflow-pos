@@ -84,10 +84,22 @@ export interface TopSellingItem {
   revenue: number
 }
 
+export interface PaymentMethodStat {
+  revenue: number
+  count: number
+}
+
+/** Rentang tanggal custom (format YYYY-MM-DD); kosong = tidak dibatasi. */
+export interface SalesDateRange {
+  startDate?: string
+  endDate?: string
+}
+
 export interface SalesSummary {
   totalRevenue: number
   orderCount: number
   topItems: TopSellingItem[]
+  paymentBreakdown: Record<'tunai' | 'qris', PaymentMethodStat>
 }
 
 export interface Settings {

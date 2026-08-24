@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,27 +13,25 @@ class SalesSummaryController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $period = $request->query('period', 'semua');
-
         $query = Order::where('status', 'selesai');
+        $this->applyFilters($request, $query);
 
-        if (in_array($period, ['harian', 'mingguan', 'bulanan'], true)) {
-            $now = now();
-
-            match ($period) {
-                'harian' => $query->whereDate('created_at', $now->toDateString()),
-                'mingguan' => $query->where('created_at', '>=', $now->subDays(7)),
-                'bulanan' => $query->whereYear('created_at', $now->year)->whereMonth('created_at', $now->month),
-                default => null,
-            };
-        }
-
-        $orders = $query->with('items')->get();
+        $orders = $query->with(['items', 'payment'])->get();
 
         $totalRevenue = 0;
         $counts = [];
 
+        $breakdown = [
+            'tunai' => ['revenue' => 0, 'count' => 0],
+            'qris' => ['revenue' => 0, 'count' => 0],
+        ];
+
         foreach ($orders as $order) {
+            if ($order->payment && isset($breakdown[$order->payment->method])) {
+                $breakdown[$order->payment->method]['revenue'] += $order->total;
+                $breakdown[$order->payment->method]['count']++;
+            }
+
             foreach ($order->items as $item) {
                 $totalRevenue += $item->price * $item->quantity;
                 $name = $item->name;
@@ -59,25 +58,14 @@ class SalesSummaryController extends Controller
             'totalRevenue' => $totalRevenue,
             'orderCount' => $orders->count(),
             'topItems' => array_slice($items, 0, 5),
+            'paymentBreakdown' => $breakdown,
         ]);
     }
 
     public function export(Request $request): Response
     {
-        $period = $request->query('period', 'semua');
-
         $query = Order::where('status', 'selesai')->with(['items', 'payment', 'table']);
-
-        if (in_array($period, ['harian', 'mingguan', 'bulanan'], true)) {
-            $now = now();
-
-            match ($period) {
-                'harian' => $query->whereDate('created_at', $now->toDateString()),
-                'mingguan' => $query->where('created_at', '>=', $now->subDays(7)),
-                'bulanan' => $query->whereYear('created_at', $now->year)->whereMonth('created_at', $now->month),
-                default => null,
-            };
-        }
+        $this->applyFilters($request, $query);
 
         $orders = $query->orderByDesc('created_at')->get();
 
@@ -120,5 +108,34 @@ class SalesSummaryController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
+    }
+
+    /**
+     * Filter bersama untuk index() & export(): periode preset + rentang tanggal custom.
+     */
+    private function applyFilters(Request $request, Builder $query): void
+    {
+        $period = $request->query('period', 'semua');
+
+        if (in_array($period, ['harian', 'mingguan', 'bulanan'], true)) {
+            $now = now();
+
+            match ($period) {
+                'harian' => $query->whereDate('created_at', $now->toDateString()),
+                'mingguan' => $query->where('created_at', '>=', $now->subDays(7)),
+                'bulanan' => $query->whereYear('created_at', $now->year)->whereMonth('created_at', $now->month),
+                default => null,
+            };
+        }
+
+        $start = $request->query('startDate');
+        $end = $request->query('endDate');
+
+        if (is_string($start) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
+            $query->whereDate('created_at', '>=', $start);
+        }
+        if (is_string($end) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+            $query->whereDate('created_at', '<=', $end);
+        }
     }
 }
