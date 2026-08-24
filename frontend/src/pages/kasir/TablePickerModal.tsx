@@ -30,7 +30,7 @@ export function TablePickerModal({ open, tables, selectedTableId, onSelect, onCl
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
           <button
             onClick={() => {
               onSelect(null)
@@ -61,7 +61,7 @@ export function TablePickerModal({ open, tables, selectedTableId, onSelect, onCl
                 }`}
               >
                 <span className="font-num text-body font-bold">{table.number}</span>
-                <span className="text-caption font-semibold uppercase tracking-wide">
+                <span className="max-w-full break-words text-center text-caption font-semibold uppercase leading-tight tracking-wide">
                   {table.status === 'perlu-dibersihkan' ? 'Bersihkan' : table.status}
                 </span>
               </button>

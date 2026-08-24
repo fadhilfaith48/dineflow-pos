@@ -6,8 +6,10 @@ import Pusher from 'pusher-js'
  * Channel publik: `orders` (kasir/dapur/pelayan) & `order.{orderNumber}` (pelanggan).
  */
 /**
- * Saat build/preview (deploy via tunnel), Reverb diakses same-origin via proxy Vite
- * (wss pada host halaman). Saat dev lokal, pakai nilai env (127.0.0.1:8080).
+ * WS selalu same-origin (host halaman) → lewat proxy `/app` di vite.config.ts
+ * (dev: ws→127.0.0.1:8080; produksi: wss:443 via Nginx). Keuntungan dev:
+ * HP di WiFi lokal tidak perlu buka port 8080 di firewall. Env VITE_REVERB_HOST/
+ * PORT/SCHEME tetap didukung sebagai override opsional.
  */
 const isPreview = import.meta.env.PROD
 
@@ -17,8 +19,11 @@ const echo = new Echo({
   Pusher,
   cluster: 'mt1',
   namespace: '',
-  wsHost: isPreview ? window.location.hostname : import.meta.env.VITE_REVERB_HOST,
-  wsPort: isPreview ? 443 : Number(import.meta.env.VITE_REVERB_PORT),
+  wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+  wsPort:
+    Number(import.meta.env.VITE_REVERB_PORT) ||
+    Number(window.location.port) ||
+    (isPreview ? 443 : 80),
   forceTLS: isPreview ? true : import.meta.env.VITE_REVERB_SCHEME === 'https',
   enabledTransports: ['ws', 'wss'],
 })

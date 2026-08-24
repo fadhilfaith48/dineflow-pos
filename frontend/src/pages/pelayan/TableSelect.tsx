@@ -25,19 +25,19 @@ export function TableSelect({ tables, onSelect, onViewOrders }: TableSelectProps
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {tables.map((table) => {
           const s = statusStyle[table.status]
           return (
             <button
               key={table.id}
               onClick={() => onSelect(table)}
-              className={`flex min-h-24 flex-col items-center justify-center gap-1 rounded-xl border-2 p-4 transition-transform active:scale-95 ${s.card}`}
+              className={`flex min-h-24 flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 transition-transform active:scale-95 sm:p-4 ${s.card}`}
             >
               <span className="font-num text-subheading font-bold text-text-primary">
                 {table.number}
               </span>
-              <span className={`text-caption font-semibold uppercase tracking-wide ${s.text}`}>
+              <span className={`max-w-full break-words text-center text-caption font-semibold uppercase leading-tight tracking-wide ${s.text}`}>
                 {s.label}
               </span>
             </button>

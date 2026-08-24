@@ -40,7 +40,8 @@ class OrderController extends Controller
         };
 
         $order = DB::transaction(function () use ($validated, $source) {
-            $table = $validated['tableId'] ? Table::lockForUpdate()->find($validated['tableId']) : null;
+            $tableId = $validated['tableId'] ?? null;
+            $table = $tableId ? Table::lockForUpdate()->find($tableId) : null;
 
             $menuItems = MenuItem::whereIn('id', collect($validated['items'])->pluck('menuItemId'))->lockForUpdate()->get()->keyBy('id');
 
