@@ -59,6 +59,15 @@ export function KasirPage() {
     }
   }, [])
 
+  useEffect(() => {
+    echo.channel('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
+      setSettings(event.settings)
+    })
+    return () => {
+      echo.leaveChannel('settings')
+    }
+  }, [])
+
   const pendingOrders = useMemo(
     () => orders.filter((o) => o.status === 'menunggu-konfirmasi'),
     [orders],

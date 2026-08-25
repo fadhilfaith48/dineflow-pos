@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\SettingsChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
@@ -12,14 +13,7 @@ class SettingController extends Controller
 {
     public function index(): JsonResponse
     {
-        $settings = Setting::pluck('value', 'key')->toArray();
-
-        return response()->json([
-            'taxRate' => (int) ($settings['tax_rate'] ?? 10),
-            'restaurantName' => $settings['restaurant_name'] ?? 'DINEFLOW RESTAURANT',
-            'restaurantAddress' => $settings['restaurant_address'] ?? 'Jl. Raya No. 1, Jakarta',
-            'logoUrl' => $settings['logo_url'] ?? null,
-        ]);
+        return response()->json($this->payload());
     }
 
     public function update(Request $request): JsonResponse
@@ -40,7 +34,9 @@ class SettingController extends Controller
             Setting::setValue('restaurant_address', $validated['restaurantAddress']);
         }
 
-        return $this->index();
+        SettingsChanged::dispatch($this->payload());
+
+        return response()->json($this->payload());
     }
 
     public function uploadLogo(Request $request): JsonResponse
@@ -53,6 +49,26 @@ class SettingController extends Controller
         $url = Storage::disk('public')->url($path);
         Setting::setValue('logo_url', $url);
 
+        SettingsChanged::dispatch($this->payload());
+
         return response()->json(['logoUrl' => $url]);
+    }
+
+    /**
+     * Payload pengaturan lengkap — dipakai index(), update(), uploadLogo(),
+     * dan broadcast SettingsChanged agar bentuknya konsisten.
+     *
+     * @return array{taxRate: int, restaurantName: string, restaurantAddress: string, logoUrl: ?string}
+     */
+    private function payload(): array
+    {
+        $settings = Setting::pluck('value', 'key')->toArray();
+
+        return [
+            'taxRate' => (int) ($settings['tax_rate'] ?? 10),
+            'restaurantName' => $settings['restaurant_name'] ?? 'DINEFLOW RESTAURANT',
+            'restaurantAddress' => $settings['restaurant_address'] ?? 'Jl. Raya No. 1, Jakarta',
+            'logoUrl' => $settings['logo_url'] ?? null,
+        ];
     }
 }

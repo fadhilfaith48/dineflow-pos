@@ -48,15 +48,15 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-xl bg-bg-surface shadow-modal">
-        <div id="print-area" className="bg-white p-5 font-mono text-[12px] text-black">
+      <div className="w-full max-w-[300px] overflow-hidden rounded-xl bg-bg-surface shadow-modal">
+        <div id="print-area" className="bg-white p-4 font-mono text-[11px] leading-snug text-black">
           <div className="text-center">
             {receipt.logoUrl && (
-              <img src={receipt.logoUrl} alt="Logo" className="mx-auto mb-2 h-12 w-12 object-contain" />
+              <img src={receipt.logoUrl} alt="Logo" className="mx-auto mb-1 h-14 w-14 object-contain" />
             )}
-            <div className="text-[15px] font-bold tracking-wide">{receipt.restaurantName || 'DINEFLOW RESTAURANT'}</div>
+            <div className="text-[13px] font-bold tracking-wide">{receipt.restaurantName || 'DINEFLOW RESTAURANT'}</div>
             <div className="mt-0.5">{receipt.restaurantAddress || 'Jl. Raya No. 1, Jakarta'}</div>
-            <div className="mt-2">{receipt.orderNumber}</div>
+            <div className="mt-1.5">{receipt.orderNumber}</div>
             <div>{receipt.tableLabel}</div>
             <div>{new Date(receipt.createdAt).toLocaleString('id-ID')}</div>
           </div>
@@ -98,7 +98,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
             </div>
           )}
 
-          <div className="mt-3 text-center">Terima kasih sudah berkunjung!</div>
+          <div className="mt-2 text-center">Terima kasih sudah berkunjung!</div>
         </div>
 
         <div className="flex gap-2 border-t border-border-subtle bg-bg-surface p-4 print:hidden">

@@ -48,8 +48,12 @@ export function TransactionHistory() {
     echo.channel('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
       if (event.action === 'paid') loadOrders()
     })
+    echo.channel('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
+      setSettings(event.settings)
+    })
     return () => {
       echo.leaveChannel('orders')
+      echo.leaveChannel('settings')
     }
   }, [])
 

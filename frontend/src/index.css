@@ -73,6 +73,11 @@
 
 /* Print: hanya area struk (#print-area) yang tampil saat window.print() */
 @media print {
+  /* Margin nol = tanpa header/footer bawaan browser (judul halaman/URL/tanggal) */
+  @page {
+    size: auto;
+    margin: 0;
+  }
   body * {
     visibility: hidden;
   }
@@ -80,10 +85,14 @@
   #print-area * {
     visibility: visible;
   }
+  /* Struk selebar kertas thermal 80mm, tinggi mengikuti isi, terpusat horizontal */
   #print-area {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    width: 302px;
     padding: 16px;
   }
 }
