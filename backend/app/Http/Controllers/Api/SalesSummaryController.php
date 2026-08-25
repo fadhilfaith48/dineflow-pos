@@ -64,7 +64,7 @@ class SalesSummaryController extends Controller
 
     public function export(Request $request): StreamedResponse
     {
-        $query = Order::where('status', 'selesai')->with(['items', 'payment', 'table']);
+        $query = Order::where('status', 'selesai')->with(['items', 'payment.cashier', 'table']);
         $this->applyFilters($request, $query);
 
         $orders = $query->orderByDesc('created_at')->get();
@@ -89,7 +89,7 @@ class SalesSummaryController extends Controller
                 $tax,
                 $order->total,
                 $order->payment->method ?? '-',
-                $order->payment->paid_by ?? '-',
+                $order->payment->cashier?->name ?? '-',
             ];
         }
 

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -29,7 +30,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'username' => $validated['username'],
             'role' => $validated['role'],
-            'password' => Hash::make('1234'),
+            'password' => Hash::make(config('dinflow.default_password')),
         ]);
 
         return new UserResource($user);
@@ -43,25 +44,26 @@ class UserController extends Controller
             'role' => ['sometimes', 'in:kasir,pelayan,dapur,admin'],
         ]);
 
-        $map = [
-            'name' => 'name',
-            'username' => 'username',
-            'role' => 'role',
-        ];
-
-        foreach ($map as $inputKey => $column) {
-            if (array_key_exists($inputKey, $validated)) {
-                $user->{$column} = $validated[$inputKey];
-            }
-        }
-
+        $user->fill($validated);
         $user->save();
 
         return new UserResource($user);
     }
 
-    public function destroy(User $user): JsonResponse
+    public function destroy(Request $request, User $user): JsonResponse
     {
+        if ($request->user()->id === $user->id) {
+            throw ValidationException::withMessages([
+                'user' => ['Tidak bisa menghapus akun yang sedang login'],
+            ]);
+        }
+
+        if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
+            throw ValidationException::withMessages([
+                'user' => ['Minimal harus tersisa satu admin'],
+            ]);
+        }
+
         $user->delete();
 
         return response()->json(['message' => 'Staf dihapus']);
@@ -69,7 +71,7 @@ class UserController extends Controller
 
     public function resetPassword(User $user): JsonResponse
     {
-        $user->password = Hash::make('1234');
+        $user->password = Hash::make(config('dinflow.default_password'));
         $user->save();
 
         return response()->json(['message' => 'Password staf berhasil direset ke 1234']);

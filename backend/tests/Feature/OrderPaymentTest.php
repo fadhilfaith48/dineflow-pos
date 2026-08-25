@@ -116,4 +116,30 @@ class OrderPaymentTest extends TestCase
 
         $this->postJson("/api/users/{$staff->id}/reset-password")->assertForbidden();
     }
+
+    public function test_admin_cannot_delete_self(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        $this->deleteJson("/api/users/{$admin->id}")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('user');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_admin_can_delete_other_user(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        $staff = User::factory()->create(['role' => 'kasir']);
+
+        $this->deleteJson("/api/users/{$staff->id}")
+            ->assertOk()
+            ->assertJson(['message' => 'Staf dihapus']);
+
+        $this->assertDatabaseMissing('users', ['id' => $staff->id]);
+    }
 }

@@ -77,4 +77,17 @@ class SalesSummaryTest extends TestCase
         $response->assertOk();
         $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
     }
+
+    public function test_export_includes_cashier_name_not_id(): void
+    {
+        $kasir = User::factory()->create(['name' => 'Kasir Shift Satu', 'role' => 'kasir']);
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+        $order = $this->makeSettledOrder('ORD-0001', 'tunai', 20000);
+        $order->payment->forceFill(['paid_by' => $kasir->id])->save();
+
+        $csv = $this->get('/api/sales-summary/export?period=semua')->streamedContent();
+
+        $this->assertStringContainsString('Kasir Shift Satu', $csv);
+    }
 }
