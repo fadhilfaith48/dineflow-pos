@@ -3,9 +3,9 @@ import Pusher from 'pusher-js'
 
 /**
  * Klien real-time tunggal (Laravel Echo + Reverb, protokol Pusher).
- * Channel publik: `orders` (kasir/dapur/pelayan) & `order.{orderNumber}` (pelanggan).
- */
-/**
+ * Channel publik: `orders` (kasir/dapur/pelayan), `order.{orderNumber}` (pelanggan),
+ * `menu` (katalog), `settings` (PPN/logo/nama restoran).
+ *
  * WS selalu same-origin (host halaman) → lewat proxy `/app` di vite.config.ts
  * (dev: ws→127.0.0.1:8080; produksi: wss:443 via Nginx). Keuntungan dev:
  * HP di WiFi lokal tidak perlu buka port 8080 di firewall. Env VITE_REVERB_HOST/

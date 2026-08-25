@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { roleHome } from '@/lib/roles'
-import { MOCK_PASSWORD } from '@/services/mockData'
+import { DEFAULT_PASSWORD } from '@/lib/constants'
 import { Button } from '@/components/Button'
 
 const demoAccounts = [
@@ -82,7 +82,7 @@ export function LoginPage() {
 
         <div className="mt-4 rounded-xl border border-border-subtle bg-bg-surface p-4">
           <p className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
-            Akun demo (password: {MOCK_PASSWORD})
+            Akun demo (password: {DEFAULT_PASSWORD})
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {demoAccounts.map((acc) => (
@@ -91,7 +91,7 @@ export function LoginPage() {
                 type="button"
                 onClick={() => {
                   setUsername(acc.username)
-                  setPassword(MOCK_PASSWORD)
+                  setPassword(DEFAULT_PASSWORD)
                 }}
                 className="rounded-lg border border-border-subtle px-3 py-2 text-caption font-semibold text-text-primary transition-colors hover:bg-accent-tint hover:text-accent-primary"
               >

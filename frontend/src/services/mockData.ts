@@ -12,8 +12,6 @@ export const mockUsers: User[] = [
   { id: 4, name: 'Staf Dapur', username: 'dapur', role: 'dapur' },
 ]
 
-export const MOCK_PASSWORD = '1234'
-
 export const mockCategories: MenuCategory[] = [
   { id: 1, name: 'Makanan', order: 1 },
   { id: 2, name: 'Minuman', order: 2 },
@@ -106,4 +104,3 @@ export const mockOrders: Order[] = [
   },
 ]
 
-export const TAX_RATE = 0.1

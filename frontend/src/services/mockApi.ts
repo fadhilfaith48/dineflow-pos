@@ -1,6 +1,7 @@
 import type { Api, CartItemInput, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
 import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
-import { MOCK_PASSWORD, TAX_RATE, mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
+import { DEFAULT_PASSWORD, TAX_RATE } from '@/lib/constants'
+import { mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
 
 let orders: Order[] = [...mockOrders]
 let menuItems: MenuItem[] = [...mockMenuItems]
@@ -16,7 +17,7 @@ let orderCounter = mockOrders.length
 export class MockApi implements Api {
   async login(username: string, password: string): Promise<User> {
     const user = users.find((u) => u.username === username)
-    if (!user || password !== MOCK_PASSWORD) {
+    if (!user || password !== DEFAULT_PASSWORD) {
       throw new Error('Username atau password salah')
     }
     return { ...user }

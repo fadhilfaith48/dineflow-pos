@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { MenuItem } from '@/types'
-import { TAX_RATE } from '@/services/mockData'
+import { TAX_RATE } from '@/lib/constants'
 
 export interface CartLine {
   menuItemId: number

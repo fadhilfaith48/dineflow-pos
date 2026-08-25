@@ -3,11 +3,7 @@ import type { Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import { Button } from '@/components/Button'
 
-interface SettingsPageProps {
-  onSettingsChanged?: () => void
-}
-
-export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
+export function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [taxRate, setTaxRate] = useState('10')
   const [restaurantName, setRestaurantName] = useState('')
@@ -51,7 +47,6 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
         setLogoFile(null)
       }
       setSuccess('Pengaturan berhasil disimpan.')
-      onSettingsChanged?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menyimpan pengaturan.')
     } finally {
