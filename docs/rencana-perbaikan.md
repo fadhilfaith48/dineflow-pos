@@ -50,7 +50,7 @@
 - [ ] Tes backend & frontend lebih lengkap
 - [ ] Sinkronkan PROGRESS.md, todo.md, frontend/.env.example
 - [ ] Commit & push perubahan (echo.ts, vite.config.ts, docs baru, cloudflared.exe)
-## Langkah Berikutnya — Riwayat Transaksi Kasir & Admin (DITUNDA, rencana matang per 24 Agu 2026)
+## Langkah Berikutnya — Riwayat Transaksi Kasir & Admin (✅ SELESAI, dikerjakan 25 Agu 2026)
 
 > Tujuan: audit trail transaksi — bila ada kekeliruan input produk/penjualan, bisa ditelusuri
 > kembali. Batas data **unlimited** (database sudah menyimpan semua order selamanya;
@@ -58,38 +58,38 @@
 > pemilik proyek.
 
 ### Keputusan desain (terkunci)
-- [ ] Admin: **tab navbar baru** "Riwayat Transaksi" setelah Laporan Penjualan (bukan digabung)
-- [ ] Fitur **cetak ulang struk** dari riwayat (reuse `ReceiptModal`)
-- [ ] Kasir: cakupan awal **Hari ini** + toggle opsi "Semua"
-- [ ] Tidak menampilkan nama kasir di v1 (`payments.paid_by` berupa ID user, bukan teks)
-- [ ] Tanpa pagination/batas baris sesuai permintaan (skala 1 outlet aman)
+- [x] Admin: **tab navbar baru** "Riwayat Transaksi" setelah Laporan Penjualan (bukan digabung)
+- [x] Fitur **cetak ulang struk** dari riwayat (reuse `ReceiptModal`)
+- [x] Kasir: cakupan awal **Hari ini** + toggle opsi "Semua"
+- [x] Tidak menampilkan nama kasir di v1 (`payments.paid_by` berupa ID user, bukan teks)
+- [x] Tanpa pagination/batas baris sesuai permintaan (skala 1 outlet aman)
 
 ### Backend (kecil, tanpa migrasi)
-- [ ] `OrderController::index`: eager load `payment` → `with(['table','items','payment'])`
-- [ ] `OrderResource`: tambah `'payment' => $this->whenLoaded('payment', fn () => new PaymentResource($this->payment))`
+- [x] `OrderController::index`: eager load `payment` → `with(['table','items','payment'])`
+- [x] `OrderResource`: tambah `'payment' => $this->whenLoaded('payment', fn () => new PaymentResource($this->payment))`
       sehingga frontend dapat `method`, `cashReceived`, `change`, `paidAt`
-- [ ] Tes backend: assertion `GET /orders` menyertakan data payment (perluas tes existing)
+- [x] Tes backend: assertion `GET /orders` menyertakan data payment (perluas tes existing)
 
 ### Frontend bersama
-- [ ] `types/index.ts`: type Order tambah field opsional `payment`
-- [ ] Pindahkan `pages/kasir/ReceiptModal.tsx` → `components/ReceiptModal.tsx`
+- [x] `types/index.ts`: type Order tambah field opsional `payment`
+- [x] Pindahkan `pages/kasir/ReceiptModal.tsx` → `components/ReceiptModal.tsx`
       (refactor import di KasirPage) agar dipakai lintas role
 
 ### Halaman Kasir
-- [ ] Panel kanan: dua tab pill "Pesanan Aktif" | "Riwayat"
-- [ ] Riwayat: filter hari-ini default + chip "Semua"; baris = jam, no.order, meja/sumber,
+- [x] Panel kanan: dua tab pill "Pesanan Aktif" | "Riwayat"
+- [x] Riwayat: filter hari-ini default + chip "Semua"; baris = jam, no.order, meja/sumber,
       total, badge metode; klik baris → buka ReceiptModal (cetak ulang)
 
 ### Halaman Admin
-- [ ] Tab baru `riwayat` di `AdminPage.tsx` (pola pill sama seperti tab lain)
-- [ ] Komponen baru `TransactionHistory.tsx`: daftar order `selesai` — tanggal+jam, no.order,
+- [x] Tab baru `riwayat` di `AdminPage.tsx` (pola pill sama seperti tab lain)
+- [x] Komponen baru `TransactionHistory.tsx`: daftar order `selesai` — tanggal+jam, no.order,
       meja/sumber, jumlah item, total, metode bayar
-- [ ] Filter client-side: rentang tanggal (pola sama dengan SalesReport), cari nomor order,
+- [x] Filter client-side: rentang tanggal (pola sama dengan SalesReport), cari nomor order,
       dropdown metode (Semua/Tunai/QRIS)
-- [ ] Real-time: subscribe channel `orders`, action `paid` → daftar ikut bertambah
+- [x] Real-time: subscribe channel `orders`, action `paid` → daftar ikut bertambah
 
 ### Verifikasi
-- [ ] Tes backend lulus (9 tes), FE build+lint+18 tes
-- [ ] E2E curl: `GET /orders` mengandung `payment.method`
-- [ ] Uji manual: bayar 1 pesanan → muncul di riwayat Kasir & Admin tanpa refresh,
+- [x] Tes backend lulus (9 tes), FE build+lint+18 tes
+- [x] E2E curl: `GET /orders` mengandung `payment.method`
+- [x] Uji manual: bayar 1 pesanan → muncul di riwayat Kasir & Admin tanpa refresh,
       cetak ulang struk berhasil

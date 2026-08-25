@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Table;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,6 +56,41 @@ class OrderPaymentTest extends TestCase
 
         $this->postJson("/api/orders/{$order->id}/payments", $payload)->assertStatus(201);
         $this->postJson("/api/orders/{$order->id}/payments", $payload)->assertStatus(409);
+    }
+
+    public function test_orders_index_includes_payment_data(): void
+    {
+        $user = User::factory()->create(['role' => 'kasir']);
+        Sanctum::actingAs($user);
+
+        $order = Order::create([
+            'order_number' => 'ORD-0001',
+            'table_id' => null,
+            'source' => 'kasir',
+            'status' => 'selesai',
+            'total' => 19800,
+        ]);
+        $paidAt = now();
+        Payment::create([
+            'order_id' => $order->id,
+            'method' => 'tunai',
+            'amount' => 19800,
+            'cash_received' => 20000,
+            'change' => 200,
+            'paid_by' => $user->id,
+            'paid_at' => $paidAt,
+        ]);
+
+        $response = $this->getJson('/api/orders')
+            ->assertOk()
+            ->assertJsonPath('data.0.status', 'selesai')
+            ->assertJsonPath('data.0.payment.method', 'tunai')
+            ->assertJsonPath('data.0.payment.amount', 19800)
+            ->assertJsonPath('data.0.payment.cashReceived', 20000)
+            ->assertJsonPath('data.0.payment.change', 200)
+            ->assertJsonPath('data.0.payment.paidBy', $user->id);
+
+        $this->assertNotNull($response->json('data.0.payment.paidAt'));
     }
 
     public function test_admin_can_reset_staff_password(): void

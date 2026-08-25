@@ -84,6 +84,15 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 ### B5. Race condition stok/order (Prioritas: P2)
 - [x] Di backend: database transaction + `lockForUpdate()` untuk order & stok bersamaan (aturan AGENTS.md, BUKAN Golang/Kafka) — sudah terimplementasi sejak B1b: `OrderController::store` (transaction + `lockForUpdate()` pada tabel & menu item, cek ketersediaan) dan `PaymentController::store` (transaction + `lockForUpdate()` pada order, cegah bayar ganda → 409). Ditambah tes fitur `OrderPaymentTest` (pembayaran dua kali → 409).
 
+### B6. Riwayat Transaksi Kasir & Admin (Prioritas: P1)
+- [x] Backend: `GET /orders` eager load `payment` (`with(['table','items','payment'])`) + `OrderResource` expose `payment` via `PaymentResource` (frontend dapat `method`, `cashReceived`, `change`, `paidAt`). Tanpa migrasi.
+- [x] Bug fix menyertakan perbaikan data riwayat: deteksi role di `OrderController::store` memakai `$request->user()` yang selalu null sejak rute POST /orders jadi publik (B3) → order kasir/pelayan tercatat sebagai `self-order`; fix dengan `auth('sanctum')->user()`.
+- [x] Frontend bersama: type `Order.payment?`, pindahkan `ReceiptModal` ke `components/`, helper bersama `lib/receipt.ts` (`orderToReceipt`) untuk cetak struk & cetak ulang.
+- [x] Kasir: panel queue ber-tab pill "Pesanan Aktif" (sub-tab Masuk/Nota tetap) | "Riwayat"; riwayat = chip filter Hari ini (default)/Semua, baris jam+no.order+meja/sumber+total+badge metode, klik baris → cetak ulang struk.
+- [x] Admin: tab navbar baru "Riwayat Transaksi" (setelah Laporan Penjualan); komponen `TransactionHistory.tsx`: daftar order `selesai` (tanggal+jam, no.order, meja/sumber, jumlah item, total, metode), filter client-side rentang tanggal + cari no.order + dropdown metode, klik baris → cetak ulang; real-time subscribe `orders` action=`paid`.
+- [x] Tanpa nama kasir di v1 (`paid_by` ID user), tanpa pagination/batas baris.
+- [x] Verifikasi: tes backend 9/9 lulus (termasuk assertion payment di `/orders`), FE build+lint+18 tes, E2E curl bayar→GET /orders mengandung payment.method, DB reset demo.
+
 ---
 
 ## Fase C - Repo & Deployment

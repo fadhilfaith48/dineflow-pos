@@ -18,7 +18,7 @@ class OrderController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $orders = Order::with(['table', 'items'])->orderByDesc('id')->get();
+        $orders = Order::with(['table', 'items', 'payment'])->orderByDesc('id')->get();
 
         return OrderResource::collection($orders);
     }
@@ -33,7 +33,9 @@ class OrderController extends Controller
             'items.*.note' => ['nullable', 'string'],
         ]);
 
-        $source = match ($request->user()?->role) {
+        // Rute POST /orders publik (self-order), jadi $request->user() tidak
+        // ter-resolve (default guard web). Resolve manual via guard sanctum.
+        $source = match (auth('sanctum')->user()?->role) {
             'kasir' => 'kasir',
             'pelayan' => 'pelayan',
             default => 'self-order',

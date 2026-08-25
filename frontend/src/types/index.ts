@@ -59,6 +59,7 @@ export interface Order {
   status: OrderStatus
   items: OrderItem[]
   total: number
+  payment?: Payment
   createdAt: string
   updatedAt: string
 }

@@ -3,12 +3,13 @@ import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod, Setting
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
+import { orderToReceipt } from '@/lib/receipt'
 import { TopNavBar } from '@/components/TopNavBar'
+import { ReceiptModal, type ReceiptData } from '@/components/ReceiptModal'
 import { MenuPanel } from './MenuPanel'
 import { CartPanel } from './CartPanel'
 import { PaymentModal } from './PaymentModal'
 import { TablePickerModal } from './TablePickerModal'
-import { ReceiptModal, type ReceiptData } from './ReceiptModal'
 import { KasirQueuePanel } from './KasirQueuePanel'
 
 export function KasirPage() {
@@ -68,6 +69,11 @@ export function KasirPage() {
     [orders],
   )
 
+  const paidOrders = useMemo(
+    () => orders.filter((o) => o.status === 'selesai'),
+    [orders],
+  )
+
   const visibleItems = useMemo(() => {
     const q = search.trim().toLowerCase()
     return items.filter(
@@ -103,6 +109,10 @@ export function KasirPage() {
     setShowPayment(true)
   }
 
+  function handleReprint(order: Order) {
+    setReceipt(orderToReceipt(order, order.payment, settings ?? undefined))
+  }
+
   async function handleConfirmPayment(payload: { method: PaymentMethod; cashReceived?: number }) {
     setError('')
     try {
@@ -113,26 +123,7 @@ export function KasirPage() {
         method: payload.method,
         cashReceived: payload.cashReceived,
       })
-      setReceipt({
-        orderNumber: order.orderNumber,
-        tableLabel: `Meja ${order.tableNumber ?? '-'}`,
-        createdAt: order.createdAt,
-        items: order.items.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-          note: item.note,
-        })),
-        subtotal: order.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-        tax: Math.round(order.total - order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)),
-        total: order.total,
-        method: payment.method,
-        change: payment.change ?? undefined,
-        taxRate: settings?.taxRate ?? 10,
-        restaurantName: settings?.restaurantName,
-        restaurantAddress: settings?.restaurantAddress,
-        logoUrl: settings?.logoUrl,
-      })
+      setReceipt(orderToReceipt(order, payment, settings ?? undefined))
       setNoteToPay(null)
       setShowPayment(false)
       setOrders(await api.getOrders())
@@ -166,8 +157,10 @@ export function KasirPage() {
         <KasirQueuePanel
           pendingOrders={pendingOrders}
           activeNotes={activeNotes}
+          historyOrders={paidOrders}
           onConfirm={handleConfirmOrder}
           onPayNote={handlePayNote}
+          onReprint={handleReprint}
         />
         <MenuPanel
           categories={categories}

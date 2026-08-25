@@ -7,8 +7,9 @@ import { SalesReport } from './SalesReport'
 import { TableManagement } from './TableManagement'
 import { StaffManagement } from './StaffManagement'
 import { SettingsPage } from './SettingsPage'
+import { TransactionHistory } from './TransactionHistory'
 
-type Tab = 'menu' | 'meja' | 'staf' | 'laporan' | 'pengaturan'
+type Tab = 'menu' | 'meja' | 'staf' | 'laporan' | 'riwayat' | 'pengaturan'
 
 export function AdminPage() {
   const [tab, setTab] = useState<Tab>('menu')
@@ -130,6 +131,14 @@ export function AdminPage() {
             Laporan Penjualan
           </button>
           <button
+            onClick={() => setTab('riwayat')}
+            className={`rounded-lg px-4 py-2 text-body font-semibold transition-colors ${
+              tab === 'riwayat' ? 'bg-accent-primary text-text-on-accent' : 'bg-bg-surface text-text-secondary'
+            }`}
+          >
+            Riwayat Transaksi
+          </button>
+          <button
             onClick={() => setTab('pengaturan')}
             className={`rounded-lg px-4 py-2 text-body font-semibold transition-colors ${
               tab === 'pengaturan' ? 'bg-accent-primary text-text-on-accent' : 'bg-bg-surface text-text-secondary'
@@ -217,6 +226,7 @@ export function AdminPage() {
           />
         )}
         {tab === 'laporan' && <SalesReport />}
+        {tab === 'riwayat' && <TransactionHistory />}
         {tab === 'pengaturan' && <SettingsPage />}
       </main>
     </div>
