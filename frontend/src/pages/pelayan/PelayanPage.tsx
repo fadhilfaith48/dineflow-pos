@@ -42,7 +42,7 @@ export function PelayanPage() {
     api.getMenuItems().then(setItems)
     loadOrders()
 
-    echo.channel('orders').listen('OrderStatusChanged', () => {
+    echo.private('orders').listen('OrderStatusChanged', () => {
       loadOrders()
       loadTables()
     })

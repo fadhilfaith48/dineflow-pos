@@ -65,7 +65,7 @@ export function SalesReport() {
   }, [loadSummary])
 
   useEffect(() => {
-    echo.channel('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
+    echo.private('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
       if (event.action === 'paid') loadSummary(false)
     })
     return () => {

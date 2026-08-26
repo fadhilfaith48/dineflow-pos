@@ -17,7 +17,7 @@ export function KitchenPage() {
 
   useEffect(() => {
     loadOrders()
-    echo.channel('orders').listen('OrderStatusChanged', loadOrders)
+    echo.private('orders').listen('OrderStatusChanged', loadOrders)
     return () => {
       echo.leaveChannel('orders')
     }

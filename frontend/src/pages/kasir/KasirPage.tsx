@@ -44,7 +44,7 @@ export function KasirPage() {
       api.getTables().then(setTables)
     }
     refresh()
-    echo.channel('orders').listen('OrderStatusChanged', refresh)
+    echo.private('orders').listen('OrderStatusChanged', refresh)
     return () => {
       echo.leaveChannel('orders')
     }
@@ -60,7 +60,7 @@ export function KasirPage() {
   }, [])
 
   useEffect(() => {
-    echo.channel('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
+    echo.private('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
       setSettings(event.settings)
     })
     return () => {

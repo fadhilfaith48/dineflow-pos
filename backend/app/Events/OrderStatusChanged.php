@@ -6,6 +6,7 @@ use App\Http\Resources\OrderItemResource;
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 
@@ -51,7 +52,7 @@ class OrderStatusChanged implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('orders'),
+            new PrivateChannel('orders'),
             new Channel($this->trackChannel),
         ];
     }

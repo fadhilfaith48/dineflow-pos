@@ -39,7 +39,8 @@ export function clearAuth(): void {
   sessionStorage.removeItem(USER_KEY)
 }
 
-function getToken(): string | null {
+/** Token sanctum aktif di tab ini (dipakai juga Echo untuk otorisasi channel privat). */
+export function getToken(): string | null {
   return sessionStorage.getItem(TOKEN_KEY)
 }
 

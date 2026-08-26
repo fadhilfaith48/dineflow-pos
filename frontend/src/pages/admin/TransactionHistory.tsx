@@ -45,10 +45,10 @@ export function TransactionHistory() {
   }, [])
 
   useEffect(() => {
-    echo.channel('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
+    echo.private('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
       if (event.action === 'paid') loadOrders()
     })
-    echo.channel('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
+    echo.private('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
       setSettings(event.settings)
     })
     return () => {
