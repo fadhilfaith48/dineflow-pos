@@ -41,7 +41,7 @@
 - [x] Real-time Laporan Penjualan: `SalesReport` subscribe `orders`, refetch saat `action=paid` (fix sesi uji manual)
 - [x] Cart Menu QR konsisten mobile: overlay + panel `max-w-md` (fix sesi uji manual)
 - [x] Sesi login per-tab: `localStorage` → `sessionStorage` agar 4 role bisa login serentak (fix sesi uji manual)
-- [ ] Uji manual alur kasir→dapur (server lokal: MySQL + serve + Reverb + dev)
+- [x] Uji manual alur kasir→dapur (server lokal: MySQL + serve + Reverb + dev) — lolos penuh 26 Agu 2026, termasuk verifikasi fitur Riwayat Transaksi & struk thermal baru (lihat `docs/uji manual.md` §8)
 
 ## Setelah Langkah 1–5 (masih kurang)
 - [ ] Deploy C2: Vercel + VPS (DuckDNS/Let's Encrypt) + Neon/Upstash/Supabase

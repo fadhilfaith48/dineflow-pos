@@ -113,6 +113,24 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 ---
 
+## 8. Riwayat Transaksi & Struk Thermal (fitur 25 Agu 2026)
+
+> Prasyarat: layanan lengkap menyala (MySQL/Redis/serve/Reverb/Vite). Uji dilakukan 26 Agu 2026.
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 8.1 | Order dari **Kasir** kirim ke dapur | Langsung masuk tab **Nota** (`diproses`), BUKAN "Masuk" — tanpa langkah konfirmasi | ✅ |
+| 8.2 | Order dari **Pelayan/Self-order** | Masuk "Masuk" (`menunggu-konfirmasi`) → Kasir klik Konfirmasi → pindah ke Nota | ✅ |
+| 8.3 | Dapur proses ticket | Mulai Masak → Siap Saji; status item berubah real-time | ✅ |
+| 8.4 | Bayar nota (tunai/QRIS) | Struk tampil: logo → nama restoran **di bawah logo** → alamat; lebar ±80mm, tinggi mengikuti jumlah item; pajak sesuai tarif terkini | ✅ |
+| 8.5 | Tab **Riwayat** panel Kasir setelah bayar | Transaksi `selesai` muncul otomatis (real-time, action=paid) dengan jam, no.order, meja/sumber, total, badge metode (Tunai hijau / QRIS biru); filter chip Hari ini/Semua | ✅ |
+| 8.6 | Klik baris riwayat | Cetak ulang struk dengan data pembayaran lengkap (method/cash/change/paidAt) | ✅ |
+| 8.7 | Admin → **Riwayat Transaksi** | Tabel order selesai: filter rentang tanggal, cari no.order, dropdown metode, reset; klik baris → cetak ulang; bertambah real-time saat kasir bayar | ✅ |
+| 8.8 | Admin ubah PPN/logo/nama restoran → buka Kasir **tanpa refresh** | Keranjang & struk memakai nilai baru instan (event `SettingsChanged`) | ✅ |
+| 8.9 | Cetak fisik via printer thermal *(jika tersedia)* | Preview cetak: struk ramping 80mm terpusat atas kertas, tanpa judul halaman/URL browser | ✅ (preview) |
+
+---
+
 ## Catatan Penting
 
 - **Real-time asli**: KDS, panel Kasir, & tracking pelanggan memakai Laravel Reverb + Redis (≤ 2 detik, tanpa refresh). Pastikan backend `8000`, `reverb:start` `8080`, Redis `6379`, MySQL `3306`, dan Vite `5173` menyala.
