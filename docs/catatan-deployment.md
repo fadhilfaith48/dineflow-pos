@@ -48,3 +48,19 @@
 - ✅ Frontend di-build; `echo.ts` & `vite.config.ts` (proxy `/api` + WS `/app`) siap.
 - ✅ cloudflared terunduh (`cloudflared.exe`) — cadangan Jalur B.
 - ✅ Kredensial cloud: Upstash, Neon, Supabase (di password manager).
+
+## 8. Keputusan Arsitektur Hosting Multi-Proyek (25 Agustus 2026)
+
+Keputusan pemilik proyek untuk rencana 3–4 proyek ke depan: **VPS HANYA untuk backend**, sisanya layanan gratis; komponen yang tak bisa gratis dipindah ke VPS.
+
+| Komponen | Hosting | Biaya | Catatan |
+|---|---|---|---|
+| Backend Laravel + Reverb (WS) | VPS (dipakai bersama semua proyek) | ±Rp87rb/bln | Satu-satunya yang wajib server persisten |
+| Frontend (React) | Vercel | Gratis | Build otomatis tiap push |
+| Database | Neon (PostgreSQL) | Gratis | Free tier tidur setelah ±5 hari idle → cold start; buka app sebelum demo |
+| Redis | Upstash | Gratis | Pantau kuota command harian |
+| Foto menu/logo | Supabase Storage | Gratis | Pause setelah 7 hari idle → resume manual |
+
+- Beban VPS per proyek ≈ PHP-FPM ±250–300 MB + Reverb ±80 MB → **satu VPS 2 GB cukup untuk backend 3–4 proyek**.
+- Aturan cadangan: MySQL/MariaDB & Redis dapat diinstal langsung di VPS (+±400 MB RAM, tetap muat di 2 GB) — config env-driven (Tahap 0) → pindah cukup edit `.env` tanpa ubah kode.
+- Prinsip multi-proyek: mulai **1 VPS saja** (BUKAN 1 VPS per proyek), resize naik saat sempit; pisahkan ke VPS sendiri hanya jika ada proyek trafik besar / klien resmi.
