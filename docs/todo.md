@@ -117,3 +117,11 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - Verifikasi wajib tiap selesai: `npm run build` (tsc) lalu `npm run lint` (oxlint) di `frontend/`.
 - Semua data lewat service layer (`api.*`), warna dari token `DESIGN.md`, angka pakai `font-num`.
 - Update `todo.md` dan `PROGRESS.md` setelah satu item selesai.
+
+## Catatan Teknis Masa Depan (hasil audit 25–26 Agu 2026)
+
+Temuan yang **disengaja dibiarkan** untuk skala prototype (aman sekarang), tapi wajib ditangani bila data/trafik tumbuh:
+
+1. **Agregasi laporan masih in-PHP** — `SalesSummaryController` memuat SEMUA order + items ke memori lalu dirangkum di PHP; ekspor CSV juga pre-build semua baris (bukan streaming). → Saat order >±10 ribu: ganti ke SQL `GROUP BY` / agregasi query builder, dan streaming response untuk CSV.
+2. **`GET /orders` unlimited tanpa pagination** (keputusan v1, terdokumentasi di kode) — Riwayat memuat semua order. → Saat data besar: tambah pagination (limit/cursor) + filter tanggal di sisi server.
+3. **Code splitting frontend belum dikerjakan** (temuan P2 audit) — bundle tunggal 433 KB karena `App.tsx` mengimpor semua halaman secara statis; pelanggan Menu QR ikut mengunduh halaman Kasir/Kitchen/Admin. → Terapkan `React.lazy()` + `Suspense` per halaman (estimasi bundle awal turun >50%).
