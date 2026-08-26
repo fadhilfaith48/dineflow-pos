@@ -8,6 +8,7 @@ interface CartPanelProps {
   subtotal: number
   tax: number
   total: number
+  taxRatePercent: number
   tableLabel: string
   onSelectTable: () => void
   onIncrement: (menuItemId: number) => void
@@ -24,6 +25,7 @@ export function CartPanel({
   subtotal,
   tax,
   total,
+  taxRatePercent,
   tableLabel,
   onSelectTable,
   onIncrement,
@@ -129,7 +131,7 @@ export function CartPanel({
           <span className="font-num">{formatRupiah(subtotal)}</span>
         </div>
         <div className="flex justify-between py-1 text-body text-text-secondary">
-          <span>Pajak (10%)</span>
+          <span>Pajak ({taxRatePercent}%)</span>
           <span className="font-num">{formatRupiah(tax)}</span>
         </div>
         <div className="mt-2 flex justify-between border-t border-border-subtle pt-3 text-subheading font-bold text-text-primary">

@@ -32,6 +32,7 @@ export interface Api {
   getSettings(): Promise<Settings>
   updateSettings(data: Partial<Settings>): Promise<Settings>
   uploadLogo(file: File): Promise<{ logoUrl: string }>
+  uploadQris(file: File): Promise<{ qrisImageUrl: string }>
   exportSalesReport(period?: SalesPeriod, range?: SalesDateRange): Promise<Blob>
 }
 

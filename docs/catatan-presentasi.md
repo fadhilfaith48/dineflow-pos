@@ -10,13 +10,14 @@
 
 **1. Yang sudah selesai (2–3 menit)**
 > "Kode Tahap 0 sudah selesai semua:
-> - **Kasir** — input pesanan manual, keranjang, pembayaran tunai & QRIS, cetak struk.
+> - **Kasir** — input pesanan manual, keranjang, pembayaran tunai & QRIS statis, cetak struk.
 > - **Pelayan** (mobile) — pilih meja, input pesanan, tandai antar.
 > - **Menu Pesan Mandiri** — pelanggan scan QR di meja, pesan sendiri, lihat status pesanan real-time.
 > - **Kitchen Display** — pesanan tampil real-time, dapur geser status: baru → dimasak → siap.
-> - **Admin** — manajemen menu, meja (QR), staf, dan laporan penjualan.
-> - Semua antarmuka sudah **tersambung ke backend Laravel** (API nyata, bukan mock), pembayaran pakai **QRIS simulasi** karena masih tahap prototype.
-> - Real-time jalan pakai **Laravel Reverb + Redis**: kalau kasir konfirmasi pesanan, KDS dan pelanggan langsung dapat update tanpa refresh."
+> - **Admin** — manajemen menu, meja (QR), staf, laporan penjualan, dan **pengaturan logo/restoran/PPN/QRIS** real-time.
+> - Semua antarmuka sudah **tersambung ke backend Laravel** (API nyata, bukan mock), pembayaran pakai **QRIS statis** (gambar diunggah admin, cashier konfirmasi manual via notifikasi di HP merchant).
+> - Real-time jalan pakai **Laravel Reverb + Redis**: kalau kasir konfirmasi pesanan, KDS dan pelanggan langsung dapat update tanpa refresh.
+> - Channel WebSocket diperkuat: channel `orders` & `settings` **private** (butuh login), channel menu & pelanggan tetap publik."
 
 *(Demo live: kasir pesan → KDS muncul → bayar → struk. Ini paling berkesan.)*
 
@@ -37,12 +38,39 @@
 - Nyalakan di Laragon: **MySQL**, **backend** (`php artisan serve`), **Reverb**, **Redis**, lalu **frontend** (`npm run dev`) supaya demo live siap saat share screen.
 - Siapkan data demo (menu 19 item + 8 meja sudah ada di seeder).
 
+## 📱 Riset QRIS Merchant & Implementasi QRIS Statis (26 Agustus 2026)
+
+> Ringkasan riset untuk presentasi: kenapa QRIS statis, bukan dinamis.
+
+**Apa itu QRIS statis?**
+Satu kode QR tetap yang dicetak/ditempel di kasir. Tidak ada nominal tertanam — pelanggan memindai nominal yang tertera di layar lalu input sendiri di HP.
+
+**Mengapa statis untuk prototype ini?**
+- Integrasi API QRIS dinamis (Midtrans/Xendit) butuh verifikasi merchant resmi + biaya gateway → untuk demonstrasi PKL, QRIS statis sudah cukup membuktikan alur pembayaran digital berjalan.
+- Kasir tetap konfirmasi manual dengan melihat notifikasi masuk di HP merchant (GoPay Spiker) — menggambarkan proses nyata UMKM.
+
+**Riset GoPay Merchant perorangan (Agustus 2026):**
+
+| Aspek | Detail |
+|---|---|
+| Platform daftar | Aplikasi **GoPay Merchant** (Google Play / App Store) — gratis |
+| Dokumen perorangan | KTP + selfie, nomor HP & email aktif, rekening bank atas nama sendiri, foto tempat usaha/produk; NPWP opsional untuk mikro |
+| Verifikasi | ±1×24 jam s.d. 1–3 hari kerja (oleh PT EN/PTEN) |
+| Biaya pendaftaran | Rp0 |
+| MDR (aturan BI, berlaku semua penyedia) | Usaha mikro (UMI): **0% untuk transaksi ≤ Rp500.000**, di atasnya 0,3%; UMKM kecil-menengah: 0,7%; merchant tidak boleh membebankan ke pembeli |
+| Pencairan dana | Instan (T+0) gratis ke bank mana pun; ada notifikasi suara (GoPay Spiker) |
+| Jenis QRIS | Statis (gratis, 1 kode tetap) sudah tersedia setelah verifikasi; dinamis (per transaksi, butuh API) = pengembangan lanjutan |
+
+**Relevansi proyek:**
+- Saat ini: admin mengunggah gambar QR statis → kasir tampilkan di layar pembayaran → kasir cek notifikasi masuk di HP merchant → konfirmasi bayar.
+- Ke depan: jika ada akses Midtrans/Xendit sandbox → integrasi QRIS dinamis (nominal otomatis tanpa input manual).
+
 ## ❓ Pertanyaan Potensial & Jawaban
 
 | Pertanyaan | Jawaban |
 |---|---|
 | Teknologi apa? | Frontend React (TypeScript), backend Laravel, real-time Laravel Reverb + Redis, DB MySQL/PostgreSQL. |
-| Kenapa QRIS simulasi? | Integrasi QRIS asli (sandbox) ada di fase berikutnya PRD; prototype fokus alur dulu. |
+| Kenapa QRIS statis? | Integrasi QRIS dinamis (API gateway) butuh verifikasi merchant resmi; QRIS statis sudah cukup membuktikan alur pembayaran digital, cocok untuk demo PKL. (QRIS dinamis = pengembangan lanjutan.) |
 | Berapa lama pengerjaan? | Sesuai roadmap fase A/B/C di `docs/todo.md`. |
 | Bagaimana real-time bekerja? | Backend broadcast event → Reverb (WebSocket) → frontend subscribe channel. |
 | Kapan online? | Target sesi berikutnya, tergantung keputusan VPS/server sekolah. |

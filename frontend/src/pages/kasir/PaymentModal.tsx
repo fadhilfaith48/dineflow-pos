@@ -7,6 +7,7 @@ import { Button } from '@/components/Button'
 interface PaymentModalProps {
   open: boolean
   total: number
+  qrisImageUrl?: string
   onClose: () => void
   onConfirm: (payload: { method: PaymentMethod; cashReceived?: number }) => Promise<void>
 }
@@ -47,7 +48,7 @@ function buildQrisPayload(total: number): string {
   return body + '6304' + crc16ccitt(body + '6304')
 }
 
-export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalProps) {
+export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: PaymentModalProps) {
   const [method, setMethod] = useState<PaymentMethod>('tunai')
   const [cash, setCash] = useState('')
   const [qrisPaid, setQrisPaid] = useState(false)
@@ -151,31 +152,41 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
         {method === 'qris' && (
           <div className="mt-4 flex flex-col items-center text-center">
             <div className="w-fit rounded-xl border border-border-subtle p-4">
-              <QRCodeSVG value={qrisPayload} size={180} />
-            </div>
-            <p className="mt-3 text-caption text-text-secondary">
-              Minta pelanggan memindai QRIS untuk membayar{' '}
-              <span className="font-num font-semibold text-text-primary">{formatRupiah(total)}</span>
-            </p>
-            <div
-              className={`mt-3 flex items-center gap-2 rounded-lg px-4 py-2 text-caption font-semibold ${
-                qrisPaid
-                  ? 'bg-status-ready/15 text-status-ready'
-                  : 'bg-accent-tint text-accent-primary'
-              }`}
-            >
-              {qrisPaid ? (
-                <>Pembayaran berhasil</>
+              {qrisImageUrl ? (
+                <img src={qrisImageUrl} alt="QRIS Statis" className="h-[180px] w-[180px] object-contain" />
               ) : (
-                <>
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-primary opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-primary" />
-                  </span>
-                  Menunggu pembayaran...
-                </>
+                <QRCodeSVG value={qrisPayload} size={180} />
               )}
             </div>
+            <p className="mt-3 text-caption text-text-secondary">
+              {qrisImageUrl ? (
+                <>Pelanggan memindai QR di atas, lalu masukkan nominal <span className="font-num font-semibold text-text-primary">{formatRupiah(total)}</span>. Setelah notifikasi masuk di HP merchant, klik tombol di bawah.</>
+              ) : (
+                <>Minta pelanggan memindai QRIS untuk membayar{' '}
+                <span className="font-num font-semibold text-text-primary">{formatRupiah(total)}</span></>
+              )}
+            </p>
+            {!qrisImageUrl && (
+              <div
+                className={`mt-3 flex items-center gap-2 rounded-lg px-4 py-2 text-caption font-semibold ${
+                  qrisPaid
+                    ? 'bg-status-ready/15 text-status-ready'
+                    : 'bg-accent-tint text-accent-primary'
+                }`}
+              >
+                {qrisPaid ? (
+                  <>Pembayaran berhasil</>
+                ) : (
+                  <>
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-primary opacity-75" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-primary" />
+                    </span>
+                    Menunggu pembayaran...
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -184,9 +195,15 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
             Batal
           </Button>
           {method === 'qris' ? (
-            <Button fullWidth onClick={() => setQrisPaid(true)} disabled={submitting}>
-              Simulasi Pembayaran Sukses
-            </Button>
+            qrisImageUrl ? (
+              <Button fullWidth onClick={handleConfirm} disabled={submitting}>
+                {submitting ? 'Memproses...' : 'Sudah Terima Bayaran'}
+              </Button>
+            ) : (
+              <Button fullWidth onClick={() => setQrisPaid(true)} disabled={submitting}>
+                Simulasi Pembayaran Sukses
+              </Button>
+            )
           ) : (
             <Button fullWidth onClick={handleConfirm} disabled={cashInvalid || submitting}>
               {submitting ? 'Memproses...' : 'Konfirmasi Bayar'}
@@ -194,7 +211,7 @@ export function PaymentModal({ open, total, onClose, onConfirm }: PaymentModalPr
           )}
         </div>
 
-        {method === 'qris' && qrisPaid && (
+        {method === 'qris' && !qrisImageUrl && qrisPaid && (
           <div className="mt-4">
             <Button variant="primary" fullWidth onClick={handleConfirm} disabled={submitting}>
               {submitting ? 'Memproses...' : 'Tandai Lunas'}

@@ -186,6 +186,7 @@ export function KasirPage() {
           subtotal={cart.summary.subtotal}
           tax={cart.summary.tax}
           total={cart.summary.total}
+          taxRatePercent={settings?.taxRate ?? 10}
           tableLabel={selectedTable ? `Meja ${selectedTable.number}` : 'Take Away'}
           onSelectTable={() => setShowTablePicker(true)}
           onIncrement={cart.increment}
@@ -208,6 +209,7 @@ export function KasirPage() {
       <PaymentModal
         open={showPayment}
         total={noteToPay ? noteToPay.total : cart.summary.total}
+        qrisImageUrl={settings?.qrisImageUrl}
         onClose={() => {
           setShowPayment(false)
           setNoteToPay(null)

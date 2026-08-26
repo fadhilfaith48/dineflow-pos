@@ -108,4 +108,5 @@ export interface Settings {
   restaurantName: string
   restaurantAddress: string
   logoUrl?: string
+  qrisImageUrl?: string
 }

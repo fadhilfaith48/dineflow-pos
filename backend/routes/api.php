@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::put('/settings', [SettingController::class, 'update']);
         Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
+        Route::post('/settings/qris', [SettingController::class, 'uploadQris']);
     });
 
     Route::get('/settings', [SettingController::class, 'index'])->middleware('role:kasir,admin');

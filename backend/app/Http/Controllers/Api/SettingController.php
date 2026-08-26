@@ -54,11 +54,26 @@ class SettingController extends Controller
         return response()->json(['logoUrl' => $url]);
     }
 
+    public function uploadQris(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'qris' => ['required', 'image', 'max:2048'],
+        ]);
+
+        $path = $request->file('qris')->store('qris', 'public');
+        $url = Storage::disk('public')->url($path);
+        Setting::setValue('qris_image_url', $url);
+
+        SettingsChanged::dispatch($this->payload());
+
+        return response()->json(['qrisImageUrl' => $url]);
+    }
+
     /**
      * Payload pengaturan lengkap — dipakai index(), update(), uploadLogo(),
-     * dan broadcast SettingsChanged agar bentuknya konsisten.
+     * uploadQris(), dan broadcast SettingsChanged agar bentuknya konsisten.
      *
-     * @return array{taxRate: int, restaurantName: string, restaurantAddress: string, logoUrl: ?string}
+     * @return array{taxRate: int, restaurantName: string, restaurantAddress: string, logoUrl: ?string, qrisImageUrl: ?string}
      */
     private function payload(): array
     {
@@ -69,6 +84,7 @@ class SettingController extends Controller
             'restaurantName' => $settings['restaurant_name'] ?? 'DINEFLOW RESTAURANT',
             'restaurantAddress' => $settings['restaurant_address'] ?? 'Jl. Raya No. 1, Jakarta',
             'logoUrl' => $settings['logo_url'] ?? null,
+            'qrisImageUrl' => $settings['qris_image_url'] ?? null,
         ];
     }
 }

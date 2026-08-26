@@ -303,6 +303,15 @@ export class HttpApi implements Api {
     })
   }
 
+  async uploadQris(file: File): Promise<{ qrisImageUrl: string }> {
+    const formData = new FormData()
+    formData.append('qris', file)
+    return request<{ qrisImageUrl: string }>('/settings/qris', {
+      method: 'POST',
+      body: formData,
+    })
+  }
+
   async exportSalesReport(period?: SalesPeriod, range?: SalesDateRange): Promise<Blob> {
     const query = salesQuery(period, range)
     const headers = new Headers()

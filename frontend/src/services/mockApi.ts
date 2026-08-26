@@ -270,6 +270,10 @@ export class MockApi implements Api {
     return { logoUrl: '' }
   }
 
+  async uploadQris(): Promise<{ qrisImageUrl: string }> {
+    return { qrisImageUrl: '' }
+  }
+
   async exportSalesReport(): Promise<Blob> {
     return new Blob(['mock export'], { type: 'text/csv' })
   }

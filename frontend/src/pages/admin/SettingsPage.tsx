@@ -10,6 +10,8 @@ export function SettingsPage() {
   const [restaurantAddress, setRestaurantAddress] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
+  const [qrisFile, setQrisFile] = useState<File | null>(null)
+  const [qrisPreview, setQrisPreview] = useState<string>('')
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
@@ -21,6 +23,7 @@ export function SettingsPage() {
       setRestaurantName(s.restaurantName)
       setRestaurantAddress(s.restaurantAddress)
       setLogoPreview(s.logoUrl ?? '')
+      setQrisPreview(s.qrisImageUrl ?? '')
     })
   }, [])
 
@@ -29,6 +32,13 @@ export function SettingsPage() {
     if (!file) return
     setLogoFile(file)
     setLogoPreview(URL.createObjectURL(file))
+  }
+
+  function handleQrisChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setQrisFile(file)
+    setQrisPreview(URL.createObjectURL(file))
   }
 
   async function handleSave() {
@@ -45,6 +55,11 @@ export function SettingsPage() {
         const result = await api.uploadLogo(logoFile)
         setLogoPreview(result.logoUrl)
         setLogoFile(null)
+      }
+      if (qrisFile) {
+        const result = await api.uploadQris(qrisFile)
+        setQrisPreview(result.qrisImageUrl)
+        setQrisFile(null)
       }
       setSuccess('Pengaturan berhasil disimpan.')
     } catch (e) {
@@ -79,6 +94,22 @@ export function SettingsPage() {
               <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
             </label>
             <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
+        <div className="text-heading font-semibold text-text-primary">Gambar QRIS Statis</div>
+        <div className="mt-3 flex items-center gap-4">
+          {qrisPreview && (
+            <img src={qrisPreview} alt="QRIS" className="h-20 w-20 rounded-lg object-contain" />
+          )}
+          <div>
+            <label className="cursor-pointer rounded-lg border border-border-subtle bg-bg-secondary px-4 py-2 text-body font-semibold text-text-primary transition-colors hover:bg-bg-primary">
+              Pilih QRIS
+              <input type="file" accept="image/*" className="hidden" onChange={handleQrisChange} />
+            </label>
+            <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB. Ditampilkan di layar pembayaran kasir.</p>
           </div>
         </div>
       </div>
