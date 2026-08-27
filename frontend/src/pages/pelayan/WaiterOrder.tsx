@@ -118,7 +118,7 @@ export function WaiterOrder({
       </div>
 
       {showCart && (
-        <div className="fixed inset-0 z-30 flex flex-col bg-bg-surface">
+        <div className="fixed inset-0 z-30 mx-auto flex max-w-md flex-col bg-bg-surface">
           <header className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
             <div>
               <div className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Keranjang</div>
