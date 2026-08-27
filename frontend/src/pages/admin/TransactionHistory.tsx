@@ -13,6 +13,7 @@ const sourceLabel: Record<Order['source'], string> = {
 }
 
 type MethodFilter = 'semua' | PaymentMethod
+type StatusFilter = 'semua' | 'selesai' | 'dibatalkan'
 
 function toYmd(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -30,6 +31,7 @@ export function TransactionHistory() {
   const [range, setRange] = useState({ start: '', end: '' })
   const [query, setQuery] = useState('')
   const [method, setMethod] = useState<MethodFilter>('semua')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('semua')
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null)
 
   function loadOrders() {
@@ -46,7 +48,7 @@ export function TransactionHistory() {
 
   useEffect(() => {
     echo.private('orders').listen('OrderStatusChanged', (event: { action?: string }) => {
-      if (event.action === 'paid') loadOrders()
+      if (event.action === 'paid' || event.action === 'voided') loadOrders()
     })
     echo.private('settings').listen('SettingsChanged', (event: { settings: Settings }) => {
       setSettings(event.settings)
@@ -57,7 +59,7 @@ export function TransactionHistory() {
     }
   }, [])
 
-  const paidOrders = useMemo(() => orders.filter((o) => o.status === 'selesai' && o.payment), [orders])
+  const paidOrders = useMemo(() => orders.filter((o) => o.status === 'selesai' || o.status === 'dibatalkan'), [orders])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -66,17 +68,19 @@ export function TransactionHistory() {
       if (range.start && dateOnly < range.start) return false
       if (range.end && dateOnly > range.end) return false
       if (method !== 'semua' && o.payment?.method !== method) return false
+      if (statusFilter !== 'semua' && o.status !== statusFilter) return false
       if (q !== '' && !o.orderNumber.toLowerCase().includes(q)) return false
       return true
     })
-  }, [paidOrders, range, method, query])
+  }, [paidOrders, range, method, statusFilter, query])
 
-  const hasFilter = range.start !== '' || range.end !== '' || query.trim() !== '' || method !== 'semua'
+  const hasFilter = range.start !== '' || range.end !== '' || query.trim() !== '' || method !== 'semua' || statusFilter !== 'semua'
 
   function resetFilters() {
     setRange({ start: '', end: '' })
     setQuery('')
     setMethod('semua')
+    setStatusFilter('semua')
   }
 
   if (error) {
@@ -118,6 +122,16 @@ export function TransactionHistory() {
           <option value="semua">Semua Metode</option>
           <option value="tunai">Tunai</option>
           <option value="qris">QRIS</option>
+        </select>
+        <select
+          aria-label="Filter status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
+        >
+          <option value="semua">Semua Status</option>
+          <option value="selesai">Selesai</option>
+          <option value="dibatalkan">Dibatalkan</option>
         </select>
         {hasFilter && (
           <button
@@ -179,12 +193,14 @@ export function TransactionHistory() {
                   </span>
                   <span
                     className={`justify-self-start rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                      order.payment?.method === 'tunai'
-                        ? 'bg-status-ready/15 text-status-ready'
-                        : 'bg-status-done/15 text-status-done'
+                      order.status === 'dibatalkan'
+                        ? 'bg-status-danger/15 text-status-danger'
+                        : order.payment?.method === 'tunai'
+                          ? 'bg-status-ready/15 text-status-ready'
+                          : 'bg-status-done/15 text-status-done'
                     }`}
                   >
-                    {order.payment?.method === 'tunai' ? 'Tunai' : 'QRIS'}
+                    {order.status === 'dibatalkan' ? 'Batal' : order.payment?.method === 'tunai' ? 'Tunai' : 'QRIS'}
                   </span>
                 </button>
               </li>

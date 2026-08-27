@@ -14,6 +14,7 @@ interface KasirQueuePanelProps {
   activeNotes: Order[]
   historyOrders: Order[]
   onConfirm: (orderId: number) => void
+  onVoid: (orderId: number) => void
   onPayNote: (order: Order) => void
   onReprint: (order: Order) => void
 }
@@ -47,20 +48,32 @@ function MethodBadge({ method }: { method?: PaymentMethod }) {
 }
 
 function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
+  const isCancelled = order.status === 'dibatalkan'
   return (
     <li>
       <button
         onClick={onClick}
-        title="Cetak ulang struk"
-        className="w-full rounded-lg border border-border-subtle p-3 text-left transition-colors hover:border-accent-primary hover:bg-accent-tint/40"
+        title={isCancelled ? 'Pesanan dibatalkan' : 'Cetak ulang struk'}
+        className={`w-full rounded-lg border p-3 text-left transition-colors ${
+          isCancelled
+            ? 'border-status-danger/30 bg-status-danger/5 opacity-60'
+            : 'border-border-subtle hover:border-accent-primary hover:bg-accent-tint/40'
+        }`}
       >
         <div className="flex items-center justify-between gap-2">
           <span className="min-w-0 truncate font-num text-caption font-bold text-text-primary">
             {order.orderNumber}
           </span>
-          <span className="shrink-0 font-num text-caption font-bold text-text-primary">
-            {formatRupiah(order.total)}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {isCancelled && (
+              <span className="shrink-0 rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-status-danger">
+                Batal
+              </span>
+            )}
+            <span className="shrink-0 font-num text-caption font-bold text-text-primary">
+              {formatRupiah(order.total)}
+            </span>
+          </div>
         </div>
         <div className="mt-1 flex items-center justify-between gap-2">
           <span className="min-w-0 truncate text-caption text-text-secondary">
@@ -71,7 +84,7 @@ function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
             {' · '}
             {order.tableNumber ? `Meja ${order.tableNumber}` : sourceLabel[order.source]}
           </span>
-          <MethodBadge method={order.payment?.method} />
+          {!isCancelled && <MethodBadge method={order.payment?.method} />}
         </div>
       </button>
     </li>
@@ -81,9 +94,11 @@ function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
 function OrderCard({
   order,
   action,
+  onVoid,
 }: {
   order: Order
   action: { label: string; onClick: () => void; primary?: boolean }
+  onVoid?: () => void
 }) {
   return (
     <li className="rounded-lg border border-border-subtle p-3">
@@ -108,6 +123,7 @@ function OrderCard({
           <li key={item.id} className="flex justify-between gap-2 py-1 text-caption text-text-primary">
             <span className="min-w-0 truncate">
               {item.quantity}× {item.name}
+              {item.variantName && <span className="text-text-secondary"> ({item.variantName})</span>}
             </span>
             <span className="shrink-0 font-num">{formatRupiah(item.price * item.quantity)}</span>
           </li>
@@ -116,9 +132,16 @@ function OrderCard({
 
       <div className="mt-2 flex items-center justify-between gap-2 border-t border-border-subtle pt-2">
         <span className="font-num text-caption font-bold text-text-primary">{formatRupiah(order.total)}</span>
-        <Button size="sm" variant={action.primary ? 'primary' : 'outline'} onClick={action.onClick}>
-          {action.label}
-        </Button>
+        <div className="flex gap-1.5">
+          {onVoid && (
+            <Button size="sm" variant="danger" onClick={onVoid}>
+              Batalkan
+            </Button>
+          )}
+          <Button size="sm" variant={action.primary ? 'primary' : 'outline'} onClick={action.onClick}>
+            {action.label}
+          </Button>
+        </div>
       </div>
     </li>
   )
@@ -134,6 +157,7 @@ export function KasirQueuePanel({
   activeNotes,
   historyOrders,
   onConfirm,
+  onVoid,
   onPayNote,
   onReprint,
 }: KasirQueuePanelProps) {
@@ -189,7 +213,7 @@ export function KasirQueuePanel({
           </header>
 
           <div className="flex-1 overflow-y-auto p-3">
-            {tab === 'masuk' ? (
+              {tab === 'masuk' ? (
               pendingOrders.length === 0 ? (
                 <p className="py-10 text-center text-body text-text-secondary">Tidak ada pesanan masuk.</p>
               ) : (
@@ -199,6 +223,7 @@ export function KasirQueuePanel({
                       key={order.id}
                       order={order}
                       action={{ label: 'Konfirmasi', primary: true, onClick: () => onConfirm(order.id) }}
+                      onVoid={() => onVoid(order.id)}
                     />
                   ))}
                 </ul>
@@ -212,6 +237,7 @@ export function KasirQueuePanel({
                     key={order.id}
                     order={order}
                     action={{ label: 'Bayar', primary: true, onClick: () => onPayNote(order) }}
+                    onVoid={() => onVoid(order.id)}
                   />
                 ))}
               </ul>

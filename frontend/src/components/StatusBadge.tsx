@@ -1,4 +1,4 @@
-export type BadgeVariant = 'new' | 'cooking' | 'ready' | 'done' | 'danger' | 'neutral'
+export type BadgeVariant = 'new' | 'cooking' | 'ready' | 'done' | 'danger' | 'neutral' | 'cancelled'
 
 const colorMap: Record<BadgeVariant, { bg: string; text: string; label: string }> = {
   new: { bg: 'bg-status-new/15', text: 'text-status-new', label: 'Baru' },
@@ -7,6 +7,7 @@ const colorMap: Record<BadgeVariant, { bg: string; text: string; label: string }
   done: { bg: 'bg-status-done/15', text: 'text-status-done', label: 'Selesai' },
   danger: { bg: 'bg-status-danger/15', text: 'text-status-danger', label: 'Habis' },
   neutral: { bg: 'bg-bg-secondary', text: 'text-text-secondary', label: 'Diproses' },
+  cancelled: { bg: 'bg-status-danger/15', text: 'text-status-danger', label: 'Dibatalkan' },
 }
 
 interface StatusBadgeProps {

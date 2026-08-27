@@ -120,6 +120,21 @@ export class MockApi implements Api {
     return order
   }
 
+  async voidOrder(orderId: number): Promise<Order> {
+    const order = orders.find((o) => o.id === orderId)
+    if (!order) throw new Error('Pesanan tidak ditemukan')
+    if (order.status === 'selesai' || order.status === 'dibatalkan') {
+      throw new Error(`Pesanan sudah ${order.status === 'selesai' ? 'selesai' : 'dibatalkan'}`)
+    }
+    order.status = 'dibatalkan'
+    order.updatedAt = new Date().toISOString()
+    if (order.tableId) {
+      const table = tables.find((t) => t.id === order.tableId)
+      if (table && table.status === 'terisi') table.status = 'kosong'
+    }
+    return order
+  }
+
   async updateItemStatus(
     orderId: number,
     itemId: number,

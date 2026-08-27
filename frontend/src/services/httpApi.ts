@@ -183,6 +183,12 @@ export class HttpApi implements Api {
     }).then(unwrap)
   }
 
+  async voidOrder(orderId: number): Promise<Order> {
+    return request<{ data: Order }>(`/orders/${orderId}/void`, {
+      method: 'PATCH',
+    }).then(unwrap)
+  }
+
   async updateItemStatus(
     orderId: number,
     itemId: number,

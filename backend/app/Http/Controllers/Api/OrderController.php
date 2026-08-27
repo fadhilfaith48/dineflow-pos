@@ -153,4 +153,30 @@ class OrderController extends Controller
 
         return new OrderResource($order->load(['table', 'items']));
     }
+
+    public function void(Order $order): OrderResource
+    {
+        if (in_array($order->status, ['selesai', 'dibatalkan'])) {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan sudah '.($order->status === 'selesai' ? 'selesai' : 'dibatalkan')],
+            ]);
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->status = 'dibatalkan';
+            $order->save();
+
+            if ($order->table_id) {
+                $table = Table::lockForUpdate()->find($order->table_id);
+                if ($table && $table->status === 'terisi') {
+                    $table->status = 'kosong';
+                    $table->save();
+                }
+            }
+        });
+
+        OrderStatusChanged::dispatch($order, 'voided');
+
+        return new OrderResource($order->load(['table', 'items']));
+    }
 }

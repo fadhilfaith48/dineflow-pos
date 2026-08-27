@@ -18,6 +18,7 @@ export interface Api {
   getOrders(): Promise<Order[]>
   createOrder(payload: CreateOrderPayload): Promise<Order>
   confirmOrder(orderId: number): Promise<Order>
+  voidOrder(orderId: number): Promise<Order>
   updateItemStatus(orderId: number, itemId: number, status: Order['items'][number]['status']): Promise<Order>
   processPayment(payload: PaymentPayload): Promise<Payment>
   createMenuItem(input: CreateMenuItemInput): Promise<MenuItem>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DiningTable, MenuCategory, MenuItem, Order, PaymentMethod, Settings } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant, Order, PaymentMethod, Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
@@ -79,7 +79,7 @@ export function KasirPage() {
   )
 
   const paidOrders = useMemo(
-    () => orders.filter((o) => o.status === 'selesai'),
+    () => orders.filter((o) => o.status === 'selesai' || o.status === 'dibatalkan'),
     [orders],
   )
 
@@ -92,9 +92,9 @@ export function KasirPage() {
     )
   }, [items, activeCategory, search])
 
-  function handleAdd(item: MenuItem) {
+  function handleAdd(item: MenuItem, variant?: MenuItemVariant) {
     if (!item.available) return
-    cart.addItem(item)
+    cart.addItem(item, variant)
   }
 
   function handleHold() {
@@ -110,6 +110,18 @@ export function KasirPage() {
       setOrders(await api.getOrders())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal konfirmasi pesanan.')
+    }
+  }
+
+  async function handleVoidOrder(orderId: number) {
+    if (!window.confirm('Batalkan pesanan ini?')) return
+    setError('')
+    try {
+      await api.voidOrder(orderId)
+      setOrders(await api.getOrders())
+      setTables(await api.getTables())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
     }
   }
 
@@ -168,6 +180,7 @@ export function KasirPage() {
           activeNotes={activeNotes}
           historyOrders={paidOrders}
           onConfirm={handleConfirmOrder}
+          onVoid={handleVoidOrder}
           onPayNote={handlePayNote}
           onReprint={handleReprint}
         />
@@ -179,6 +192,7 @@ export function KasirPage() {
           search={search}
           onSearchChange={setSearch}
           onAdd={handleAdd}
+          taxRate={settings?.taxRate}
         />
         <CartPanel
           lines={cart.lines}

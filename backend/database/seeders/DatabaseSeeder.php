@@ -198,6 +198,16 @@ class DatabaseSeeder extends Seeder
                     ['#M08', 8000, 1, 'baru', null, 'Besar'],
                 ],
             ],
+            [
+                'order_number' => 'ORD-0004',
+                'table' => 'T6',
+                'source' => 'kasir',
+                'status' => 'dibatalkan',
+                'created_at' => '2026-08-13 09:15:00',
+                'items' => [
+                    ['#M05', 15000, 1, 'baru'],
+                ],
+            ],
         ];
 
         foreach ($orders as $data) {
