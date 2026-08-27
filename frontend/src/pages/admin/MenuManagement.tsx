@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { MenuCategory, MenuItem } from '@/types'
+import type { MenuCategory, MenuItem, MenuItemVariant } from '@/types'
+import type { MenuVariantInput } from '@/services/api'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/Button'
 
@@ -20,6 +21,7 @@ export interface MenuFormData {
   description?: string
   imageUrl?: string
   image?: File
+  variants?: MenuVariantInput[]
 }
 
 const emptyForm: MenuFormData = {
@@ -28,6 +30,14 @@ const emptyForm: MenuFormData = {
   categoryId: 0,
   description: '',
   imageUrl: '',
+  variants: [],
+}
+
+interface VariantDraft {
+  id?: number
+  name: string
+  price: number
+  available: boolean
 }
 
 interface MenuFormModalProps {
@@ -43,6 +53,9 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     ...initial,
     categoryId: initial.categoryId || categories[0]?.id || 0,
   })
+  const [variants, setVariants] = useState<VariantDraft[]>(
+    (initial.variants ?? []).map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available ?? true }))
+  )
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState<string | null>(initial.imageUrl ?? null)
@@ -53,15 +66,41 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     setPreview(URL.createObjectURL(file))
   }
 
+  function addVariant() {
+    setVariants([...variants, { name: '', price: 0, available: true }])
+  }
+
+  function removeVariant(index: number) {
+    setVariants(variants.filter((_, i) => i !== index))
+  }
+
+  function updateVariant(index: number, field: keyof VariantDraft, value: string | number | boolean) {
+    setVariants(variants.map((v, i) => (i === index ? { ...v, [field]: value } : v)))
+  }
+
   async function handleSave() {
     if (!form.name.trim() || form.price <= 0 || !form.categoryId) {
       setError('Nama, harga, dan kategori wajib diisi.')
       return
     }
+
+    const validVariants = variants.filter((v) => v.name.trim() !== '')
+    if (validVariants.length > 0) {
+      const hasInvalid = validVariants.some((v) => v.price <= 0)
+      if (hasInvalid) {
+        setError('Semua varian harus memiliki harga lebih dari 0.')
+        return
+      }
+    }
+
     setError('')
     setSaving(true)
     try {
-      await onSave(form)
+      const variantInputs: MenuVariantInput[] | undefined =
+        validVariants.length > 0
+          ? validVariants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available }))
+          : undefined
+      await onSave({ ...form, variants: variantInputs })
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menyimpan')
@@ -72,7 +111,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal">
+      <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h3 className="text-heading font-semibold text-text-primary">{title}</h3>
           <button onClick={onClose} aria-label="Tutup" className="text-text-secondary hover:text-text-primary">
@@ -93,7 +132,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Harga</label>
+              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Harga Dasar</label>
               <input
                 value={form.price === 0 ? '' : String(form.price)}
                 onChange={(e) => setForm({ ...form, price: Number(e.target.value.replace(/\D/g, '')) || 0 })}
@@ -149,6 +188,65 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
             </div>
             <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB (opsional)</p>
           </div>
+
+          <div className="border-t border-border-subtle pt-3">
+            <div className="flex items-center justify-between">
+              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Varian Menu</label>
+              <button
+                type="button"
+                onClick={addVariant}
+                className="rounded-lg bg-accent-tint px-2 py-1 text-caption font-bold text-accent-primary hover:bg-accent-primary/10"
+              >
+                + Tambah
+              </button>
+            </div>
+            <p className="mt-0.5 text-[11px] text-text-secondary">Opsi ukuran/tipe dengan harga berbeda (opsional)</p>
+
+            {variants.length === 0 ? (
+              <p className="mt-2 rounded-lg border border-dashed border-border-subtle py-3 text-center text-caption text-text-secondary">
+                Tanpa varian — gunakan harga dasar
+              </p>
+            ) : (
+              <div className="mt-2 flex flex-col gap-2">
+                {variants.map((v, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border-subtle p-2">
+                    <input
+                      value={v.name}
+                      onChange={(e) => updateVariant(i, 'name', e.target.value)}
+                      placeholder="Nama (e.g. Reguler)"
+                      className="flex-1 rounded-md border border-border-subtle px-2 py-1 text-caption focus:border-accent-primary focus:outline-none"
+                    />
+                    <input
+                      value={v.price === 0 ? '' : String(v.price)}
+                      onChange={(e) => updateVariant(i, 'price', Number(e.target.value.replace(/\D/g, '')) || 0)}
+                      inputMode="numeric"
+                      placeholder="Harga"
+                      className="w-24 rounded-md border border-border-subtle px-2 py-1 font-num text-caption focus:border-accent-primary focus:outline-none"
+                    />
+                    <label className="flex items-center gap-1 text-[11px] text-text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={v.available}
+                        onChange={(e) => updateVariant(i, 'available', e.target.checked)}
+                        className="h-3.5 w-3.5 accent-accent-primary"
+                      />
+                      Aktif
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeVariant(i)}
+                      className="rounded p-1 text-text-secondary hover:bg-status-danger/10 hover:text-status-danger"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {error && <p className="text-caption text-status-danger">{error}</p>}
         </div>
 
@@ -199,6 +297,12 @@ export function MenuManagement({
         categoryId: editingItem.categoryId,
         description: editingItem.description,
         imageUrl: editingItem.imageUrl,
+        variants: editingItem.variants?.map((v) => ({
+          id: v.id,
+          name: v.name,
+          price: v.price,
+          available: v.available,
+        })),
       }
     : emptyForm
 
@@ -243,6 +347,15 @@ export function MenuManagement({
                       <div>
                         <div className="text-body font-semibold text-text-primary">{item.name}</div>
                         <div className="font-num text-caption text-text-secondary">{item.code}</div>
+                        {item.variants && item.variants.length > 0 && (
+                          <div className="mt-0.5 flex flex-wrap gap-1">
+                            {item.variants.map((v) => (
+                              <span key={v.id} className="rounded bg-accent-tint px-1.5 py-0.5 text-[10px] font-bold text-accent-primary">
+                                {v.name} {formatRupiah(v.price)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>

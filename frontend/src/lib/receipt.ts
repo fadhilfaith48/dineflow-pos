@@ -12,7 +12,7 @@ export function orderToReceipt(order: Order, payment: Order['payment'], settings
     tableLabel: order.tableNumber ? `Meja ${order.tableNumber}` : 'Take Away',
     createdAt: order.createdAt,
     items: order.items.map((item) => ({
-      name: item.name,
+      name: item.variantName ? `${item.name} (${item.variantName})` : item.name,
       quantity: item.quantity,
       price: item.price,
       note: item.note,

@@ -11,10 +11,10 @@ interface CartPanelProps {
   taxRatePercent: number
   tableLabel: string
   onSelectTable: () => void
-  onIncrement: (menuItemId: number) => void
-  onDecrement: (menuItemId: number) => void
-  onRemove: (menuItemId: number) => void
-  onSetNote: (menuItemId: number, note: string) => void
+  onIncrement: (menuItemId: number, variantName?: string) => void
+  onDecrement: (menuItemId: number, variantName?: string) => void
+  onRemove: (menuItemId: number, variantName?: string) => void
+  onSetNote: (menuItemId: number, note: string, variantName?: string) => void
   onHold: () => void
   onSendToKitchen: () => void
 }
@@ -63,13 +63,20 @@ export function CartPanel({
         ) : (
           <ul className="flex flex-col gap-3">
             {lines.map((line) => (
-              <li key={line.menuItemId} className="rounded-lg border border-border-subtle p-3">
+              <li key={`${line.menuItemId}-${line.variantName ?? ''}`} className="rounded-lg border border-border-subtle p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 flex-1 truncate text-body font-semibold text-text-primary">
-                    {line.name}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="truncate text-body font-semibold text-text-primary">
+                      {line.name}
+                    </span>
+                    {line.variantName && (
+                      <span className="ml-1 text-caption text-text-secondary">
+                        ({line.variantName})
+                      </span>
+                    )}
+                  </div>
                   <button
-                    onClick={() => onRemove(line.menuItemId)}
+                    onClick={() => onRemove(line.menuItemId, line.variantName)}
                     aria-label={`Hapus ${line.name}`}
                     className="text-text-secondary transition-colors hover:text-status-danger"
                   >
@@ -89,7 +96,7 @@ export function CartPanel({
                 <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onDecrement(line.menuItemId)}
+                      onClick={() => onDecrement(line.menuItemId, line.variantName)}
                       aria-label="Kurangi"
                       className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
@@ -99,7 +106,7 @@ export function CartPanel({
                     </button>
                     <span className="w-6 text-center font-num text-body font-semibold">{line.quantity}</span>
                     <button
-                      onClick={() => onIncrement(line.menuItemId)}
+                      onClick={() => onIncrement(line.menuItemId, line.variantName)}
                       aria-label="Tambah"
                       className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
@@ -115,7 +122,7 @@ export function CartPanel({
 
                 <input
                   value={line.note ?? ''}
-                  onChange={(e) => onSetNote(line.menuItemId, e.target.value)}
+                  onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName)}
                   placeholder="Catatan (mis. tidak pedas)"
                   className="mt-2 w-full rounded-md border border-border-subtle px-2.5 py-1.5 text-caption placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
                 />

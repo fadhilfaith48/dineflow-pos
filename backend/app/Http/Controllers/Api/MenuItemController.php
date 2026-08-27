@@ -6,6 +6,7 @@ use App\Events\MenuChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuItemResource;
 use App\Models\MenuItem;
+use App\Models\MenuItemVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,7 @@ class MenuItemController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = MenuItem::query();
+        $query = MenuItem::with('variants');
 
         if ($request->filled('categoryId')) {
             $query->where('category_id', $request->integer('categoryId'));
@@ -34,6 +35,10 @@ class MenuItemController extends Controller
             'description' => ['nullable', 'string'],
             'imageUrl' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
+            'variants.*.price' => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.available' => ['nullable', 'boolean'],
         ]);
 
         $last = DB::transaction(function () {
@@ -50,9 +55,20 @@ class MenuItemController extends Controller
             'image_url' => $this->resolveImageUrl($request) ?? $validated['imageUrl'] ?? null,
         ]);
 
+        if (! empty($validated['variants'])) {
+            foreach ($validated['variants'] as $i => $v) {
+                $item->variants()->create([
+                    'name' => $v['name'],
+                    'price' => $v['price'],
+                    'available' => $v['available'] ?? true,
+                    'order' => $i,
+                ]);
+            }
+        }
+
         MenuChanged::dispatch($item);
 
-        return new MenuItemResource($item);
+        return new MenuItemResource($item->load('variants'));
     }
 
     public function update(Request $request, MenuItem $menuItem): MenuItemResource
@@ -65,6 +81,10 @@ class MenuItemController extends Controller
             'available' => ['sometimes', 'boolean'],
             'imageUrl' => ['sometimes', 'nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
+            'variants.*.price' => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.available' => ['nullable', 'boolean'],
         ]);
 
         $map = [
@@ -90,9 +110,21 @@ class MenuItemController extends Controller
 
         $menuItem->save();
 
+        if (array_key_exists('variants', $validated)) {
+            $menuItem->variants()->delete();
+            foreach ($validated['variants'] as $i => $v) {
+                $menuItem->variants()->create([
+                    'name' => $v['name'],
+                    'price' => $v['price'],
+                    'available' => $v['available'] ?? true,
+                    'order' => $i,
+                ]);
+            }
+        }
+
         MenuChanged::dispatch($menuItem);
 
-        return new MenuItemResource($menuItem);
+        return new MenuItemResource($menuItem->load('variants'));
     }
 
     private function resolveImageUrl(Request $request): ?string

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { DiningTable, MenuCategory, MenuItem } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant } from '@/types'
 import type { CartLine } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
@@ -14,11 +14,11 @@ interface WaiterOrderProps {
   lines: CartLine[]
   itemCount: number
   total: number
-  onAdd: (item: MenuItem) => void
-  onIncrement: (menuItemId: number) => void
-  onDecrement: (menuItemId: number) => void
-  onRemove: (menuItemId: number) => void
-  onSetNote: (menuItemId: number, note: string) => void
+  onAdd: (item: MenuItem, variant?: MenuItemVariant) => void
+  onIncrement: (menuItemId: number, variantName?: string) => void
+  onDecrement: (menuItemId: number, variantName?: string) => void
+  onRemove: (menuItemId: number, variantName?: string) => void
+  onSetNote: (menuItemId: number, note: string, variantName?: string) => void
   onSubmit: () => void
   onBack: () => void
 }
@@ -71,37 +71,59 @@ export function WaiterOrder({
           {items.length === 0 && (
             <li className="py-10 text-center text-body text-text-secondary">Tidak ada menu.</li>
           )}
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className={`flex items-center gap-3 rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card ${
-                item.available ? '' : 'opacity-50'
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-subheading font-semibold text-text-primary">{item.name}</div>
-                {item.description && (
-                  <p className="truncate text-caption text-text-secondary">{item.description}</p>
-                )}
-                <div className="mt-1 font-num text-body font-semibold text-text-secondary">
-                  {formatRupiah(item.price)}
+          {items.map((item) => {
+            const hasVariants = item.variants && item.variants.length > 0
+            return (
+              <li
+                key={item.id}
+                className={`rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card ${
+                  item.available ? '' : 'opacity-50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-subheading font-semibold text-text-primary">{item.name}</div>
+                    {item.description && (
+                      <p className="truncate text-caption text-text-secondary">{item.description}</p>
+                    )}
+                    <div className="mt-1 font-num text-body font-semibold text-text-secondary">
+                      {formatRupiah(item.price)}
+                    </div>
+                  </div>
+                  {!hasVariants && item.available && (
+                    <button
+                      onClick={() => onAdd(item)}
+                      aria-label={`Tambah ${item.name}`}
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-primary text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+                    >
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
+                  )}
+                  {!item.available && <StatusBadge variant="danger" />}
                 </div>
-              </div>
-              {item.available ? (
-                <button
-                  onClick={() => onAdd(item)}
-                  aria-label={`Tambah ${item.name}`}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-primary text-text-on-accent transition-colors hover:bg-accent-primary-hover"
-                >
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                </button>
-              ) : (
-                <StatusBadge variant="danger" />
-              )}
-            </li>
-          ))}
+                {hasVariants && item.available && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {item.variants!.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => onAdd(item, v)}
+                        disabled={!v.available}
+                        className={`rounded-lg border px-3 py-1.5 text-caption font-semibold transition-colors ${
+                          v.available
+                            ? 'border-accent-primary/30 bg-accent-tint text-accent-primary hover:bg-accent-primary hover:text-text-on-accent'
+                            : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
+                        }`}
+                      >
+                        {v.name} {formatRupiah(v.price)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </div>
 
@@ -141,16 +163,19 @@ export function WaiterOrder({
             ) : (
               <ul className="flex flex-col gap-3">
                 {lines.map((line) => (
-                  <li key={line.menuItemId} className="rounded-xl border border-border-subtle p-4">
+                  <li key={`${line.menuItemId}-${line.variantName ?? ''}`} className="rounded-xl border border-border-subtle p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-body font-semibold text-text-primary">{line.name}</div>
+                        <div className="truncate text-body font-semibold text-text-primary">
+                          {line.name}
+                          {line.variantName && <span className="ml-1 text-caption text-text-secondary">({line.variantName})</span>}
+                        </div>
                         <div className="mt-0.5 font-num text-caption text-text-secondary">
                           {formatRupiah(line.price)} / porsi
                         </div>
                       </div>
                       <button
-                        onClick={() => onRemove(line.menuItemId)}
+                        onClick={() => onRemove(line.menuItemId, line.variantName)}
                         aria-label={`Hapus ${line.name}`}
                         className="text-text-secondary transition-colors hover:text-status-danger"
                       >
@@ -162,7 +187,7 @@ export function WaiterOrder({
                     <div className="mt-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => onDecrement(line.menuItemId)}
+                          onClick={() => onDecrement(line.menuItemId, line.variantName)}
                           aria-label="Kurangi"
                           className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
                         >
@@ -172,7 +197,7 @@ export function WaiterOrder({
                         </button>
                         <span className="w-6 text-center font-num text-body font-bold">{line.quantity}</span>
                         <button
-                          onClick={() => onIncrement(line.menuItemId)}
+                          onClick={() => onIncrement(line.menuItemId, line.variantName)}
                           aria-label="Tambah"
                           className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
                         >
@@ -187,7 +212,7 @@ export function WaiterOrder({
                     </div>
                     <input
                       value={line.note ?? ''}
-                      onChange={(e) => onSetNote(line.menuItemId, e.target.value)}
+                      onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName)}
                       placeholder="Catatan (mis. tidak pedas)"
                       className="mt-3 w-full rounded-lg border border-border-subtle px-3 py-2 text-body placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
                     />

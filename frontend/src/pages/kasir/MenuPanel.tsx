@@ -1,4 +1,4 @@
-import type { MenuCategory, MenuItem } from '@/types'
+import type { MenuCategory, MenuItem, MenuItemVariant } from '@/types'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { formatRupiah } from '@/lib/format'
 
@@ -9,7 +9,8 @@ interface MenuPanelProps {
   items: MenuItem[]
   search: string
   onSearchChange: (value: string) => void
-  onAdd: (item: MenuItem) => void
+  onAdd: (item: MenuItem, variant?: MenuItemVariant) => void
+  taxRate?: number
 }
 
 export function MenuPanel({
@@ -20,6 +21,7 @@ export function MenuPanel({
   search,
   onSearchChange,
   onAdd,
+  taxRate,
 }: MenuPanelProps) {
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">
@@ -54,43 +56,60 @@ export function MenuPanel({
           </div>
         ) : (
           <ul className="divide-y divide-border-subtle">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className={`flex items-center gap-4 px-4 py-3 ${item.available ? '' : 'opacity-50'}`}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-subheading font-semibold text-text-primary">
-                    {item.name}
+            {items.map((item) => {
+              const hasVariants = item.variants && item.variants.length > 0
+              return (
+                <li
+                  key={item.id}
+                  className={`px-4 py-3 ${item.available ? '' : 'opacity-50'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-subheading font-semibold text-text-primary">
+                        {item.name}
+                      </div>
+                      <div className="font-num text-body font-medium text-text-secondary">
+                        {formatRupiah(item.price)}
+                      </div>
+                    </div>
+                    {!hasVariants && item.available && (
+                      <button
+                        onClick={() => onAdd(item)}
+                        aria-label={`Tambah ${item.name}`}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border-subtle text-accent-primary transition-colors hover:bg-accent-primary hover:text-text-on-accent"
+                      >
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M12 5v14M5 12h14" />
+                        </svg>
+                      </button>
+                    )}
+                    {!item.available && (
+                      <span className="shrink-0 rounded-full bg-status-danger/15 px-3 py-1 text-caption font-bold uppercase tracking-wider text-status-danger">
+                        Habis
+                      </span>
+                    )}
                   </div>
-                  <div className="font-num text-body font-medium text-text-secondary">
-                    {formatRupiah(item.price)}
-                  </div>
-                </div>
-                {item.available ? (
-                  <button
-                    onClick={() => onAdd(item)}
-                    aria-label={`Tambah ${item.name}`}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border-subtle text-accent-primary transition-colors hover:bg-accent-primary hover:text-text-on-accent"
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                  </button>
-                ) : (
-                  <span className="rounded-full bg-status-danger/15 px-3 py-1 text-caption font-bold uppercase tracking-wider text-status-danger">
-                    Habis
-                  </span>
-                )}
-              </li>
-            ))}
+                  {hasVariants && item.available && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {item.variants!.map((v) => (
+                        <button
+                          key={v.id}
+                          onClick={() => onAdd(item, v)}
+                          disabled={!v.available}
+                          className={`rounded-md border px-2.5 py-1 text-caption font-semibold transition-colors ${
+                            v.available
+                              ? 'border-accent-primary/30 bg-accent-tint text-accent-primary hover:bg-accent-primary hover:text-text-on-accent'
+                              : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
+                          }`}
+                        >
+                          {v.name} {formatRupiah(v.price)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

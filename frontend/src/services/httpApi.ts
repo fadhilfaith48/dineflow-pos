@@ -2,6 +2,7 @@ import type {
   Api,
   CreateMenuItemInput,
   CreateOrderPayload,
+  MenuVariantInput,
   PaymentPayload,
 } from './api'
 import type {
@@ -201,6 +202,21 @@ export class HttpApi implements Api {
   }
 
   async createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {
+    const payload: Record<string, unknown> = {
+      name: input.name,
+      price: input.price,
+      categoryId: input.categoryId,
+      description: input.description,
+      imageUrl: input.imageUrl,
+    }
+    if (input.variants?.length) {
+      payload.variants = input.variants.map((v, i) => ({
+        name: v.name,
+        price: v.price,
+        available: v.available ?? true,
+        order: i,
+      }))
+    }
     if (input.image instanceof File) {
       const formData = new FormData()
       appendScalar(formData, {
@@ -209,6 +225,9 @@ export class HttpApi implements Api {
         categoryId: input.categoryId,
         description: input.description ?? '',
       })
+      if (input.variants?.length) {
+        formData.append('variants', JSON.stringify(payload.variants))
+      }
       formData.append('image', input.image)
       return request<{ data: MenuItem }>('/menu-items', {
         method: 'POST',
@@ -217,25 +236,31 @@ export class HttpApi implements Api {
     }
     return request<{ data: MenuItem }>('/menu-items', {
       method: 'POST',
-      ...jsonBody({
-        name: input.name,
-        price: input.price,
-        categoryId: input.categoryId,
-        description: input.description,
-        imageUrl: input.imageUrl,
-      }),
+      ...jsonBody(payload),
     }).then(unwrap)
   }
 
   async updateMenuItem(
     id: number,
-    data: Partial<MenuItem> & { image?: File },
+    data: Partial<MenuItem> & { image?: File; variants?: MenuVariantInput[] },
   ): Promise<MenuItem> {
-    const { image, ...scalars } = data
+    const { image, variants, ...scalars } = data
+    const payload: Record<string, unknown> = { ...scalars }
+    if (variants !== undefined) {
+      payload.variants = variants.map((v, i) => ({
+        name: v.name,
+        price: v.price,
+        available: v.available ?? true,
+        order: i,
+      }))
+    }
     if (image instanceof File) {
       const formData = new FormData()
       formData.append('_method', 'PUT')
       appendScalar(formData, scalars)
+      if (variants !== undefined) {
+        formData.append('variants', JSON.stringify(payload.variants))
+      }
       formData.append('image', image)
       return request<{ data: MenuItem }>(`/menu-items/${id}`, {
         method: 'POST',
@@ -244,7 +269,7 @@ export class HttpApi implements Api {
     }
     return request<{ data: MenuItem }>(`/menu-items/${id}`, {
       method: 'PUT',
-      ...jsonBody(scalars),
+      ...jsonBody(payload),
     }).then(unwrap)
   }
 

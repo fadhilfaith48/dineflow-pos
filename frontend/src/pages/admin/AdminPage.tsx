@@ -65,6 +65,7 @@ export function AdminPage() {
         description: data.description,
         imageUrl: data.imageUrl,
         image: data.image,
+        variants: data.variants,
       })
       loadItems()
     } catch (e) {

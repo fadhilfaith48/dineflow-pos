@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { MenuItem } from '@/types'
+import type { MenuItem, MenuItemVariant } from '@/types'
 import { TAX_RATE } from '@/lib/constants'
 
 export interface CartLine {
@@ -8,49 +8,62 @@ export interface CartLine {
   price: number
   quantity: number
   note?: string
+  variantName?: string
+}
+
+function lineKey(menuItemId: number, variantName?: string): string {
+  return variantName ? `${menuItemId}-${variantName}` : String(menuItemId)
 }
 
 export function useCart(taxRatePercent?: number) {
   const [lines, setLines] = useState<CartLine[]>([])
   const rate = (taxRatePercent ?? TAX_RATE * 100) / 100
 
-  function addItem(item: MenuItem) {
+  function addItem(item: MenuItem, variant?: MenuItemVariant) {
+    const vName = variant?.name
+    const vPrice = variant?.price ?? item.price
+    const key = lineKey(item.id, vName)
+
     setLines((prev) => {
-      const existing = prev.find((l) => l.menuItemId === item.id)
+      const existing = prev.find((l) => lineKey(l.menuItemId, l.variantName) === key)
       if (existing) {
         return prev.map((l) =>
-          l.menuItemId === item.id ? { ...l, quantity: l.quantity + 1 } : l,
+          lineKey(l.menuItemId, l.variantName) === key ? { ...l, quantity: l.quantity + 1 } : l,
         )
       }
-      return [...prev, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }]
+      return [...prev, { menuItemId: item.id, name: item.name, price: vPrice, quantity: 1, variantName: vName }]
     })
   }
 
-  function increment(menuItemId: number) {
+  function increment(menuItemId: number, variantName?: string) {
+    const key = lineKey(menuItemId, variantName)
     setLines((prev) =>
       prev.map((l) =>
-        l.menuItemId === menuItemId ? { ...l, quantity: l.quantity + 1 } : l,
+        lineKey(l.menuItemId, l.variantName) === key ? { ...l, quantity: l.quantity + 1 } : l,
       ),
     )
   }
 
-  function decrement(menuItemId: number) {
+  function decrement(menuItemId: number, variantName?: string) {
+    const key = lineKey(menuItemId, variantName)
     setLines((prev) =>
       prev
         .map((l) =>
-          l.menuItemId === menuItemId ? { ...l, quantity: l.quantity - 1 } : l,
+          lineKey(l.menuItemId, l.variantName) === key ? { ...l, quantity: l.quantity - 1 } : l,
         )
         .filter((l) => l.quantity > 0),
     )
   }
 
-  function removeLine(menuItemId: number) {
-    setLines((prev) => prev.filter((l) => l.menuItemId !== menuItemId))
+  function removeLine(menuItemId: number, variantName?: string) {
+    const key = lineKey(menuItemId, variantName)
+    setLines((prev) => prev.filter((l) => lineKey(l.menuItemId, l.variantName) !== key))
   }
 
-  function setNote(menuItemId: number, note: string) {
+  function setNote(menuItemId: number, note: string, variantName?: string) {
+    const key = lineKey(menuItemId, variantName)
     setLines((prev) =>
-      prev.map((l) => (l.menuItemId === menuItemId ? { ...l, note } : l)),
+      prev.map((l) => (lineKey(l.menuItemId, l.variantName) === key ? { ...l, note } : l)),
     )
   }
 

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
+use App\Models\MenuItemVariant;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Setting;
@@ -19,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->seedSettings();
         $this->seedUsers();
         $this->seedMenu();
+        $this->seedVariants();
         $this->seedTables();
         $this->seedOrders();
     }
@@ -95,6 +97,49 @@ class DatabaseSeeder extends Seeder
         }
     }
 
+    private function seedVariants(): void
+    {
+        $variants = [
+            '#M01' => [
+                ['Reguler', 18000, true],
+                ['Besar', 25000, true],
+            ],
+            '#M03' => [
+                ['Reguler', 16000, true],
+                ['Besar', 22000, true],
+            ],
+            '#M08' => [
+                ['Reguler', 5000, true],
+                ['Besar', 8000, true],
+            ],
+            '#M09' => [
+                ['Reguler', 7000, true],
+                ['Besar', 10000, true],
+            ],
+        ];
+
+        foreach ($variants as $code => $items) {
+            $menuItem = MenuItem::where('code', $code)->first();
+            if (! $menuItem) {
+                continue;
+            }
+            // Base price = price of first variant (Reguler)
+            $menuItem->price = $items[0][1];
+            $menuItem->save();
+
+            foreach ($items as $i => $v) {
+                MenuItemVariant::updateOrCreate(
+                    ['menu_item_id' => $menuItem->id, 'name' => $v[0]],
+                    [
+                        'price' => $v[1],
+                        'available' => $v[2],
+                        'order' => $i,
+                    ],
+                );
+            }
+        }
+    }
+
     private function seedTables(): void
     {
         $tables = [
@@ -118,6 +163,7 @@ class DatabaseSeeder extends Seeder
 
     private function seedOrders(): void
     {
+        // Format item: [code, price, quantity, status, note?, variantName?]
         $orders = [
             [
                 'order_number' => 'ORD-0001',
@@ -126,7 +172,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'diproses',
                 'created_at' => '2026-08-12 10:15:00',
                 'items' => [
-                    ['#M03', 16000, 1, 'dimasak'],
+                    ['#M03', 16000, 1, 'dimasak', null, 'Reguler'],
                     ['#M10', 12000, 1, 'baru'],
                 ],
             ],
@@ -138,7 +184,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => '2026-08-12 10:20:00',
                 'items' => [
                     ['#M02', 22000, 1, 'dimasak', 'Tidak pedas'],
-                    ['#M09', 7000, 2, 'baru'],
+                    ['#M09', 10000, 2, 'baru', null, 'Besar'],
                 ],
             ],
             [
@@ -148,8 +194,8 @@ class DatabaseSeeder extends Seeder
                 'status' => 'menunggu-konfirmasi',
                 'created_at' => '2026-08-13 09:00:00',
                 'items' => [
-                    ['#M01', 18000, 1, 'baru'],
-                    ['#M08', 5000, 1, 'baru'],
+                    ['#M01', 25000, 1, 'baru', null, 'Besar'],
+                    ['#M08', 8000, 1, 'baru', null, 'Besar'],
                 ],
             ],
         ];
@@ -181,6 +227,7 @@ class DatabaseSeeder extends Seeder
                     ],
                     [
                         'menu_item_id' => $menu->id,
+                        'variant_name' => $item[5] ?? null,
                         'price' => $item[1],
                         'quantity' => $item[2],
                         'note' => $item[4] ?? null,

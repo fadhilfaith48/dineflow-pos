@@ -31,6 +31,7 @@ class OrderController extends Controller
             'items.*.menuItemId' => ['required', 'exists:menu_items,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.note' => ['nullable', 'string'],
+            'items.*.variantName' => ['nullable', 'string'],
         ]);
 
         // Rute POST /orders publik (self-order), jadi $request->user() tidak
@@ -55,7 +56,22 @@ class OrderController extends Controller
                         'items' => ['Menu "'.($menuItem->name ?? '?').'" sedang tidak tersedia'],
                     ]);
                 }
-                $subtotal += $menuItem->price * $item['quantity'];
+
+                $variantName = $item['variantName'] ?? null;
+                $unitPrice = $menuItem->price;
+
+                if ($variantName && $menuItem->variants()->count() > 0) {
+                    $variant = $menuItem->variants()->where('name', $variantName)->first();
+                    if ($variant && $variant->available) {
+                        $unitPrice = $variant->price;
+                    } elseif ($variant && ! $variant->available) {
+                        throw ValidationException::withMessages([
+                            'items' => ['Varian "'.$variantName.'" untuk "'.($menuItem->name).'" sedang tidak tersedia'],
+                        ]);
+                    }
+                }
+
+                $subtotal += $unitPrice * $item['quantity'];
             }
 
             $lastId = Order::lockForUpdate()->max('id') ?? 0;
@@ -73,10 +89,21 @@ class OrderController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $menuItem = $menuItems->get($item['menuItemId']);
+                $variantName = $item['variantName'] ?? null;
+                $unitPrice = $menuItem->price;
+
+                if ($variantName && $menuItem->variants()->count() > 0) {
+                    $variant = $menuItem->variants()->where('name', $variantName)->first();
+                    if ($variant) {
+                        $unitPrice = $variant->price;
+                    }
+                }
+
                 $order->items()->create([
                     'menu_item_id' => $menuItem->id,
                     'name' => $menuItem->name,
-                    'price' => $menuItem->price,
+                    'variant_name' => $variantName,
+                    'price' => $unitPrice,
                     'quantity' => $item['quantity'],
                     'note' => $item['note'] ?? null,
                     'status' => 'baru',

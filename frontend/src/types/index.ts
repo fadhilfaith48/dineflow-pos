@@ -32,6 +32,15 @@ export interface MenuItem {
   categoryId: number
   available: boolean
   imageUrl?: string
+  variants?: MenuItemVariant[]
+}
+
+export interface MenuItemVariant {
+  id: number
+  name: string
+  price: number
+  available: boolean
+  order: number
 }
 
 export type OrderSource = 'kasir' | 'pelayan' | 'self-order'
@@ -44,6 +53,7 @@ export interface OrderItem {
   id: number
   menuItemId: number
   name: string
+  variantName?: string
   price: number
   quantity: number
   note?: string

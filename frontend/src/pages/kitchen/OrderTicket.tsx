@@ -68,6 +68,7 @@ export function OrderTicket({ order, onAdvanceItem }: OrderTicketProps) {
                 <div className="min-w-0">
                   <div className="text-[24px] font-semibold leading-tight text-text-primary">
                     {item.quantity}× {item.name}
+                    {item.variantName && <span className="text-[17px] font-normal text-text-secondary"> ({item.variantName})</span>}
                   </div>
                   {item.note && (
                     <div className="mt-1 text-[16px] font-semibold text-status-danger">
