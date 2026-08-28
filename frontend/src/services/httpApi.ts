@@ -183,9 +183,10 @@ export class HttpApi implements Api {
     }).then(unwrap)
   }
 
-  async voidOrder(orderId: number): Promise<Order> {
+  async voidOrder(orderId: number, reason: string): Promise<Order> {
     return request<{ data: Order }>(`/orders/${orderId}/void`, {
       method: 'PATCH',
+      ...jsonBody({ reason }),
     }).then(unwrap)
   }
 
@@ -215,6 +216,9 @@ export class HttpApi implements Api {
       description: input.description,
       imageUrl: input.imageUrl,
     }
+    if (typeof input.isSpicy === 'boolean') {
+      payload.isSpicy = input.isSpicy
+    }
     if (input.variants?.length) {
       payload.variants = input.variants.map((v, i) => ({
         name: v.name,
@@ -231,6 +235,9 @@ export class HttpApi implements Api {
         categoryId: input.categoryId,
         description: input.description ?? '',
       })
+      if (typeof input.isSpicy === 'boolean') {
+        formData.append('isSpicy', String(input.isSpicy))
+      }
       if (input.variants?.length) {
         formData.append('variants', JSON.stringify(payload.variants))
       }

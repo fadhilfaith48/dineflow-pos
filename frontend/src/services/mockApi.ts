@@ -81,6 +81,8 @@ export class MockApi implements Api {
       id: index + 1,
       menuItemId: item.menuItemId,
       name: item.name,
+      variantName: item.variantName,
+      spiceLevel: item.spiceLevel,
       price: item.price,
       quantity: item.quantity,
       note: item.note,
@@ -120,13 +122,14 @@ export class MockApi implements Api {
     return order
   }
 
-  async voidOrder(orderId: number): Promise<Order> {
+  async voidOrder(orderId: number, reason: string): Promise<Order> {
     const order = orders.find((o) => o.id === orderId)
     if (!order) throw new Error('Pesanan tidak ditemukan')
     if (order.status === 'selesai' || order.status === 'dibatalkan') {
       throw new Error(`Pesanan sudah ${order.status === 'selesai' ? 'selesai' : 'dibatalkan'}`)
     }
     order.status = 'dibatalkan'
+    order.voidReason = reason
     order.updatedAt = new Date().toISOString()
     if (order.tableId) {
       const table = tables.find((t) => t.id === order.tableId)
@@ -188,6 +191,7 @@ export class MockApi implements Api {
       categoryId: input.categoryId,
       available: true,
       imageUrl: input.imageUrl,
+      isSpicy: input.isSpicy,
     }
     menuItems = [...menuItems, item]
     return { ...item }

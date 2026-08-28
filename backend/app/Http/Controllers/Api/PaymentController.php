@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Setting;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,10 +52,17 @@ class PaymentController extends Controller
 
             $cashReceived = $validated['cashReceived'] ?? null;
 
+            $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
+            $subtotal = (int) round($order->total / (1 + $taxRate));
+            $ppnAmount = $order->total - $subtotal;
+
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'method' => $validated['method'],
                 'amount' => $order->total,
+                'subtotal' => $subtotal,
+                'ppn_amount' => $ppnAmount,
+                'total' => $order->total,
                 'cash_received' => $cashReceived,
                 'change' => $cashReceived !== null
                     ? $cashReceived - $order->total

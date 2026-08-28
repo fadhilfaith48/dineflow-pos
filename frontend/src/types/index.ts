@@ -32,6 +32,7 @@ export interface MenuItem {
   categoryId: number
   available: boolean
   imageUrl?: string
+  isSpicy?: boolean
   variants?: MenuItemVariant[]
 }
 
@@ -54,6 +55,7 @@ export interface OrderItem {
   menuItemId: number
   name: string
   variantName?: string
+  spiceLevel?: number
   price: number
   quantity: number
   note?: string
@@ -70,6 +72,8 @@ export interface Order {
   items: OrderItem[]
   total: number
   payment?: Payment
+  voidReason?: string
+  voidedBy?: number
   createdAt: string
   updatedAt: string
 }
@@ -81,6 +85,8 @@ export interface Payment {
   orderId: number
   method: PaymentMethod
   amount: number
+  subtotal?: number
+  ppnAmount?: number
   cashReceived?: number
   change?: number
   paidBy: number

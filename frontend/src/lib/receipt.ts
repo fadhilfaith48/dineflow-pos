@@ -6,19 +6,26 @@ import type { ReceiptData } from '@/components/ReceiptModal'
  * Dipakai Kasir (setelah bayar & cetak ulang dari riwayat) dan Admin (cetak ulang).
  */
 export function orderToReceipt(order: Order, payment: Order['payment'], settings?: Settings): ReceiptData {
-  const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const fallbackSubtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = typeof payment?.subtotal === 'number' ? payment.subtotal : fallbackSubtotal
+  const tax = typeof payment?.ppnAmount === 'number' ? payment.ppnAmount : Math.round(order.total - subtotal)
   return {
     orderNumber: order.orderNumber,
     tableLabel: order.tableNumber ? `Meja ${order.tableNumber}` : 'Take Away',
     createdAt: order.createdAt,
-    items: order.items.map((item) => ({
-      name: item.variantName ? `${item.name} (${item.variantName})` : item.name,
-      quantity: item.quantity,
-      price: item.price,
-      note: item.note,
-    })),
+    items: order.items.map((item) => {
+      const parts = [item.name]
+      if (item.variantName) parts.push(item.variantName)
+      if (typeof item.spiceLevel === 'number') parts.push(`Level ${item.spiceLevel}`)
+      return {
+        name: parts.join(' · '),
+        quantity: item.quantity,
+        price: item.price,
+        note: item.note,
+      }
+    }),
     subtotal,
-    tax: Math.round(order.total - subtotal),
+    tax,
     total: order.total,
     method: payment?.method ?? 'tunai',
     change: payment?.change ?? undefined,

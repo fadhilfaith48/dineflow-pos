@@ -18,7 +18,7 @@ export interface Api {
   getOrders(): Promise<Order[]>
   createOrder(payload: CreateOrderPayload): Promise<Order>
   confirmOrder(orderId: number): Promise<Order>
-  voidOrder(orderId: number): Promise<Order>
+  voidOrder(orderId: number, reason: string): Promise<Order>
   updateItemStatus(orderId: number, itemId: number, status: Order['items'][number]['status']): Promise<Order>
   processPayment(payload: PaymentPayload): Promise<Payment>
   createMenuItem(input: CreateMenuItemInput): Promise<MenuItem>
@@ -51,6 +51,7 @@ export interface CreateMenuItemInput {
   description?: string
   imageUrl?: string
   image?: File
+  isSpicy?: boolean
   variants?: MenuVariantInput[]
 }
 
@@ -61,6 +62,7 @@ export interface CartItemInput {
   quantity: number
   note?: string
   variantName?: string
+  spiceLevel?: number
 }
 
 export interface CreateOrderPayload {
