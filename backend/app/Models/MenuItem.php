@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'name', 'description', 'price', 'category_id', 'available', 'image_url'])]
+#[Fillable(['code', 'name', 'description', 'price', 'category_id', 'available', 'is_spicy', 'image_url'])]
 class MenuItem extends Model
 {
     protected function casts(): array
@@ -15,6 +15,7 @@ class MenuItem extends Model
         return [
             'price' => 'integer',
             'available' => 'boolean',
+            'is_spicy' => 'boolean',
         ];
     }
 

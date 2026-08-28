@@ -7,6 +7,7 @@ import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
+import { SpicePills } from '@/components/SpicePills'
 import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
 
 const itemBadge: Record<string, BadgeVariant> = {
@@ -131,6 +132,7 @@ export function MenuPage() {
                     <div className="truncate text-body font-semibold text-text-primary">
                       {item.quantity}× {item.name}
                       {item.variantName && <span className="ml-1 text-caption text-text-secondary">({item.variantName})</span>}
+                      {typeof item.spiceLevel === 'number' && <span className="ml-1 text-caption text-status-danger">Level {item.spiceLevel}</span>}
                     </div>
                   </div>
                   <StatusBadge variant={itemBadge[item.status] ?? 'new'} label={item.status} />
@@ -207,11 +209,13 @@ export function MenuPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-num text-subheading font-bold text-accent-primary">
                           {formatRupiah(item.price)}
                         </span>
-                        {item.available ? (
+                        {item.available && item.isSpicy ? (
+                          <SpicePills onSelect={(level) => cart.addItem(item, undefined, level)} />
+                        ) : item.available ? (
                           <button
                             onClick={() => cart.addItem(item)}
                             aria-label={`Tambah ${item.name}`}
@@ -268,15 +272,38 @@ export function MenuPage() {
               ) : (
                 <ul className="flex flex-col gap-3">
                   {cart.lines.map((line) => (
-                    <li key={`${line.menuItemId}-${line.variantName ?? ''}`} className="flex items-center justify-between gap-2 rounded-xl border border-border-subtle p-4">
+                    <li key={`${line.menuItemId}-${line.variantName ?? ''}-${line.spiceLevel ?? 'x'}`} className="flex items-center justify-between gap-2 rounded-xl border border-border-subtle p-4">
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-body font-semibold text-text-primary">
                           {line.name}
                           {line.variantName && <span className="ml-1 text-caption text-text-secondary">({line.variantName})</span>}
+                          {typeof line.spiceLevel === 'number' && <span className="ml-1 text-caption text-status-danger">Level {line.spiceLevel}</span>}
                         </div>
-                        <div className="mt-1 flex items-center gap-2">
+                        {typeof line.spiceLevel === 'number' && (
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            <span className="text-caption text-text-secondary">Pedas</span>
+                            <button
+                              onClick={() => cart.setSpiceLevel(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
+                              disabled={line.spiceLevel === 0}
+                              aria-label="Turunkan level"
+                              className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
+                            >
+                              −
+                            </button>
+                            <span className="w-6 text-center font-num text-caption font-bold">{line.spiceLevel}</span>
+                            <button
+                              onClick={() => cart.setSpiceLevel(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
+                              disabled={line.spiceLevel === 5}
+                              aria-label="Naikkan level"
+                              className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                        <div className="mt-1.5 flex items-center gap-2">
                           <button
-                            onClick={() => cart.decrement(line.menuItemId, line.variantName)}
+                            onClick={() => cart.decrement(line.menuItemId, line.variantName, line.spiceLevel)}
                             aria-label="Kurangi"
                             className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
                           >
@@ -286,7 +313,7 @@ export function MenuPage() {
                           </button>
                           <span className="w-6 text-center font-num text-body font-bold">{line.quantity}</span>
                           <button
-                            onClick={() => cart.increment(line.menuItemId, line.variantName)}
+                            onClick={() => cart.increment(line.menuItemId, line.variantName, line.spiceLevel)}
                             aria-label="Tambah"
                             className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
                           >

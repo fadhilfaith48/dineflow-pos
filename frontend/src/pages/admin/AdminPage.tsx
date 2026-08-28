@@ -64,6 +64,7 @@ export function AdminPage() {
         categoryId: data.categoryId,
         description: data.description,
         imageUrl: data.imageUrl,
+        isSpicy: data.isSpicy,
         image: data.image,
         variants: data.variants,
       })

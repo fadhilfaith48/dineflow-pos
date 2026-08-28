@@ -11,10 +11,11 @@ interface CartPanelProps {
   taxRatePercent: number
   tableLabel: string
   onSelectTable: () => void
-  onIncrement: (menuItemId: number, variantName?: string) => void
-  onDecrement: (menuItemId: number, variantName?: string) => void
-  onRemove: (menuItemId: number, variantName?: string) => void
-  onSetNote: (menuItemId: number, note: string, variantName?: string) => void
+  onIncrement: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onDecrement: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onRemove: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onSetNote: (menuItemId: number, note: string, variantName?: string, spiceLevel?: number) => void
+  onSetSpice: (menuItemId: number, variantName: string | undefined, oldSpice: number, newSpice: number) => void
   onHold: () => void
   onSendToKitchen: () => void
 }
@@ -32,6 +33,7 @@ export function CartPanel({
   onDecrement,
   onRemove,
   onSetNote,
+  onSetSpice,
   onHold,
   onSendToKitchen,
 }: CartPanelProps) {
@@ -63,7 +65,7 @@ export function CartPanel({
         ) : (
           <ul className="flex flex-col gap-3">
             {lines.map((line) => (
-              <li key={`${line.menuItemId}-${line.variantName ?? ''}`} className="rounded-lg border border-border-subtle p-3">
+              <li key={`${line.menuItemId}-${line.variantName ?? ''}-${line.spiceLevel ?? 'x'}`} className="rounded-lg border border-border-subtle p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <span className="truncate text-body font-semibold text-text-primary">
@@ -74,9 +76,14 @@ export function CartPanel({
                         ({line.variantName})
                       </span>
                     )}
+                    {typeof line.spiceLevel === 'number' && (
+                      <span className="ml-1 text-caption text-status-danger">
+                        Level {line.spiceLevel}
+                      </span>
+                    )}
                   </div>
                   <button
-                    onClick={() => onRemove(line.menuItemId, line.variantName)}
+                    onClick={() => onRemove(line.menuItemId, line.variantName, line.spiceLevel)}
                     aria-label={`Hapus ${line.name}`}
                     className="text-text-secondary transition-colors hover:text-status-danger"
                   >
@@ -93,10 +100,35 @@ export function CartPanel({
                   </button>
                 </div>
 
+                {typeof line.spiceLevel === 'number' && (
+                  <div className="mt-1.5 flex items-center justify-between rounded-md bg-bg-secondary px-2.5 py-1.5">
+                    <span className="text-caption font-semibold text-text-secondary">Level Pedas</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
+                        disabled={line.spiceLevel === 0}
+                        aria-label="Turunkan level"
+                        className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
+                      >
+                        −
+                      </button>
+                      <span className="w-6 text-center font-num text-caption font-bold">{line.spiceLevel}</span>
+                      <button
+                        onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
+                        disabled={line.spiceLevel === 5}
+                        aria-label="Naikkan level"
+                        className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onDecrement(line.menuItemId, line.variantName)}
+                      onClick={() => onDecrement(line.menuItemId, line.variantName, line.spiceLevel)}
                       aria-label="Kurangi"
                       className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
@@ -106,7 +138,7 @@ export function CartPanel({
                     </button>
                     <span className="w-6 text-center font-num text-body font-semibold">{line.quantity}</span>
                     <button
-                      onClick={() => onIncrement(line.menuItemId, line.variantName)}
+                      onClick={() => onIncrement(line.menuItemId, line.variantName, line.spiceLevel)}
                       aria-label="Tambah"
                       className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
@@ -122,7 +154,7 @@ export function CartPanel({
 
                 <input
                   value={line.note ?? ''}
-                  onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName)}
+                  onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName, line.spiceLevel)}
                   placeholder="Catatan (mis. tidak pedas)"
                   className="mt-2 w-full rounded-md border border-border-subtle px-2.5 py-1.5 text-caption placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
                 />

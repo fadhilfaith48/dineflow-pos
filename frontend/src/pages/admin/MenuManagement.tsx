@@ -21,6 +21,7 @@ export interface MenuFormData {
   description?: string
   imageUrl?: string
   image?: File
+  isSpicy?: boolean
   variants?: MenuVariantInput[]
 }
 
@@ -30,6 +31,7 @@ const emptyForm: MenuFormData = {
   categoryId: 0,
   description: '',
   imageUrl: '',
+  isSpicy: false,
   variants: [],
 }
 
@@ -164,6 +166,20 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
               className="mt-1 w-full rounded-lg border border-border-subtle px-3 py-2 text-body focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
             />
           </div>
+          <label className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
+            <span className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+              Item Pedas
+            </span>
+            <input
+              type="checkbox"
+              checked={!!form.isSpicy}
+              onChange={(e) => setForm({ ...form, isSpicy: e.target.checked })}
+              className="h-4 w-4 accent-accent-primary"
+            />
+          </label>
+          <p className="-mt-1 text-[11px] text-text-secondary">
+            Jika dicentang, pelanggan memilih level kepedasan (0-5) saat memesan.
+          </p>
           <div>
             <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Foto Menu</label>
             <div className="mt-1 flex items-center gap-3">
@@ -297,6 +313,7 @@ export function MenuManagement({
         categoryId: editingItem.categoryId,
         description: editingItem.description,
         imageUrl: editingItem.imageUrl,
+        isSpicy: editingItem.isSpicy,
         variants: editingItem.variants?.map((v) => ({
           id: v.id,
           name: v.name,
@@ -344,9 +361,16 @@ export function MenuManagement({
                           </svg>
                         </div>
                       )}
-                      <div>
-                        <div className="text-body font-semibold text-text-primary">{item.name}</div>
-                        <div className="font-num text-caption text-text-secondary">{item.code}</div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-body font-semibold text-text-primary">{item.name}</span>
+                            {item.isSpicy && (
+                              <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-status-danger">
+                                Pedas
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-num text-caption text-text-secondary">{item.code}</div>
                         {item.variants && item.variants.length > 0 && (
                           <div className="mt-0.5 flex flex-wrap gap-1">
                             {item.variants.map((v) => (

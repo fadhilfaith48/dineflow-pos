@@ -17,6 +17,7 @@ class MenuItemResource extends JsonResource
             'price' => $this->price,
             'categoryId' => $this->category_id,
             'available' => $this->available,
+            'isSpicy' => $this->is_spicy,
             'imageUrl' => $this->image_url,
             'variants' => MenuItemVariantResource::collection($this->whenLoaded('variants')),
         ];

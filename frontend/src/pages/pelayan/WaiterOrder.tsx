@@ -3,6 +3,7 @@ import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant } from '@/typ
 import type { CartLine } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
+import { SpicePills } from '@/components/SpicePills'
 import { StatusBadge } from '@/components/StatusBadge'
 
 interface WaiterOrderProps {
@@ -14,11 +15,12 @@ interface WaiterOrderProps {
   lines: CartLine[]
   itemCount: number
   total: number
-  onAdd: (item: MenuItem, variant?: MenuItemVariant) => void
-  onIncrement: (menuItemId: number, variantName?: string) => void
-  onDecrement: (menuItemId: number, variantName?: string) => void
-  onRemove: (menuItemId: number, variantName?: string) => void
-  onSetNote: (menuItemId: number, note: string, variantName?: string) => void
+  onAdd: (item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) => void
+  onIncrement: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onDecrement: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onRemove: (menuItemId: number, variantName?: string, spiceLevel?: number) => void
+  onSetNote: (menuItemId: number, note: string, variantName?: string, spiceLevel?: number) => void
+  onSetSpice: (menuItemId: number, variantName: string | undefined, oldSpice: number, newSpice: number) => void
   onSubmit: () => void
   onBack: () => void
 }
@@ -37,6 +39,7 @@ export function WaiterOrder({
   onDecrement,
   onRemove,
   onSetNote,
+  onSetSpice,
   onSubmit,
   onBack,
 }: WaiterOrderProps) {
@@ -90,7 +93,7 @@ export function WaiterOrder({
                       {formatRupiah(item.price)}
                     </div>
                   </div>
-                  {!hasVariants && item.available && (
+                  {!hasVariants && item.available && !item.isSpicy && (
                     <button
                       onClick={() => onAdd(item)}
                       aria-label={`Tambah ${item.name}`}
@@ -100,6 +103,11 @@ export function WaiterOrder({
                         <path d="M12 5v14M5 12h14" />
                       </svg>
                     </button>
+                  )}
+                  {!hasVariants && item.available && item.isSpicy && (
+                    <div className="shrink-0">
+                      <SpicePills onSelect={(level) => onAdd(item, undefined, level)} />
+                    </div>
                   )}
                   {!item.available && <StatusBadge variant="danger" />}
                 </div>
@@ -163,19 +171,20 @@ export function WaiterOrder({
             ) : (
               <ul className="flex flex-col gap-3">
                 {lines.map((line) => (
-                  <li key={`${line.menuItemId}-${line.variantName ?? ''}`} className="rounded-xl border border-border-subtle p-4">
+                  <li key={`${line.menuItemId}-${line.variantName ?? ''}-${line.spiceLevel ?? 'x'}`} className="rounded-xl border border-border-subtle p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-body font-semibold text-text-primary">
                           {line.name}
                           {line.variantName && <span className="ml-1 text-caption text-text-secondary">({line.variantName})</span>}
+                          {typeof line.spiceLevel === 'number' && <span className="ml-1 text-caption text-status-danger">Level {line.spiceLevel}</span>}
                         </div>
                         <div className="mt-0.5 font-num text-caption text-text-secondary">
                           {formatRupiah(line.price)} / porsi
                         </div>
                       </div>
                       <button
-                        onClick={() => onRemove(line.menuItemId, line.variantName)}
+                        onClick={() => onRemove(line.menuItemId, line.variantName, line.spiceLevel)}
                         aria-label={`Hapus ${line.name}`}
                         className="text-text-secondary transition-colors hover:text-status-danger"
                       >
@@ -184,10 +193,34 @@ export function WaiterOrder({
                         </svg>
                       </button>
                     </div>
+                    {typeof line.spiceLevel === 'number' && (
+                      <div className="mt-3 flex items-center justify-between rounded-lg bg-bg-secondary px-3 py-2">
+                        <span className="text-caption font-semibold text-text-secondary">Level Pedas</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
+                            disabled={line.spiceLevel === 0}
+                            aria-label="Turunkan level"
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
+                          >
+                            −
+                          </button>
+                          <span className="w-8 text-center font-num text-body font-bold">{line.spiceLevel}</span>
+                          <button
+                            onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
+                            disabled={line.spiceLevel === 5}
+                            aria-label="Naikkan level"
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => onDecrement(line.menuItemId, line.variantName)}
+                          onClick={() => onDecrement(line.menuItemId, line.variantName, line.spiceLevel)}
                           aria-label="Kurangi"
                           className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
                         >
@@ -197,7 +230,7 @@ export function WaiterOrder({
                         </button>
                         <span className="w-6 text-center font-num text-body font-bold">{line.quantity}</span>
                         <button
-                          onClick={() => onIncrement(line.menuItemId, line.variantName)}
+                          onClick={() => onIncrement(line.menuItemId, line.variantName, line.spiceLevel)}
                           aria-label="Tambah"
                           className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
                         >
@@ -212,7 +245,7 @@ export function WaiterOrder({
                     </div>
                     <input
                       value={line.note ?? ''}
-                      onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName)}
+                      onChange={(e) => onSetNote(line.menuItemId, e.target.value, line.variantName, line.spiceLevel)}
                       placeholder="Catatan (mis. tidak pedas)"
                       className="mt-3 w-full rounded-lg border border-border-subtle px-3 py-2 text-body placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
                     />

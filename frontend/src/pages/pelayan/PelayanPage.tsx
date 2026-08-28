@@ -119,6 +119,7 @@ export function PelayanPage() {
           onDecrement={cart.decrement}
           onRemove={cart.removeLine}
           onSetNote={cart.setNote}
+          onSetSpice={cart.setSpiceLevel}
           onSubmit={handleSubmitOrder}
           onBack={() => setView('tables')}
         />

@@ -1,5 +1,6 @@
 import type { MenuCategory, MenuItem, MenuItemVariant } from '@/types'
 import { CategoryTabs } from '@/components/CategoryTabs'
+import { SpicePills } from '@/components/SpicePills'
 import { formatRupiah } from '@/lib/format'
 
 interface MenuPanelProps {
@@ -9,7 +10,7 @@ interface MenuPanelProps {
   items: MenuItem[]
   search: string
   onSearchChange: (value: string) => void
-  onAdd: (item: MenuItem, variant?: MenuItemVariant) => void
+  onAdd: (item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) => void
 }
 
 export function MenuPanel({
@@ -70,7 +71,7 @@ export function MenuPanel({
                         {formatRupiah(item.price)}
                       </div>
                     </div>
-                    {!hasVariants && item.available && (
+                    {!hasVariants && item.available && !item.isSpicy && (
                       <button
                         onClick={() => onAdd(item)}
                         aria-label={`Tambah ${item.name}`}
@@ -80,6 +81,12 @@ export function MenuPanel({
                           <path d="M12 5v14M5 12h14" />
                         </svg>
                       </button>
+                    )}
+                    {!hasVariants && item.available && item.isSpicy && (
+                      <SpicePills
+                        className="shrink-0"
+                        onSelect={(level) => onAdd(item, undefined, level)}
+                      />
                     )}
                     {!item.available && (
                       <span className="shrink-0 rounded-full bg-status-danger/15 px-3 py-1 text-caption font-bold uppercase tracking-wider text-status-danger">

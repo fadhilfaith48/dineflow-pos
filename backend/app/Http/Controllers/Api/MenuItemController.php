@@ -35,6 +35,7 @@ class MenuItemController extends Controller
             'description' => ['nullable', 'string'],
             'imageUrl' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
+            'isSpicy' => ['nullable', 'boolean'],
             'variants' => ['nullable', 'array'],
             'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
             'variants.*.price' => ['required_with:variants', 'integer', 'min:0'],
@@ -52,6 +53,7 @@ class MenuItemController extends Controller
             'price' => $validated['price'],
             'category_id' => $validated['categoryId'],
             'available' => true,
+            'is_spicy' => $validated['isSpicy'] ?? false,
             'image_url' => $this->resolveImageUrl($request) ?? $validated['imageUrl'] ?? null,
         ]);
 
@@ -79,6 +81,7 @@ class MenuItemController extends Controller
             'categoryId' => ['sometimes', 'exists:menu_categories,id'],
             'description' => ['sometimes', 'nullable', 'string'],
             'available' => ['sometimes', 'boolean'],
+            'isSpicy' => ['sometimes', 'boolean'],
             'imageUrl' => ['sometimes', 'nullable', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
             'variants' => ['nullable', 'array'],
@@ -93,6 +96,7 @@ class MenuItemController extends Controller
             'categoryId' => 'category_id',
             'description' => 'description',
             'available' => 'available',
+            'isSpicy' => 'is_spicy',
         ];
 
         foreach ($map as $inputKey => $column) {

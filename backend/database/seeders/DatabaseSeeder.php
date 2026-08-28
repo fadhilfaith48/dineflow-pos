@@ -58,13 +58,13 @@ class DatabaseSeeder extends Seeder
 
         $items = [
             // Makanan
-            ['#M01', 'Nasi Goreng Spesial', 'Nasi goreng dengan telur, ayam, dan kerupuk', 18000, 'Makanan'],
-            ['#M02', 'Ayam Bakar', 'Ayam bakar bumbu kecap, sambal, lalapan', 22000, 'Makanan'],
-            ['#M03', 'Mie Ayam', 'Mie ayam pangsit dengan kuah kaldu', 16000, 'Makanan'],
+            ['#M01', 'Nasi Goreng Spesial', 'Nasi goreng dengan telur, ayam, dan kerupuk', 18000, 'Makanan', true, true],
+            ['#M02', 'Ayam Bakar', 'Ayam bakar bumbu kecap, sambal, lalapan', 22000, 'Makanan', true, true],
+            ['#M03', 'Mie Ayam', 'Mie ayam pangsit dengan kuah kaldu', 16000, 'Makanan', true, true],
             ['#M04', 'Sate Ayam (10)', 'Sate ayam dengan bumbu kacang', 25000, 'Makanan'],
             ['#M05', 'Gado-Gado', 'Sayuran rebus, tahu tempe, bumbu kacang', 15000, 'Makanan'],
             ['#M06', 'Soto Ayam', 'Soto ayam dengan nasi dan emping', 17000, 'Makanan'],
-            ['#M07', 'Nasi Uduk', 'Nasi uduk dengan ayam goreng dan sambal', 19000, 'Makanan', false],
+            ['#M07', 'Nasi Uduk', 'Nasi uduk dengan ayam goreng dan sambal', 19000, 'Makanan', false, true],
             // Minuman
             ['#M08', 'Es Teh Manis', '', 5000, 'Minuman'],
             ['#M09', 'Es Jeruk', '', 7000, 'Minuman'],
@@ -92,6 +92,7 @@ class DatabaseSeeder extends Seeder
                     'price' => $item[3],
                     'category_id' => $category->id,
                     'available' => $item[5] ?? true,
+                    'is_spicy' => $item[6] ?? false,
                 ],
             );
         }
@@ -172,7 +173,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'diproses',
                 'created_at' => '2026-08-12 10:15:00',
                 'items' => [
-                    ['#M03', 16000, 1, 'dimasak', null, 'Reguler'],
+                    ['#M03', 16000, 1, 'dimasak', null, 'Reguler', 3],
                     ['#M10', 12000, 1, 'baru'],
                 ],
             ],
@@ -183,7 +184,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'diproses',
                 'created_at' => '2026-08-12 10:20:00',
                 'items' => [
-                    ['#M02', 22000, 1, 'dimasak', 'Tidak pedas'],
+                    ['#M02', 22000, 1, 'dimasak', 'Tidak pedas', null, 0],
                     ['#M09', 10000, 2, 'baru', null, 'Besar'],
                 ],
             ],
@@ -194,7 +195,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'menunggu-konfirmasi',
                 'created_at' => '2026-08-13 09:00:00',
                 'items' => [
-                    ['#M01', 25000, 1, 'baru', null, 'Besar'],
+                    ['#M01', 25000, 1, 'baru', null, 'Besar', 2],
                     ['#M08', 8000, 1, 'baru', null, 'Besar'],
                 ],
             ],
@@ -203,6 +204,7 @@ class DatabaseSeeder extends Seeder
                 'table' => 'T6',
                 'source' => 'kasir',
                 'status' => 'dibatalkan',
+                'void_reason' => 'Dibatalkan pelanggan',
                 'created_at' => '2026-08-13 09:15:00',
                 'items' => [
                     ['#M05', 15000, 1, 'baru'],
@@ -222,6 +224,7 @@ class DatabaseSeeder extends Seeder
                     'table_id' => $table->id,
                     'source' => $data['source'],
                     'status' => $data['status'],
+                    'void_reason' => $data['void_reason'] ?? null,
                     'total' => (int) round($subtotal * 1.1),
                     'created_at' => $data['created_at'],
                     'updated_at' => $data['created_at'],
@@ -241,6 +244,7 @@ class DatabaseSeeder extends Seeder
                         'price' => $item[1],
                         'quantity' => $item[2],
                         'note' => $item[4] ?? null,
+                        'spice_level' => $item[6] ?? null,
                         'status' => $item[3],
                     ],
                 );
