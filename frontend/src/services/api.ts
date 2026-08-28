@@ -22,7 +22,7 @@ export interface Api {
   updateItemStatus(orderId: number, itemId: number, status: Order['items'][number]['status']): Promise<Order>
   processPayment(payload: PaymentPayload): Promise<Payment>
   createMenuItem(input: CreateMenuItemInput): Promise<MenuItem>
-  updateMenuItem(id: number, data: Partial<MenuItem> & { image?: File; variants?: MenuVariantInput[] }): Promise<MenuItem>
+  updateMenuItem(id: number, data: Omit<Partial<MenuItem>, 'variants'> & { image?: File; variants?: MenuVariantInput[] }): Promise<MenuItem>
   deleteMenuItem(id: number): Promise<void>
   getUsers(): Promise<User[]>
   createUser(input: { name: string; username: string; role: Role }): Promise<User>
@@ -38,6 +38,7 @@ export interface Api {
 }
 
 export interface MenuVariantInput {
+  id?: number
   name: string
   price: number
   available?: boolean

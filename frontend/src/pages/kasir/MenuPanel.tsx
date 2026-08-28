@@ -10,7 +10,6 @@ interface MenuPanelProps {
   search: string
   onSearchChange: (value: string) => void
   onAdd: (item: MenuItem, variant?: MenuItemVariant) => void
-  taxRate?: number
 }
 
 export function MenuPanel({
@@ -21,7 +20,6 @@ export function MenuPanel({
   search,
   onSearchChange,
   onAdd,
-  taxRate,
 }: MenuPanelProps) {
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">

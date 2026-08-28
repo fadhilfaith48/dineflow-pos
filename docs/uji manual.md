@@ -131,6 +131,42 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 ---
 
+## 9. Menu Varian & Void Order (fitur baru)
+
+> Prasyarat: seed data demo sudah punya varian untuk menu #M01 (Nasi Goreng), #M03 (Mie Ayam), #M08 (Es Teh), #M09 (Es Jeruk), dan satu order mock ORD-0004 berstatus `dibatalkan`.
+
+### 9a. Menu Varian (Admin → Kasir/Pelayan/Menu QR)
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 9.1 | Admin → **Manajemen Menu** → edit menu **Nasi Goreng** (#M01) | Muncul bagian **Varian** dengan 2 baris: Reguler / Besar, masing-masing punya nama, harga, toggle aktif | ⬜ |
+| 9.2 | Tambah varian baru (klik tombol tambah) | Baris varian kosong baru muncul | ⬜ |
+| 9.3 | Isi nama (mis. "Jumbo") + harga, klik **Simpan** | Varian tersimpan; harga varian pertama ikut dijadikan harga dasar menu | ⬜ |
+| 9.4 | Matikan toggle **aktif** pada satu varian, Simpan | Varian tidak bisa dipilih di Kasir/Pelayan/Menu QR (tidak tampil/disabled) | ⬜ |
+| 9.5 | Hapus satu varian (tombol hapus), Simpan | Varian hilang dari daftar | ⬜ |
+| 9.6 | Buka **Kasir** → kategori Makanan | Item Nasi Goreng menampilkan **pill varian** (Reguler/Besar) | ⬜ |
+| 9.7 | Pilih varian **Besar**, tambah ke keranjang | Masuk keranjang sebagai baris terpisah dengan harga varian (lebih mahal dari Reguler), label "Besar" tampil | ⬜ |
+| 9.8 | Tambah item sama dengan varian berbeda (Reguler + Besar) | Muncul sebagai **2 baris terpisah** di keranjang (bukan digabung) | ⬜ |
+| 9.9 | Buka **Pelayan** → pilih meja → tambah item ber-varian | Pill varian muncul & pilihan berfungsi seperti di Kasir | ⬜ |
+| 9.10 | Buka **Menu QR** (`/menu/T1`) → item ber-varian | Pill varian muncul; pilih varian → harga menyesuaikan → kirim pesanan | ⬜ |
+| 9.11 | Lihat struk (Kasir) / OrderTicket (KDS) setelah order ber-varian | Nama item diikuti label varian (mis. "Nasi Goreng - Besar") di struk & ticket | ⬜ |
+
+### 9b. Void / Cancel Order (Admin & Kasir)
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 9.12 | Kasir buat order (belum dibayar) → muncul di panel Kasir | Tombol **Batalkan** tersedia di kartu order | ⬜ |
+| 9.13 | Klik **Batalkan** → konfirmasi | Order berstatus `dibatalkan`; badge "Batal" tampil; hilang dari daftar yang harus diproses/dibayar | ⬜ |
+| 9.14 | Order tersebut terkait meja (bukan Take Away) | Meja kembali ke status **kosong** secara otomatis | ⬜ |
+| 9.15 | Coba **Batalkan** order yang sudah `selesai` / `dibatalkan` | Tombol tidak tersedia / ditolak (tidak bisa void dua kali) | ⬜ |
+| 9.16 | Coba **Batalkan** order dari role **pelayan** / **dapur** | Tidak ada tombol / tidak punya izin (hanya admin & kasir) | ⬜ |
+| 9.17 | Admin → **Riwayat Transaksi** / panel Riwayat Kasir, filter status **Dibatalkan** | Order yang di-void muncul dengan badge "Batal" | ⬜ |
+| 9.18 | Order `dibatalkan` tidak dihitung di **Laporan Penjualan** | Total laporan tidak memasukkan order yang dibatalkan | ⬜ |
+| 9.19 | Order dibatalkan tidak bisa dibayar | Klik bayar → ditolak / tidak tersedia (guard `dibatalkan`) | ⬜ |
+| 9.20 | Void order via backend langsung (curl `PATCH /api/orders/{id}/void` sebagai kasir/admin) | Response sukses, status jadi `dibatalkan`; event `OrderStatusChanged` action=voided terkirim (bisa dicek listener WS) | ⬜ |
+
+---
+
 ## Catatan Penting
 
 - **Real-time asli**: KDS, panel Kasir, & tracking pelanggan memakai Laravel Reverb + Redis (≤ 2 detik, tanpa refresh). Pastikan backend `8000`, `reverb:start` `8080`, Redis `6379`, MySQL `3306`, dan Vite `5173` menyala.

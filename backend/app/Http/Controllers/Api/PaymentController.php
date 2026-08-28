@@ -28,6 +28,10 @@ class PaymentController extends Controller
                 abort(409, 'Pesanan sudah dibayar');
             }
 
+            if (in_array($order->status, ['dibatalkan', 'menunggu-konfirmasi'])) {
+                abort(422, 'Pesanan tidak dapat dibayar');
+            }
+
             if ($validated['method'] === 'tunai' && ($validated['cashReceived'] ?? 0) < $order->total) {
                 throw ValidationException::withMessages([
                     'cashReceived' => ['Uang yang diterima kurang dari total pembayaran'],

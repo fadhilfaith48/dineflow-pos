@@ -192,7 +192,6 @@ export function KasirPage() {
           search={search}
           onSearchChange={setSearch}
           onAdd={handleAdd}
-          taxRate={settings?.taxRate}
         />
         <CartPanel
           lines={cart.lines}

@@ -12,7 +12,7 @@ Dokumen progres & roadmap pengembangan frontend. **Baca di awal setiap sesi**, u
 | 4 | Kitchen Display `/kitchen` | ✅ Selesai | Grid ticket, update status per item, polling 5s (simulasi real-time) |
 | 5 | Pesan Mandiri QR `/menu/:table` | ✅ Selesai | Katalog, keranjang, tracking status pesanan |
 | 6 | Admin `/admin` | ✅ Selesai | 4 tab: Manajemen Menu, Meja (+QR), Staf, Laporan (filter periode) |
-| 7 | Sambungkan ke API Laravel | ⬜ Belum | Ganti `MockApi` di `src/services/mockApi.ts` dengan fetch/axios, UI tidak berubah |
+| 7 | Sambungkan ke API Laravel | ✅ Selesai | Ganti `MockApi` di `src/services/mockApi.ts` dengan fetch/axios, UI tidak berubah. Selesai di Fase B (`httpApi.ts` aktif sebagai `api`; `mockApi.ts` hanya dipakai tes service layer) |
 | 8 | Real-time Laravel Reverb + Redis | ✅ Selesai | Echo + Reverb (B2): ganti polling 5s di KitchenPage, KasirPage, MenuPage tracking. Event `OrderStatusChanged` → channel `orders` + `order.{orderNumber}`. NFR ≤2s terverifikasi |
 | 9 | Auth & role (kasir/pelayan/dapur/admin) | ✅ Selesai (mock) | Login + guard role + logout, akun demo (password 1234). Auth nyata (Sanctum) tetap di rencana B |
 | 10 | Generator QR per meja + cetak struk | ✅ Selesai | QR per meja di Admin → link `/menu/:qr`; struk di Kasir (ReceiptModal: cetak + salin) |

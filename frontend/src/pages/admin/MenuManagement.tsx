@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MenuCategory, MenuItem, MenuItemVariant } from '@/types'
+import type { MenuCategory, MenuItem } from '@/types'
 import type { MenuVariantInput } from '@/services/api'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/Button'
