@@ -3,11 +3,13 @@ import type { Order, OrderItem } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { TopNavBar } from '@/components/TopNavBar'
+import { VoidOrderModal } from '@/components/VoidOrderModal'
 import { OrderTicket } from './OrderTicket'
 
 export function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
+  const [voidTarget, setVoidTarget] = useState<Order | null>(null)
 
   const loadOrders = useCallback(() => {
     api.getOrders().then(setOrders).catch(() => {
@@ -29,6 +31,20 @@ export function KitchenPage() {
       loadOrders()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal memperbarui status item.')
+    }
+  }
+
+  async function handleVoidConfirm(reason: string) {
+    if (!voidTarget) return
+    const orderId = voidTarget.id
+    setError('')
+    try {
+      await api.voidOrder(orderId, reason)
+      loadOrders()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
+    } finally {
+      setVoidTarget(null)
     }
   }
 
@@ -55,11 +71,18 @@ export function KitchenPage() {
         ) : (
           <div className="grid auto-rows-min grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {activeOrders.map((order) => (
-              <OrderTicket key={order.id} order={order} onAdvanceItem={handleAdvanceItem} />
+              <OrderTicket key={order.id} order={order} onAdvanceItem={handleAdvanceItem} onVoidOrder={setVoidTarget} />
             ))}
           </div>
         )}
       </main>
+
+      <VoidOrderModal
+        open={!!voidTarget}
+        orderNumber={voidTarget?.orderNumber}
+        onClose={() => setVoidTarget(null)}
+        onConfirm={handleVoidConfirm}
+      />
     </div>
   )
 }

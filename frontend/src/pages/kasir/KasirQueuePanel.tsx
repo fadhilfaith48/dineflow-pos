@@ -14,7 +14,7 @@ interface KasirQueuePanelProps {
   activeNotes: Order[]
   historyOrders: Order[]
   onConfirm: (orderId: number) => void
-  onVoid: (orderId: number) => void
+  onVoid: (order: Order) => void
   onPayNote: (order: Order) => void
   onReprint: (order: Order) => void
 }
@@ -86,6 +86,11 @@ function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
           </span>
           {!isCancelled && <MethodBadge method={order.payment?.method} />}
         </div>
+        {isCancelled && order.voidReason && (
+          <div className="mt-1 truncate text-caption font-medium text-status-danger">
+            {order.voidReason}
+          </div>
+        )}
       </button>
     </li>
   )
@@ -124,6 +129,9 @@ function OrderCard({
             <span className="min-w-0 truncate">
               {item.quantity}× {item.name}
               {item.variantName && <span className="text-text-secondary"> ({item.variantName})</span>}
+              {typeof item.spiceLevel === 'number' && (
+                <span className="text-status-danger"> Level {item.spiceLevel}</span>
+              )}
             </span>
             <span className="shrink-0 font-num">{formatRupiah(item.price * item.quantity)}</span>
           </li>
@@ -223,7 +231,7 @@ export function KasirQueuePanel({
                       key={order.id}
                       order={order}
                       action={{ label: 'Konfirmasi', primary: true, onClick: () => onConfirm(order.id) }}
-                      onVoid={() => onVoid(order.id)}
+                      onVoid={() => onVoid(order)}
                     />
                   ))}
                 </ul>
@@ -237,7 +245,7 @@ export function KasirQueuePanel({
                     key={order.id}
                     order={order}
                     action={{ label: 'Bayar', primary: true, onClick: () => onPayNote(order) }}
-                    onVoid={() => onVoid(order.id)}
+                    onVoid={() => onVoid(order)}
                   />
                 ))}
               </ul>

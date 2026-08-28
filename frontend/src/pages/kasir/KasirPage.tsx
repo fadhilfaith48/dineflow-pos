@@ -6,6 +6,7 @@ import { useCart } from '@/hooks/useCart'
 import { orderToReceipt } from '@/lib/receipt'
 import { TopNavBar } from '@/components/TopNavBar'
 import { ReceiptModal, type ReceiptData } from '@/components/ReceiptModal'
+import { VoidOrderModal } from '@/components/VoidOrderModal'
 import { MenuPanel } from './MenuPanel'
 import { CartPanel } from './CartPanel'
 import { PaymentModal } from './PaymentModal'
@@ -27,6 +28,7 @@ export function KasirPage() {
   const [error, setError] = useState('')
   const [orders, setOrders] = useState<Order[]>([])
   const [noteToPay, setNoteToPay] = useState<Order | null>(null)
+  const [voidTarget, setVoidTarget] = useState<Order | null>(null)
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -92,9 +94,9 @@ export function KasirPage() {
     )
   }, [items, activeCategory, search])
 
-  function handleAdd(item: MenuItem, variant?: MenuItemVariant) {
+  function handleAdd(item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) {
     if (!item.available) return
-    cart.addItem(item, variant)
+    cart.addItem(item, variant, spiceLevel)
   }
 
   function handleHold() {
@@ -113,15 +115,18 @@ export function KasirPage() {
     }
   }
 
-  async function handleVoidOrder(orderId: number) {
-    if (!window.confirm('Batalkan pesanan ini?')) return
+  async function handleVoidConfirm(reason: string) {
+    if (!voidTarget) return
+    const orderId = voidTarget.id
     setError('')
     try {
-      await api.voidOrder(orderId)
+      await api.voidOrder(orderId, reason)
       setOrders(await api.getOrders())
       setTables(await api.getTables())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
+    } finally {
+      setVoidTarget(null)
     }
   }
 
@@ -180,7 +185,7 @@ export function KasirPage() {
           activeNotes={activeNotes}
           historyOrders={paidOrders}
           onConfirm={handleConfirmOrder}
-          onVoid={handleVoidOrder}
+          onVoid={setVoidTarget}
           onPayNote={handlePayNote}
           onReprint={handleReprint}
         />
@@ -206,6 +211,7 @@ export function KasirPage() {
           onDecrement={cart.decrement}
           onRemove={cart.removeLine}
           onSetNote={cart.setNote}
+          onSetSpice={cart.setSpiceLevel}
           onHold={handleHold}
           onSendToKitchen={handleSendToKitchen}
         />
@@ -228,6 +234,13 @@ export function KasirPage() {
           setNoteToPay(null)
         }}
         onConfirm={handleConfirmPayment}
+      />
+
+      <VoidOrderModal
+        open={!!voidTarget}
+        orderNumber={voidTarget?.orderNumber}
+        onClose={() => setVoidTarget(null)}
+        onConfirm={handleVoidConfirm}
       />
 
       {error && (

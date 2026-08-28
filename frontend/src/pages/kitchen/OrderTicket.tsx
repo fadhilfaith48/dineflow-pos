@@ -4,6 +4,7 @@ import { formatRupiah } from '@/lib/format'
 interface OrderTicketProps {
   order: Order
   onAdvanceItem: (orderId: number, itemId: number, status: OrderItem['status']) => void
+  onVoidOrder?: (order: Order) => void
 }
 
 const nextStatus: Record<OrderItem['status'], OrderItem['status'] | null> = {
@@ -34,7 +35,7 @@ const statusBg: Record<OrderItem['status'], string> = {
   diantar: 'bg-status-done/15',
 }
 
-export function OrderTicket({ order, onAdvanceItem }: OrderTicketProps) {
+export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketProps) {
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-bg-surface shadow-card">
       <header className="flex items-start justify-between gap-3 border-b border-dashed border-border-subtle px-5 py-4">
@@ -69,6 +70,9 @@ export function OrderTicket({ order, onAdvanceItem }: OrderTicketProps) {
                   <div className="text-[24px] font-semibold leading-tight text-text-primary">
                     {item.quantity}× {item.name}
                     {item.variantName && <span className="text-[17px] font-normal text-text-secondary"> ({item.variantName})</span>}
+                    {typeof item.spiceLevel === 'number' && (
+                      <span className="ml-1 text-[17px] font-bold text-status-danger">Level {item.spiceLevel}</span>
+                    )}
                   </div>
                   {item.note && (
                     <div className="mt-1 text-[16px] font-semibold text-status-danger">
@@ -98,6 +102,14 @@ export function OrderTicket({ order, onAdvanceItem }: OrderTicketProps) {
       <footer className="flex items-center justify-between border-t border-border-subtle bg-bg-secondary px-5 py-3">
         <span className="text-[15px] font-semibold text-text-secondary">{order.items.length} item</span>
         <span className="font-num text-[18px] font-bold text-text-primary">{formatRupiah(order.total)}</span>
+        {onVoidOrder && (
+          <button
+            onClick={() => onVoidOrder(order)}
+            className="ml-3 rounded-lg border border-status-danger/40 px-3 py-1.5 text-[14px] font-bold uppercase tracking-wide text-status-danger transition-colors hover:bg-status-danger hover:text-text-on-accent"
+          >
+            Batalkan
+          </button>
+        )}
       </footer>
     </article>
   )

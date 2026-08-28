@@ -16,6 +16,8 @@ class OrderResource extends JsonResource
             'tableNumber' => $this->whenLoaded('table', fn () => $this->table?->number),
             'source' => $this->source,
             'status' => $this->status,
+            'voidReason' => $this->void_reason,
+            'voidedBy' => $this->voided_by,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'total' => $this->total,
             'payment' => $this->whenLoaded('payment', fn () => new PaymentResource($this->payment)),

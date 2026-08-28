@@ -32,6 +32,7 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.note' => ['nullable', 'string'],
             'items.*.variantName' => ['nullable', 'string'],
+            'items.*.spiceLevel' => ['nullable', 'integer', 'between:0,5'],
         ]);
 
         // Rute POST /orders publik (self-order), jadi $request->user() tidak
@@ -54,6 +55,12 @@ class OrderController extends Controller
                 if (! $menuItem || ! $menuItem->available) {
                     throw ValidationException::withMessages([
                         'items' => ['Menu "'.($menuItem->name ?? '?').'" sedang tidak tersedia'],
+                    ]);
+                }
+
+                if ($menuItem->is_spicy && ! isset($item['spiceLevel'])) {
+                    throw ValidationException::withMessages([
+                        'items' => ['Pilih level kepedasan (0-5) untuk "'.$menuItem->name.'"'],
                     ]);
                 }
 
@@ -106,6 +113,7 @@ class OrderController extends Controller
                     'price' => $unitPrice,
                     'quantity' => $item['quantity'],
                     'note' => $item['note'] ?? null,
+                    'spice_level' => $item['spiceLevel'] ?? null,
                     'status' => 'baru',
                 ]);
             }
@@ -154,16 +162,22 @@ class OrderController extends Controller
         return new OrderResource($order->load(['table', 'items']));
     }
 
-    public function void(Order $order): OrderResource
+    public function void(Request $request, Order $order): OrderResource
     {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
         if (in_array($order->status, ['selesai', 'dibatalkan'])) {
             throw ValidationException::withMessages([
                 'order' => ['Pesanan sudah '.($order->status === 'selesai' ? 'selesai' : 'dibatalkan')],
             ]);
         }
 
-        DB::transaction(function () use ($order) {
+        DB::transaction(function () use ($order, $validated, $request) {
             $order->status = 'dibatalkan';
+            $order->void_reason = $validated['reason'];
+            $order->voided_by = $request->user()?->id;
             $order->save();
 
             if ($order->table_id) {
