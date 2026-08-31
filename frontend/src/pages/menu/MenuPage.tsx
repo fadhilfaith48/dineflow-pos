@@ -219,7 +219,7 @@ export function MenuPage() {
                           <button
                             onClick={() => cart.addItem(item)}
                             aria-label={`Tambah ${item.name}`}
-                            className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-primary text-text-on-accent"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-primary text-text-on-accent"
                           >
                             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                               <path d="M12 5v14M5 12h14" />
@@ -305,7 +305,7 @@ export function MenuPage() {
                           <button
                             onClick={() => cart.decrement(line.menuItemId, line.variantName, line.spiceLevel)}
                             aria-label="Kurangi"
-                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary"
                           >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                               <path d="M5 12h14" />
@@ -315,7 +315,7 @@ export function MenuPage() {
                           <button
                             onClick={() => cart.increment(line.menuItemId, line.variantName, line.spiceLevel)}
                             aria-label="Tambah"
-                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-accent-primary"
                           >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                               <path d="M12 5v14M5 12h14" />

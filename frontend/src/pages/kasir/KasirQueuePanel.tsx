@@ -201,7 +201,7 @@ export function KasirQueuePanel({
               }`}
             >
               Masuk
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-status-new px-1.5 font-num text-caption font-bold text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-status-new px-1.5 font-num text-caption font-bold text-text-on-accent">
                 {pendingOrders.length}
               </span>
             </button>
@@ -214,7 +214,7 @@ export function KasirQueuePanel({
               }`}
             >
               Nota
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-primary px-1.5 font-num text-caption font-bold text-white">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-primary px-1.5 font-num text-caption font-bold text-text-on-accent">
                 {activeNotes.length}
               </span>
             </button>
