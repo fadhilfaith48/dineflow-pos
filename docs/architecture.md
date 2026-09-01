@@ -126,8 +126,8 @@ Backend dikerjakan di folder `backend/` di repo utama `resto_pos/`
 | `confirmOrder` | `PATCH /api/orders/{id}/confirm` |
 | `updateItemStatus` | `PATCH /api/orders/{id}/items/{itemId}` (+ broadcast) |
 | `processPayment` | `POST /api/orders/{id}/payments` (transaction) |
-| *(rencana)* `checkoutOrder` | `POST /api/orders/{id}/checkout` (publik self-order; buat QRIS via gateway) |
-| *(rencana)* `getPaymentStatus` | `GET /api/payments/{reference}/status` (publik; polling Tingkat 2) |
+| *(rencana)* `checkoutOrder` | `POST /api/orders/{id}/checkout` (buat QRIS via gateway; self/pelayan/kasir) |
+| *(rencana)* `getPaymentStatus` | `GET /api/payments/{reference}/status` (polling Tingkat 2) |
 | *(rencana, driver mock)* `markMockPaid` | `POST /api/payments/{reference}/mock-paid` (hanya Mock, non-production) |
 | CRUD menu-item | CRUD `/api/menu-items` |
 | CRUD user (admin) | CRUD `/api/users` |
@@ -153,28 +153,41 @@ Kasir → PaymentModal (tunai: uang+kembalian / QRIS: simulasi QR + sukses)
   → ReceiptModal: Cetak (window.print #print-area) / Salin Struk (clipboard)
 ```
 
-### 5.3 (RENCANA) Bayar di Muka Self-Order — DOKU QRIS (Pola B, Tingkat 2 polling)
+### 5.3 (RENCANA) Bayar di Muka Wajib — Semua Kanal (DOKU QRIS + Tunai Kasir)
 
-> **Status: RENCANA (belum diimplementasikan).** Keputusan user: bayar di muka Wajib
-> hanya untuk self-order; langsung ke dapur setelah pembayaran `paid`; vendor **DOKU
-> (sandbox untuk demo PKL)**; **QRIS tunggal**; pola **B (QRIS tampil di aplikasi +
-> polling)** — pelanggan tidak pindah ke web DOKU, layar menunggu lalu otomatis lanjut.
+> **Status: RENCANA (belum diimplementasikan).** Keputusan user (revisi dari "self-order
+> saja" → **semua kanal**): bayar di muka **wajib di self-order, kasir, dan pelayan**;
+> order baru dibuat `menunggu` (belum ke dapur) dan baru masuk dapur (`diproses`) setelah
+> pembayaran `paid`. Vendor **DOKU (sandbox untuk demo PKL)**; pola **B (QRIS tampil di
+> aplikasi + polling)** — pelanggan tidak pindah ke web DOKU, layar menunggu lalu otomatis
+> lanjut. Tombol **Konfirmasi kasir DIHAPUS** (prepay otomatis ke dapur). Meja jadi `terisi`
+> saat order `paid` & mulai dimasak.
+
+Per-role:
+
+| Kanal | Metode bayar di muka | Cara |
+|---|---|---|
+| Self-order (scan QR) | QRIS DOKU dinamis | QR tampil di layar pelanggan → discan e-wallet/m-banking → polling → ke dapur |
+| Pelayan (HP/tablet) | QRIS DOKU dinamis | QR tampil di layar pelayan → discan pelanggan di meja → polling → ke dapur |
+| Kasir | Tunai ATAU QRIS DOKU | Kasir bayar segera setelah buat order (before dapur); tunai = terima uang & tandai; QRIS = QR DOKU + polling |
+
+Alur umum (semua kanal):
 
 ```
-Pelanggan pilih menu → keranjang → klik "Bayar di Muka"
-  → POST /orders (self-order, status: menunggu; BELUM ke dapur)
-  → POST /orders/{id}/checkout → DOKU buat transaksi QRIS → tampilkan QRIS di layar aplikasi
-  → Pelanggan scan QRIS dgn e-wallet/m-banking (DANA/OVO/GoPay dsb)
-  → sistem POLLING GET /payments/{ref}/status tiap 3–5 detik
-  → status paid → order `diproses` (langsung ke dapur) → layar otomatis lanjut ke tracking
-  → Kasir Nota tampil "Lunas"; tertulis otomatis di Laporan; tombol "Bayar" nonaktif
+Buat order (kasir/pelayan/self-order) → status: menunggu (BELUM ke dapur)
+  → QRIS: POST /orders/{id}/checkout → DOKU buat transaksi QRIS → tampilkan QRIS di layar
+          → pelanggan scan (e-wallet/m-banking DANA/OVO/GoPay dsb)
+          → sistem POLLING GET /payments/{ref}/status tiap 3–5 detik
+          → status paid → order `diproses` (langsung ke dapur) → meja `terisi`
+  → Tunai (kasir): kasir terima uang → tandai lunas → order `diproses` (langsung ke dapur) → meja `terisi`
+  → Kasir Nota tampil "Lunas"; tertulis otomatis di Laporan; tombol "Bayar" nonaktif utk yang sudah prepay
 ```
 
 Abstraksi pembayaran agar mudah ganti/upgrade provider (DOKU → yang lain/Production):
 
 ```
-frontend MenuPage → api.checkoutOrder + api.getPaymentStatus
-        │ (POST /orders/{id}/checkout, GET /payments/{ref}/status — publik self-order)
+frontend (MenuPage / WaiterOrder / PaymentModal kasir) → api.checkoutOrder + api.getPaymentStatus
+        │ (POST /orders/{id}/checkout, GET /payments/{ref}/status)
         ▼
 PaymentService (backend)
    └─ PaymentGateway (interface)

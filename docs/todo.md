@@ -19,7 +19,7 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - ✅ **PPN otomatis persisten per-transaksi + Export CSV + Struk Logo + Void wajib alasan + Level Kepedasan (fitur PRD batch 2)**: Menuntaskan 5 fitur dari `docs/prd.md` (§6.4-6.7). **(1) PPN otomatis persisten** — migrasi `payments` + kolom `subtotal`/`ppn_amount`/`total`; `PaymentController::store` hitung & simpan (`subtotal = round(total/(1+rate))`, `ppn = total - subtotal`); `PaymentResource` expose; `lib/receipt.ts` pakai nilai tersimpan bila ada (fallback). **(2) Struk Logo** — sudah ada (logo di struk thermal). **(3) Export CSV** — sudah ada (`exportSalesReport`). **(4) Void wajib alasan + role dapur** — kolom `void_reason`/`voided_by` di `orders`; route `PATCH /orders/{order}/void` role `kasir,admin,dapur`; `OrderController::void` terima `reason` (wajib) + simpan + meja→kosong + event; frontend `VoidOrderModal` (alasan preset/teks, divalidasi) di Kasir & Kitchen, alasan tampil di riwayat. **(5) Level Kepedasan 0-5** — kolom `is_spicy` di `menu_items` + `spice_level` di `order_items`; `OrderController::store` validasi 0-5 + wajib utk menu `is_spicy`; frontend pill `SpicePills` 0-5 di MenuPanel/WaiterOrder/MenuPage (item pedas tanpa varian), atur level di keranjang (item pedas ber-varian), `useCart` key `menuItemId-variantName-spiceLevel` + `setSpiceLevel` stepper; tampil di ticket/receipt/tracking/OrderCard; Admin toggle "Item Pedas". Verifikasi: 15 tes backend (40 assertion), build/lint/18 tes FE, `tsc -b` ✓, `vite build` ✓ |
 - ✅ **Konversi 3 mockup Stitch (Table Map, Menu Ordering, Active Orders, Customer Self-Order) ke React + durasi duduk**: Menyesuaikan beberapa komponen frontend agar tampilannya mengikuti mockup terbaru (Google Stitch), dengan **warna tetap token `DESIGN.md`** (tanpa hex baru), **Bahasa Indonesia**, harga **Rupiah** (`formatRupiah`), ikon **SVG inline** (bukan Material Symbols), dan **tanpa** sidebar desktop / bottom-nav (tetap `TopNavBar`). **(1) TableSelect (Peta Meja Pelayan)** — kartu persegi (`aspect-square`) + ikon + "N Pax" + **durasi duduk** untuk meja `terisi` (hit mm:ss, auto-refresh 30s, dari order aktif terawal per meja; `PelayanPage` menghitung `seatedAt`). **(2) WaiterOrder (input pesanan Pelayan)** — kartu menu vertikal → **horizontal** (thumbnail foto kiri + info kanan + tombol `+`), fallback placeholder bila tanpa `imageUrl`. **(3) OrderList (daftar pesanan Pelayan)** — **garis status** warna di tepi kiri kartu, **elapsed time** (`mm:ss`, auto-refresh), **note item** jadi badge merah gaya "No Croutons", tombol "Tandai Diantar" → "Antarkan". **(4) MenuPage (Menu QR pelanggan)** — grid 2 kolom → **kartu horizontal** + overlay "Habis". **(5) DRY** — `formatElapsed` dipindah ke `lib/format.ts` (dipakai TableSelect & OrderList). Backend: seeder `created_at` order aktif diubah ke relatif `now()` agar durasi duduk tidak puluhan jam (ORD-0004 `dibatalkan` tetap di masa lalu utk data laporan). Verifikasi: build ✓, lint ✓ (warning lama saja), 18/18 tes FE ✓, `migrate:fresh --seed` ✓ |
 - ✅ **Pendalaman 4 layar mendekati mockup Stitch (sesi lanjutan)**: Setelah user merasa hasil awal "perubahannya sedikit", dilakukan perbandingan langsung HTML mockup Stitch (di `resto-pos-frontend/`) vs komponen React, lalu menambah elemen mockup yang belum teradopsi. **Keputusan**: skip **floor tabs** & tombol **Filter** (aplikasi single-outlet tanpa data floor); tombol OrderList tetap satu **"Antarkan"** (tanpa View Details/Add Note); Featured Card di MenuPage pakai **menu pertama kategori aktif** (tanpa flag `featured` backend). Perubahan: **(1) TableSelect** — nomor meja besar (`text-heading`, accent utk terisi) + label status jadi **pill** (`rounded-full bg-status-*/15`) di bawah kartu via `mt-auto` (anti-meluber). **(2) OrderList** — **ikon jam** SVG di samping `Meja X · durasi`. **(3) WaiterOrder** — Review Order bar sticky (jumlah item + total + "Lihat & Kirim") **sudah ada**, tanpa perubahan. **(4) MenuPage** — komponen `FeaturedCard` baru (gambar besar h-48 + badge harga kanan atas + nama + deskripsi + tombol "Tambah ke Pesanan" lebar; menangani varian & item pedas via `SpicePills`; overlay "Habis"); daftar reguler `slice(1)` agar unggulan tak duplikat.     Verifikasi: build ✓, lint ✓ (warning lama saja), 18/18 tes FE ✓ |
-- ⏳ **(RENCANA) Bayar di Muka Self-Order — DOKU QRIS**: Keputusan user: bayar di muka Wajib hanya untuk self-order; langsung ke dapur setelah `paid`; vendor **DOKU** (sandbox utk demo PKL); **QRIS tunggal**; pola **B (QRIS tampil di aplikasi + polling Tingkat 2)** — pelanggan tidak pindah ke web DOKU, layar menampilkan QRIS lalu otomatis lanjut. Abstraksi `PaymentGateway` (`DokuGateway` + `MockQrisGateway`, pilih via `PAYMENT_DRIVER`), kolom baru `payments` (`reference`/`status`/`gateway`/`paid_via`). Langkah detail: **Fase D** di bawah. *Belum ada kode — update dokumen ini saja oleh user.* |
+- ⏳ **(RENCANA) Bayar di Muka Wajib Semua Kanal — DOKU QRIS + Tunai Kasir**: Keputusan user (**revisi**: semua kanal, bukan self-order saja) — bayar di muka Wajib di **self-order, kasir, pelayan**; order dibuat `menunggu`, baru ke dapur (`diproses`) setelah `paid`; **Konfirmasi kasir dihapus** (prepay otomatis ke dapur); meja `terisi` saat `paid`. **Self-order & Pelayan** → QRIS DOKU dinamis (QR di layar HP/tablet pelayan utk discan); **Kasir** → Tunai ATAU QRIS DOKU di muka (bayar segera setelah buat order). Vendor **DOKU** (sandbox demo PKL); pola **B (QRIS di aplikasi + polling)**. Abstraksi `PaymentGateway` (`DokuGateway` + `MockQrisGateway`, pilih via `PAYMENT_DRIVER`), kolom baru `payments` (`reference`/`status`/`gateway`/`paid_via`). Langkah detail: **Fase D** di bawah. *Belum ada kode — update dokumen ini saja oleh user.* |
 
 ---
 
@@ -116,13 +116,17 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 
 ---
 
-## Fase D - (RENCANA) Bayar di Muka Self-Order — DOKU QRIS
+## Fase D - (RENCANA) Bayar di Muka Wajib — Semua Kanal (DOKU QRIS + Tunai Kasir)
 
-> **Status: RENCANA — belum diimplementasikan.** Keputusan user yang sudah disepakati:
-> - Bayar di muka **wajib hanya untuk self-order**; pelayan/kasir manual tetap pay-after.
-> - Setelah pembayaran `paid` → order **langsung ke dapur** (tanpa Konfirmasi manual utk self-order yang sudah prepay).
+> **Status: RENCANA — belum diimplementasikan.** Keputusan user yang sudah disepakati
+> (**revisi** dari "self-order saja" → **semua kanal**):
+> - Bayar di muka **wajib di semua kanal**: self-order (scan QR), pelayan (HP/tablet), dan kasir.
+> - Order baru dibuat status `menunggu` (BELUM ke dapur); baru `diproses` → dapur setelah pembayaran `paid`.
+> - **Self-order & Pelayan** → **QRIS DOKU dinamis**; QR tampil di layar pelanggan/layan pelayan utk discan.
+> - **Kasir** → bayar **segera setelah buat order** (before dapur), boleh **Tunai ATAU QRIS DOKU** di muka.
+> - **Tombol "Konfirmasi" kasir DIHAPUS** — prepay otomatis ke dapur (tanpa konfirmasi manual).
+> - Meja jadi `terisi` pada saat order `paid` & mulai dimasak.
 > - Vendor **DOKU** (sandbox untuk demo/penilaian PKL; production/uang asli bila operasional → butuh dokumen + rekening bank/DANA Bisnis).
-> - **QRIS tunggal** sebagai metode bayar di muka.
 > - Pola **B (QRIS tampil di aplikasi + polling)**: pelanggan tidak pindah ke web DOKU; layar menampilkan QRIS, menunggu, lalu otomatis lanjut saat `paid`.
 > - Abstraksi `PaymentGateway` (interface) + dua driver: `DokuGateway` + `MockQrisGateway` (cadangan demo tanpa akun/internet), dipilih via `PAYMENT_DRIVER` di `.env`.
 > - Settlement production: DANA Premium **tidak bisa** jadi tujuan dana; butuh rekening bank atau **DANA Bisnis**. (Tidak relevan utk sandbox/Opsi A.)
@@ -135,17 +139,21 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [ ] Migrasi: tambah kolom `reference` (unique), `status` (`pending|paid|failed|expired|cancelled`), `gateway`, `paid_via` pada `payments`.
 - [ ] `app/Services/Payment/PaymentGateway` (interface) + `DokuGateway` + `MockQrisGateway`.
 - [ ] `config/payment.php` + binding di `AppServiceProvider` (driver dari `PAYMENT_DRIVER`, default `mock`).
-- [ ] `PaymentController`: `POST /orders/{id}/checkout` (publik self-order; buat QRIS via gateway, simpan `payments` status pending) + `GET /payments/{reference}/status` (polling) + `POST /payments/{reference}/mock-paid` (hanya Mock, non-production).
-- [ ] `OrderController::store`: self-order status awal `menunggu` TAPI belum ke dapur; baru `diproses` + broadcast setelah checkout `paid`.
-- [ ] Guard kasir: order self-order berstatus `pending` tidak boleh dibayar kasir; order `paid` tampil "Lunas" (tombol Bayar nonaktif). Pelayan/kasir manual tetap pay-after.
-- [ ] `.env.example` + `OrderStatusChanged`/`OrderResource` expose status pembayaran.
+- [ ] `PaymentController`: `POST /orders/{id}/checkout` (buat QRIS via gateway utk self/pelayan/kasir, simpan `payments` status pending) + `GET /payments/{reference}/status` (polling) + `POST /payments/{reference}/mock-paid` (hanya Mock, non-production).
+- [ ] `OrderController::store`: **semua kanal** status awal `menunggu` (belum ke dapur); tanpa Konfirmasi; baru `diproses` + broadcast + meja `terisi` setelah pembayaran `paid`.
+- [ ] `PaymentController::store` (tunai kasir di muka): validasi order `menunggu`, set `paid`, lanjutkan order ke dapur + meja `terisi`.
+- [ ] Guard kasir: order `menunggu` (belum bayar) tidak masuk dapur; order prepay tak bisa dibayar ganda; `paid` tampil "Lunas" (tombol Bayar nonaktif).
+- [ ] `.env.example` + `OrderStatusChanged`/`OrderResource`/`PaymentResource` expose status pembayaran.
 - [ ] Feature tests backend.
 
 ### D2. Frontend — alur bayar di muka (Prioritas: P1)
 - [ ] `types` + `httpApi`/`api`: `checkoutOrder`, `getPaymentStatus`, `markMockPaid`.
 - [ ] `MenuPage`: tambah view `payment` — tampilkan QRIS; polling `getPaymentStatus` (doku) / tombol "Saya Sudah Bayar" (mock); otomatis lanjut ke tracking saat `paid`.
+- [ ] `WaiterOrder` (pelayan): setelah kirim order → tampilkan QRIS DOKU di layar → polling → paid → ke dapur.
+- [ ] `PaymentModal` (kasir): bayar segera setelah buat order — Tunai (seperti sekarang) ATAU QRIS DOKU (checkout → QR → polling → paid).
+- [ ] Hapus tombol "Konfirmasi" dari `KasirQueuePanel`/flow kasir — semua otomatis ke dapur saat `paid`.
+- [ ] `KasirQueuePanel`: Nota tampil badge "Lunas", tombol "Bayar" nonaktif utk yang sudah prepay.
 - [ ] Ganti teks "bayar di kasir" → "pembayaran di muka".
-- [ ] `KasirPage`/`KasirQueuePanel`: Nota tampil badge "Lunas", tombol "Bayar" nonaktif utk yang sudah prepay.
 - [ ] Verifikasi: `npm run build` + `lint` + `npm test`.
 
 ### D3. Deployment online untuk penilaian PKL (Opsi A — DOKU Sandbox)
