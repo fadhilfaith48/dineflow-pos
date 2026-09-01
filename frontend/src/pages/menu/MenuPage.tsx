@@ -165,17 +165,17 @@ export function MenuPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        <ul className="grid grid-cols-2 gap-3">
+        <ul className="flex flex-col gap-3">
           {visibleItems.map((item) => {
             const hasVariants = item.variants && item.variants.length > 0
             return (
               <li
                 key={item.id}
-                className={`flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card ${
+                className={`flex gap-3 overflow-hidden rounded-xl border border-border-subtle bg-bg-surface p-2 shadow-card ${
                   item.available ? '' : 'opacity-50'
                 }`}
               >
-                <div className="flex h-20 items-center justify-center overflow-hidden bg-bg-secondary">
+                <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg-secondary">
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
                   ) : (
@@ -186,51 +186,52 @@ export function MenuPage() {
                       <circle cx="12" cy="5" r="2" />
                     </svg>
                   )}
+                  {!item.available && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-bg-surface/60">
+                      <span className="rounded bg-bg-surface px-2 py-0.5 text-caption font-bold uppercase text-status-danger">Habis</span>
+                    </span>
+                  )}
                 </div>
-                <div className="flex flex-1 flex-col p-3">
-                  <div className="line-clamp-2 text-body font-semibold text-text-primary">{item.name}</div>
-                  {item.description && <p className="mt-0.5 line-clamp-2 text-caption text-text-secondary">{item.description}</p>}
-                  <div className="mt-auto pt-2">
-                    {hasVariants && item.available ? (
-                      <div className="flex flex-wrap gap-1">
-                        {item.variants!.map((v: MenuItemVariant) => (
-                          <button
-                            key={v.id}
-                            onClick={() => cart.addItem(item, v)}
-                            disabled={!v.available}
-                            className={`rounded-md border px-2 py-0.5 text-caption font-semibold transition-colors ${
-                              v.available
-                                ? 'border-accent-primary/30 bg-accent-tint text-accent-primary'
-                                : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
-                            }`}
-                          >
-                            {v.name} {formatRupiah(v.price)}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-num text-subheading font-bold text-accent-primary">
-                          {formatRupiah(item.price)}
-                        </span>
-                        {item.available && item.isSpicy ? (
-                          <SpicePills onSelect={(level) => cart.addItem(item, undefined, level)} />
-                        ) : item.available ? (
-                          <button
-                            onClick={() => cart.addItem(item)}
-                            aria-label={`Tambah ${item.name}`}
-                            className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-primary text-text-on-accent"
-                          >
-                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                              <path d="M12 5v14M5 12h14" />
-                            </svg>
-                          </button>
-                        ) : (
-                          <span className="text-caption font-bold uppercase tracking-wide text-status-danger">Habis</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div className="flex min-w-0 flex-1 flex-col gap-1 py-1 pr-1">
+                  <div className="line-clamp-1 text-body font-semibold text-text-primary">{item.name}</div>
+                  {item.description && <p className="line-clamp-1 text-caption text-text-secondary">{item.description}</p>}
+                  {hasVariants && item.available ? (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {item.variants!.map((v: MenuItemVariant) => (
+                        <button
+                          key={v.id}
+                          onClick={() => cart.addItem(item, v)}
+                          disabled={!v.available}
+                          className={`rounded-md border px-2 py-0.5 text-caption font-semibold transition-colors ${
+                            v.available
+                              ? 'border-accent-primary/30 bg-accent-tint text-accent-primary'
+                              : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
+                          }`}
+                        >
+                          {v.name} {formatRupiah(v.price)}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-num text-subheading font-bold text-accent-primary">
+                        {formatRupiah(item.price)}
+                      </span>
+                      {item.available && item.isSpicy ? (
+                        <SpicePills onSelect={(level) => cart.addItem(item, undefined, level)} />
+                      ) : item.available ? (
+                        <button
+                          onClick={() => cart.addItem(item)}
+                          aria-label={`Tambah ${item.name}`}
+                          className="flex h-11 w-11 items-center justify-center rounded-lg bg-accent-primary text-text-on-accent"
+                        >
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               </li>
             )

@@ -171,7 +171,7 @@ class DatabaseSeeder extends Seeder
                 'table' => 'T8',
                 'source' => 'self-order',
                 'status' => 'diproses',
-                'created_at' => '2026-08-12 10:15:00',
+                'created_at' => now()->subMinutes(47)->toDateTimeString(),
                 'items' => [
                     ['#M03', 16000, 1, 'dimasak', null, 'Reguler', 3],
                     ['#M10', 12000, 1, 'baru'],
@@ -182,7 +182,7 @@ class DatabaseSeeder extends Seeder
                 'table' => 'T5',
                 'source' => 'pelayan',
                 'status' => 'diproses',
-                'created_at' => '2026-08-12 10:20:00',
+                'created_at' => now()->subMinutes(25)->toDateTimeString(),
                 'items' => [
                     ['#M02', 22000, 1, 'dimasak', 'Tidak pedas', null, 0],
                     ['#M09', 10000, 2, 'baru', null, 'Besar'],
@@ -193,7 +193,7 @@ class DatabaseSeeder extends Seeder
                 'table' => 'T3',
                 'source' => 'self-order',
                 'status' => 'menunggu-konfirmasi',
-                'created_at' => '2026-08-13 09:00:00',
+                'created_at' => now()->subMinutes(8)->toDateTimeString(),
                 'items' => [
                     ['#M01', 25000, 1, 'baru', null, 'Besar', 2],
                     ['#M08', 8000, 1, 'baru', null, 'Besar'],

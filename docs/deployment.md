@@ -17,7 +17,7 @@ Pilih jalur berdasarkan kondisi Anda:
 | 3 | Butuh **hosting gratis sementara** (demo PKL) | **§3 — Opsi Sementara** | Rp0 (trial) | Railway 30 hari / Tencent 3 bulan |
 | 4 | Tidak bisa bayar & tidak ada server sekolah | **§4 — Tidak Bisa** | — | Cari pinjaman VPS teman / tunggu |
 
-> **Rekomendasi**: Coba **§2** dulu (tanya guru), kalau tidak ada → **§1** (DomaiNesia paling murah), kalau butuh gratis segera → **§3** (Tencent trial).
+> **Rekomendasi**: Coba **§2** dulu (tanya guru), kalau tidak ada → **§1** (DomaiNesia paling murah / **Nevacloud §1.Opsi-D** jika butuh e-wallet + QRIS murah dengan setup hemat VPS), kalau butuh gratis segera → **§3** (Tencent trial).
 
 ---
 
@@ -112,6 +112,31 @@ VPS (1 server, semua layanan):
 3. Buat **Lighthouse** instance baru → pilih Ubuntu 24.04.
 4. Login: `ssh root@<ip-vps>` (password dari dashboard Lighthouse).
 5. Lanjut ke **Setup Server** di bawah.
+
+---
+
+### Opsi D: Nevacloud (e-wallet + QRIS, tanpa kartu kredit)
+
+| Aspek | Detail |
+|---|---|
+| **Paket** | **Nevalite 1GB** — 1 vCPU / 1GB RAM / 20GB NVMe (Intel Xeon Skylake, DDR4, RAID10) |
+| **Harga** | **Rp42.240/bulan** atau **Rp506.880/12 bulan** (Fixed Term, diskon 12%). Billing **per jam** (Pay as You Go) juga tersedia (~Rp72/jam) |
+| **Pembayaran** | **QRIS / GoPay / transfer bank / e-wallet** — tanpa kartu kredit. Harus **isi deposit dulu** ke saldo akun |
+| **Region** | Indonesia (Jakarta, Cyber 2 & Menara Tendean) — latency rendah untuk demo PKL lokal |
+| **Control Panel** | `app.nevacloud.com` |
+| **OS** | **Ubuntu 24.04** (pilih saat order — jangan Windows Server) |
+| **Kelas** | Nevalite DDR4 (mur) vs Nevacloud VM DDR5 (lebih cepat/HA). Untuk 1 proyek DineFlow, **Nevalite DDR4 cukup** |
+| **Upgrade** | Bisa **Scale Up** kapan pun dari dashboard (mis. 1GB → 2GB) kalau butuh 2 proyek nanti |
+| **Catatan** | Credible: PT Delta Awan Angkasa, terdaftar PSE Komdigi, SLA 99.9%, replikasi data 3X |
+
+> **Arsitektur hemat VPS** (cocok untuk 1GB): pasang hanya **Nginx + PHP + Reverb** di VPS. Database, Redis, dan foto menu **pakai layanan gratis eksternal** (Neon / Upstash / Supabase) agar RAM 1GB cukup. Lihat **§1.Opsi-D-Setup** di bawah untuk panduan lengkap, atau **§1.Setup Server** untuk langkah umum.
+
+**Langkah:**
+1. Daftar di `app.nevacloud.com` (email/Google).
+2. **Isi deposit** (QRIS/transfer) ke saldo akun — wajib sebelum order.
+3. Buat VPS → pilih **Nevalite 1GB** → OS **Ubuntu 24.04** → pilih billing (**Fixed Term** agar server hidup terus, atau **Pay as You Go** untuk uji coba).
+4. Login SSH: `ssh root@<ip-vps>` (IP + password root dari dashboard).
+5. Lanjut ke **§1.Opsi-D-Setup** (panduan hemat VPS 1GB) atau **§1.Setup Server** (umum).
 
 ---
 
@@ -274,6 +299,264 @@ curl -X POST https://<domain>/api/login -H "Content-Type: application/json" \
 
 ---
 
+## §1.Opsi-D-SETUP — Panduan Khusus Nevacloud Nevalite 1GB (Hemat VPS)
+
+> Panduan ini mengadaptasi **§1.Setup Server** agar pas di **VPS 1GB**. Kunci utamanya:
+> **jangan pasang PostgreSQL/MySQL dan Redis di VPS** — pakai layanan gratis eksternal
+> (Neon, Upstash) supaya RAM 1GB hanya menampung **Nginx + PHP-FPM + Reverb**.
+> Foto menu juga dimindahkan ke **Supabase S3** agar tidak makan storage/log.
+> Nilai env mengikuti **template produksi** yang sudah tertulis di `backend/.env.example`
+> (blok komentar bagian bawah) — tinggal aktivasi & isi nilai nyata.
+
+### Bagan Target (hemat VPS)
+
+```
+Browser (POS)
+  ├─ https://<nama>.vercel.app         → React SPA (Vercel, gratis)
+  │     ├─ API → https://dineflow.duckdns.org  (Laravel, VPS 1GB)
+  │     └─ WS  → wss://dineflow.duckdns.org    (Reverb, VPS 1GB, via Nginx)
+  └─ (foto menu → Supabase S3)
+
+VPS Nevacloud 1GB  (HANYA ini yang "jalan" di RAM 1GB):
+  ├─ Nginx (reverse proxy + SSL Let's Encrypt)
+  ├─ PHP-FPM 8.3 (Laravel API)
+  └─ Supervisor → Reverb (WebSocket), auto-restart
+
+Eksternal gratis (BUKAN di VPS):
+  ├─ Database  → Neon PostgreSQL (gratis)
+  ├─ Redis     → Upstash (gratis)
+  ├─ Foto menu → Supabase Storage S3 (gratis)
+  ├─ Frontend  → Vercel (gratis)
+  └─ Domain    → DuckDNS (gratis) + Let's Encrypt untuk SSL/wss
+```
+
+### Langkah 1 — Persiapan layanan gratis (di browser, sebelum buka VPS)
+
+1. **Neon** (`neon.tech`) — buat project PostgreSQL → salin nilai:
+   `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
+   > Gunakan koneksi **pooled** kalau tersedia (ringan untuk free tier).
+2. **Upstash** (`upstash.com`) — buat Redis free → salin `REDIS_URL` (format `rediss://...`).
+3. **Supabase** (`supabase.com`) — buat project → buat bucket publik `menu-photos` →
+   salin `service_role` key, `AWS_ENDPOINT` (…/storage/v1/s3), region, public URL.
+4. **DuckDNS** (`duckdns.org`) — buat subdomain (mis. `dineflow`) → simpan token.
+   (A record ke IP VPS diisi **setelah** VPS aktif.)
+5. **Vercel** — siapkan akun, nanti deploy frontend dari GitHub.
+
+### Langkah 2 — Order VPS Nevacloud
+
+1. `app.nevacloud.com` → daftar → **isi deposit** (QRIS/transfer).
+2. Buat VPS → **Nevalite 1GB** / OS **Ubuntu 24.04** / billing **Fixed Term**.
+3. Catat **IP** + **password root** dari dashboard.
+4. SSH masuk: `ssh root@<ip-vps>` (pakai aplikasi terminal seperti Windows Terminal/Git Bash).
+
+### Langkah 3 — Update & install dependency (jangan pasang cPanel/aaPanel/Plesk!)
+
+```bash
+apt update && apt upgrade -y
+apt install -y nginx php8.3-fpm php8.3-cli php8.3-pgsql php8.3-mbstring \
+  php8.3-xml php8.3-curl php8.3-zip php8.3-bcmath git unzip curl supervisor
+```
+> Tidak perlu `php8.3-redis` karena Redis pakai Upstash via `predis` (sudah di `composer.json`).
+> Jangan install `postgresql` atau `redis-server` — itu akan memakan RAM 1GB.
+
+Install Composer (di luar direktori repo):
+```bash
+cd /tmp
+curl -sS https://getcomposer.org/installer -o composer-setup.php
+php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+composer --version
+```
+
+### Langkah 4 — Clone & deploy Laravel
+
+```bash
+mkdir -p /var/www && cd /var/www
+git clone https://github.com/fadhilfaith48/dineflow-pos.git
+cd dineflow-pos/backend
+composer install --no-dev --optimize-autoloader
+cp .env.example .env
+php artisan key:generate
+```
+
+### Langkah 5 — Setup `.env` (aktifkan template produksi)
+
+Buka `backend/.env` (nano/vim) dan set nilai berikut. **Hapus tanda `#`** pada baris template
+produksi di bawah `.env.example` dan isi nilai nyata:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://dineflow.duckdns.org
+FRONTEND_URL=https://<nama-proyek>.vercel.app
+
+# --- Database: Neon ---
+DB_CONNECTION=pgsql
+DB_HOST=<neon-host>
+DB_PORT=5432
+DB_DATABASE=dineflow_pos
+DB_USERNAME=dineflow
+DB_PASSWORD=<password-neon>
+
+# --- Redis: Upstash ---
+REDIS_CLIENT=predis
+REDIS_URL=rediss://<username>:<password>@<region>.upstash.io:<port>
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+BROADCAST_CONNECTION=reverb
+QUEUE_CONNECTION=sync          # PENTING: hindari proses queue worker di VPS 1GB
+
+# --- Reverb (WebSocket) lewat DuckDNS + SSL ---
+REVERB_SERVER_HOST=0.0.0.0
+REVERB_SERVER_PORT=8080
+REVERB_SERVER_HOSTNAME=dineflow.duckdns.org
+REVERB_SERVER_SCHEME=https
+REVERB_SERVER_DEBUG=false
+REVERB_HOST=dineflow.duckdns.org
+REVERB_PORT=443                 # lewat Nginx proxy + certbot
+REVERB_SCHEME=https
+REVERB_ALLOWED_ORIGINS=https://<nama-proyek>.vercel.app
+
+# --- Foto menu: Supabase Storage (S3) ---
+FILESYSTEM_DISK=s3
+PHOTO_DISK=s3
+AWS_ACCESS_KEY_ID=<supabase-service-role-key>
+AWS_SECRET_ACCESS_KEY=<supabase-service-role-key>
+AWS_DEFAULT_REGION=<bucket-region>
+AWS_BUCKET=menu-photos
+AWS_ENDPOINT=https://<project-ref>.supabase.co/storage/v1/s3
+AWS_URL=<public-url-ke-bucket>
+AWS_USE_PATH_STYLE_ENDPOINT=true    # WAJIB true untuk Supabase
+```
+
+Simpan, lalu:
+```bash
+php artisan config:clear
+php artisan migrate --force
+php artisan db:seed
+```
+> Karena foto menu di S3, **`storage:link` tidak wajib**. (Opsional tetap bisa dijalankan.)
+
+### Langkah 6 — Supervisor (Reverb auto-restart)
+
+```bash
+cat > /etc/supervisor/conf.d/reverb.conf << 'EOF'
+[program:reverb]
+process_name=%(program_name)s
+command=php /var/www/dineflow-pos/backend/artisan reverb:start --host=0.0.0.0 --port=8080
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/www/dineflow-pos/backend/storage/logs/reverb.log
+stopwaitsecs=3600
+EOF
+
+supervisorctl reread
+supervisorctl update
+supervisorctl start reverb
+# Cek berjalan
+supervisorctl status
+```
+
+### Langkah 7 — Nginx
+
+```bash
+cat > /etc/nginx/sites-available/dineflow << 'EOF'
+server {
+    listen 80;
+    server_name dineflow.duckdns.org;
+
+    root /var/www/dineflow-pos/backend/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # WebSocket (Reverb)
+    location /app {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+}
+EOF
+
+ln -s /etc/nginx/sites-available/dineflow /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && systemctl reload nginx
+```
+> Tidak perlu blok `/storage` karena foto di S3 (Supabase).
+
+### Langkah 8 — DuckDNS + SSL (wajib agar WebSocket `wss://` aman)
+
+1. Set **A record** `dineflow` → **IP VPS** di `duckdns.org`.
+2. SSL:
+```bash
+apt install certbot python3-certbot-nginx -y
+certbot --nginx -d dineflow.duckdns.org
+# Auto-renew
+crontab -e
+# tambah baris:
+# 0 12 * * * certbot renew --quiet
+```
+3. Setelah SSL aktif, `https://dineflow.duckdns.org/api/categories` harus 200 JSON.
+
+### Langkah 9 — Deploy frontend ke Vercel
+
+1. Vercel → Add New → Project → import `dineflow-pos`, Root Directory: `frontend`.
+2. Env Vars:
+   - `VITE_API_URL` = `https://dineflow.duckdns.org/api`
+   - `VITE_REVERB_APP_KEY` = (sama dengan backend)
+   - `VITE_REVERB_HOST` = `dineflow.duckdns.org`
+   - `VITE_REVERB_PORT` = `443`
+   - `VITE_REVERB_SCHEME` = `https`
+3. Deploy → URL `https://<nama-proyek>.vercel.app`.
+
+### Langkah 10 — Verifikasi menyeluruh
+
+```bash
+# API
+curl https://dineflow.duckdns.org/api/categories   # → 200 JSON
+# Login
+curl -X POST https://dineflow.duckdns.org/api/login -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"1234"}'       # → token
+# WebSocket
+# Buka DevTools → Network → WS → cek koneksi wss://dineflow.duckdns.org/app
+# Lalu uji: buat order dari Menu QR → KDS tampil tanpa refresh (real-time ≤2s)
+```
+Lalu uji manual seluruh peran sesuai `docs/uji manual.md` (kasir, pelayan, dapur, menu QR, admin), upload foto menu, PPN, struk, void, level pedas.
+
+### Troubleshooting RAM 1GB
+
+| Gejala | Cek / solusi |
+|---|---|
+| Server lemot / restart mendadak | `free -h` → pastikan tidak penuh. Jangan install cPanel/aaPanel/Plesk/DB lokal. |
+| Queue worker jalan tak sengaja | Pastikan `QUEUE_CONNECTION=sync` di `.env`. |
+| PHP-FPM banyak proses jalan | Atur `/etc/php/8.3/fpm/pool.d/www.conf` → `pm = dynamic`, `pm.max_children = 5` (atau lebih kecil). |
+| RAM masih penuh | Aktifkan **swap** (`fallocate -l 1G /swapfile`) — aman karena storage NVMe cepat. |
+| WebSocket gagal | Pastikan DuckDNS A record benar, certbot SSL aktif (`wss://`), origin di `REVERB_ALLOWED_ORIGINS` sesuai. |
+
+### Upgrade 1GB → 2GB (bila nanti butuh 2 proyek)
+
+- Dari dashboard Nevacloud, **Scale Up** instance (1GB → 2GB) kapan pun.
+- 1GB cukup untuk **1 proyek** DineFlow (dengan Neon/Upstash/Supabase).
+- Untuk **2 proyek** (misal 2 POS atau DineFlow + proyek lain) → **2GB lebih aman**, tidak perlu ubah kode, cukup:
+  - tambah **server block** Nginx kedua (`server_name` beda, mis. `proyek2.duckdns.org`),
+  - tambah **pool PHP** kedua / atau reuse pool,
+  - tambah **program Supervisor** kedua (port Reverb beda, mis. 8081),
+  - tambah budget → pertimbangkan **Nevacloud VM DDR5** (lebih kencang & HA).
+
+---
+
 ## §2. JALUR SEKOLAH — Server Sekolah / Oracle Academy (Rp0)
 
 **Opsi paling murah: Rp0.** Minta izin pakai server milik sekolah (lab komputer / server guru) atau lewat program Oracle Academy.
@@ -397,12 +680,63 @@ Atau pasang **semua di VPS** (PostgreSQL + Redis + Laravel + Reverb) → hemat b
 
 ---
 
+## §5A. DuckDNS & SSL untuk Backend (WebSocket Aman)
+
+> **Kenapa hampir wajib?** Bukan sekadar rapi, tapi berkaitan dengan kelancaran **WebSocket real-time** (fitur inti: KDS, panel Kasir, tracking pelanggan).
+
+### Masalah tanpa DuckDNS
+- Frontend di Vercel otomatis `https://`.
+- Jika backend cuma `http://<ip>/...`, browser modern **memblokir WebSocket dari halaman HTTPS ke IP/HTTP** → real-time (Reverb) bisa gagal di produksi.
+- Dengan DuckDNS + SSL (`https://namamu.duckdns.org`), WebSocket jadi `wss://` → jalan normal.
+
+### Keuntungan DuckDNS
+| Aspek | Pakai IP langsung | Pakai DuckDNS |
+|---|---|---|
+| Alamat backend | `http://45.xx.xx.xx/api` (susah diingat) | `http://dineflow.duckdns.org/api` |
+| SSL/HTTPS | Susah (sertifikat untuk IP aneh) | Bisa dengan Let's Encrypt |
+| Stabil saat IP ganti | ❌ Semua config frontend ikut ganti | ✅ Tinggal update 1 record DNS |
+| Biaya | Rp0 | Rp0 (gratis) |
+
+### Langkah Setup DuckDNS
+1. Daftar di `www.duckdns.org` (via Google/GitHub login).
+2. Buat subdomain, mis. `dineflow` → dapat token.
+3. A record ke IP VPS: `dineflow` → `<ip-vps>`.
+4. *(opsional)* Set cron auto-update kalau IP dinamis:
+   ```bash
+   curl "https://www.duckdns.org/update?domains=dineflow&token=<TOKEN>&ip="
+   ```
+
+### SSL (Let's Encrypt via certbot)
+> **Catatan**: Let's Encrypt **tidak menerbitkan sertifikat untuk IP** — harus lewat nama domain (DuckDNS).
+```bash
+apt install certbot python3-certbot-nginx -y
+certbot --nginx -d dineflow.duckdns.org
+# Auto-renew: crontab → 0 12 * * * certbot renew --quiet
+```
+
+### Nilai env yang dipakai
+```env
+# Backend
+APP_URL=https://dineflow.duckdns.org
+# Reverb di Nginx proxy (port 443 wss)
+```
+```env
+# Frontend (Vercel)
+VITE_API_URL=https://dineflow.duckdns.org/api
+VITE_REVERB_HOST=dineflow.duckdns.org
+VITE_REVERB_PORT=443
+VITE_REVERB_SCHEME=https
+```
+
+---
+
 ## §6. Checklist Sebelum Deploy
 
 - [ ] Pilih jalur (§0 → §1/2/3/4).
 - [ ] Buat akun di provider yang dipilih.
-- [ ] Siapkan environment variables (lihat langkah 4 di §1).
+- [ ] Siapkan environment variables (lihat langkah 4 di §1, atau langkah 5 di §1.Opsi-D-Setup untuk Nevacloud 1GB).
 - [ ] Isi nilai rahasia: `APP_KEY`, `DB_PASSWORD`, `REVERB_*`, `AWS_*` (kalau pakai Supabase).
+- [ ] (! khusus Nevacloud 1GB) Login ke layanan gratis: Neon, Upstash, Supabase, DuckDNS, Vercel.
 - [ ] Deploy backend ke VPS.
 - [ ] Deploy frontend ke Vercel.
 - [ ] Verifikasi: API, login, WebSocket, foto menu.
@@ -452,5 +786,7 @@ status, nama menu; tanpa data pembayaran). Sebelum dipakai publik sungguhan:
 
 ---
 
-> **Status**: Dokumen ini disusun ulang pada 20 Agustus 2026. Pilih jalur sesuai kondisi
-> Anda di §0. Jika ada pertanyaan, tanyakan ke pembimbing PKL.
+> **Status**: Dokumen ini disusun ulang pada 20 Agustus 2026, dan ditambahkan
+> **§1.Opsi-D (Nevacloud Nevalite 1GB)** pada 1 September 2026 sebagai opsi VPS
+> e-wallet/QRIS murah dengan panduan hemat VPS 1GB (DB/Redis/foto eksternal gratis).
+> Pilih jalur sesuai kondisi Anda di §0. Jika ada pertanyaan, tanyakan ke pembimbing PKL.

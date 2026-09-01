@@ -156,14 +156,57 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | # | Kasus | Hasil Diharapkan | Status |
 |---|---|---|---|
 | 9.12 | Kasir buat order (belum dibayar) → muncul di panel Kasir | Tombol **Batalkan** tersedia di kartu order | ⬜ |
-| 9.13 | Klik **Batalkan** → konfirmasi | Order berstatus `dibatalkan`; badge "Batal" tampil; hilang dari daftar yang harus diproses/dibayar | ⬜ |
+| 9.13 | Klik **Batalkan** → modal **Alasan Pembatalan** (dropdown preset / ketik bebas) → klik **Ya, Batalkan** | Order berstatus `dibatalkan`; badge "Batal" tampil; hilang dari daftar yang harus diproses/dibayar; alasan muncul di riwayat | ⬜ |
 | 9.14 | Order tersebut terkait meja (bukan Take Away) | Meja kembali ke status **kosong** secara otomatis | ⬜ |
 | 9.15 | Coba **Batalkan** order yang sudah `selesai` / `dibatalkan` | Tombol tidak tersedia / ditolak (tidak bisa void dua kali) | ⬜ |
-| 9.16 | Coba **Batalkan** order dari role **pelayan** / **dapur** | Tidak ada tombol / tidak punya izin (hanya admin & kasir) | ⬜ |
+| 9.16 | Coba **Batalkan** order dari role **pelayan** | Tidak ada tombol / tidak punya izin; role **admin, kasir, dapur** boleh void | ⬜ |
 | 9.17 | Admin → **Riwayat Transaksi** / panel Riwayat Kasir, filter status **Dibatalkan** | Order yang di-void muncul dengan badge "Batal" | ⬜ |
 | 9.18 | Order `dibatalkan` tidak dihitung di **Laporan Penjualan** | Total laporan tidak memasukkan order yang dibatalkan | ⬜ |
 | 9.19 | Order dibatalkan tidak bisa dibayar | Klik bayar → ditolak / tidak tersedia (guard `dibatalkan`) | ⬜ |
 | 9.20 | Void order via backend langsung (curl `PATCH /api/orders/{id}/void` sebagai kasir/admin) | Response sukses, status jadi `dibatalkan`; event `OrderStatusChanged` action=voided terkirim (bisa dicek listener WS) | ⬜ |
+
+## 10. Level Kepedasan 0-5, PPN Persisten, Void Alasan (fitur PRD batch 2)
+
+> Prasyarat: seed demo menandai #M01 (Nasi Goreng Spesial), #M02 (Ayam Bakar), #M03 (Mie Ayam), #M07 (Nasi Uduk) sebagai item **pedas**. #M01 & #M03 juga ber-varian.
+
+### 10a. Level Kepedasan (Kasir / Pelayan / Menu QR)
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 10.1 | Buka **Kasir** → kategori Makanan → item **Ayam Bakar** (#M02, pedas tanpa varian) | Tampil pill **Level 0 1 2 3 4 5** (bukan tombol +) | ⬜ |
+| 10.2 | Klik pill **Level 3** pada Ayam Bakar | Masuk keranjang sebagai baris dengan label "Level 3"; harga item dasar | ⬜ |
+| 10.3 | Item pedas **Nasi Goreng** (#M01, pedas + ber-varian) | Pill varian (Reguler/Besar) tampil; klik varian → masuk keranjang (level diatur di keranjang) | ⬜ |
+| 10.4 | Di keranjang, baris item pedas menampilkan stepper **Level Pedas − N +** | Klik **+** naik ke 4, **−** turun; batas 0-5 (tombol nonaktif di ujung) | ⬜ |
+| 10.5 | Tambah Ayam Bakar Level 2 lalu tambah lagi Level 4 | Muncul **2 baris terpisah** (level berbeda = baris berbeda); tambah lagi Level 2 → digabung qty baris Level 2 | ⬜ |
+| 10.6 | Kirim order ber-level ke dapur → buka **KDS** (`/kitchen`) | Item ditampilkan "Level N" jelas di ticket agar dapur tepat racik | ⬜ |
+| 10.7 | **Menu QR** (`/menu/T1`) → item pedas tanpa varian (Ayam Bakar) | Pill Level tampil; pilih level → keranjang; kirim pesanan | ⬜ |
+| 10.8 | Struk (Kasir) setelah order ber-level | Nama item diikuti "Level N" | ⬜ |
+| 10.9 | Item **bukan** pedas (mis. Es Teh) | Tidak ada pill level, tetap tombol + / pill varian biasa | ⬜ |
+
+### 10b. Admin: Toggle Item Pedas
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 10.10 | Admin → **Manajemen Menu** → edit item | Ada checkbox **Item Pedas**; centang → **Simpan** | ⬜ |
+| 10.11 | Setelah disimpan, menu tampilkan badge **Pedas** di tabel | Badge "Pedas" tampil di dekat nama item yang `isSpicy` | ⬜ |
+| 10.12 | Item kini muncul pill Level di Kasir/Pelayan/Menu QR | Perubahan `is_spicy` tersimpan & berefek di semua antarmuka | ⬜ |
+
+### 10c. Void Wajib Alasan + Role Dapur
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 10.13 | Kasir/via KDS klik **Batalkan** tanpa mengisi alasan | Tombol "Ya, Batalkan" menampilkan pesan "Alasan pembatalan wajib diisi" (tidak melanjutkan) | ⬜ |
+| 10.14 | Pilih alasan preset (dropdown) lalu **Ya, Batalkan** | Order `dibatalkan`; riwayat Kasir menampilkan alasan | ⬜ |
+| 10.15 | Role **dapur** coba void via KDS (tombol Batalkan di ticket) | Berhasil void (role dapur kini boleh void sesuai PRD) | ⬜ |
+| 10.16 | Cek backend: order yang di-void punya `void_reason` | `GET /api/orders` menampilkan `voidReason` pada order `dibatalkan` | ⬜ |
+
+### 10d. PPN Persisten per-Transaksi
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 10.17 | Bayar nota → struktur struk: Subtotal / Pajak X% / Total | Subtotal & Pajak tercetak sesuai tarif & dijumlahkan benar (subtotal = total ÷ (1+rate)) | ⬜ |
+| 10.18 | Ubah tarif PPN admin → **cetak ulang struk** transaksi lama (riwayat) | Struk lama tetap pakai nilai PPN **saat transaksi** (persisten, tidak ikut tarif baru) | ⬜ |
+| 10.19 | Backend `GET /api/orders` untuk transaksi ber-PPN | Payment menampilkan `subtotal`, `ppnAmount`, `total` | ⬜ |
 
 ---
 

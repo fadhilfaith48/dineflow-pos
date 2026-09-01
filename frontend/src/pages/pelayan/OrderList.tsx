@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import type { Order } from '@/types'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatElapsed } from '@/lib/format'
 import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
 
 const orderStatusBadge: Record<Order['status'], BadgeVariant> = {
@@ -10,6 +11,14 @@ const orderStatusBadge: Record<Order['status'], BadgeVariant> = {
   dibatalkan: 'danger',
 }
 
+const orderStatusBar: Record<Order['status'], string> = {
+  'menunggu-konfirmasi': 'bg-status-new',
+  baru: 'bg-status-new',
+  diproses: 'bg-status-cooking',
+  selesai: 'bg-status-done',
+  dibatalkan: 'bg-status-danger',
+}
+
 interface OrderListProps {
   orders: Order[]
   onDeliver: (orderId: number) => void
@@ -18,6 +27,13 @@ interface OrderListProps {
 
 export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
   const active = orders.filter((o) => o.status !== 'dibatalkan')
+
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000)
+    return () => clearInterval(id)
+  }, [])
+  const now = Date.now()
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-bg-secondary">
@@ -41,40 +57,45 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
           <ul className="flex flex-col gap-3">
             {active.map((order) => {
               const allDelivered = order.items.every((i) => i.status === 'diantar')
+              const elapsed = formatElapsed(new Date(order.createdAt).getTime(), now)
               return (
-                <li key={order.id} className="rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card">
-                  <div className="flex items-center justify-between">
+                <li key={order.id} className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card">
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${orderStatusBar[order.status]}`} />
+                  <div className="flex items-center justify-between pl-1">
                     <div>
                       <div className="font-num text-subheading font-bold text-text-primary">{order.orderNumber}</div>
                       <div className="text-caption text-text-secondary">
-                        Meja {order.tableNumber ?? '-'} · {new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        Meja {order.tableNumber ?? '-'} · {elapsed}
                       </div>
                     </div>
                     <StatusBadge variant={orderStatusBadge[order.status]} label={order.status} />
                   </div>
-                  <ul className="mt-3 divide-y divide-border-subtle">
+                  <ul className="divide-y divide-border-subtle pl-1">
                     {order.items.map((item) => (
-                      <li key={item.id} className="flex items-center justify-between py-2">
+                      <li key={item.id} className="flex items-center justify-between gap-2 py-2">
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-body text-text-primary">
-                            {item.quantity}× {item.name}
+                            <span className="font-num font-semibold text-text-primary">{item.quantity}x</span>{' '}
+                            {item.name}
                           </div>
-                          {item.note && <div className="truncate text-caption text-text-secondary">- {item.note}</div>}
+                          {item.note && (
+                            <span className="mt-0.5 inline-block rounded bg-status-danger/10 px-1.5 py-0.5 text-caption font-bold uppercase text-status-danger">
+                              {item.note}
+                            </span>
+                          )}
                         </div>
-                        <div className="ml-2 flex items-center gap-2">
-                          <StatusBadge variant={item.status === 'diantar' ? 'done' : item.status === 'siap' ? 'ready' : item.status === 'dimasak' ? 'cooking' : 'new'} label={item.status} />
-                        </div>
+                        <StatusBadge variant={item.status === 'diantar' ? 'done' : item.status === 'siap' ? 'ready' : item.status === 'dimasak' ? 'cooking' : 'new'} label={item.status} />
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center justify-between border-t border-border-subtle pl-1 pt-3">
                     <span className="font-num text-body font-bold text-text-primary">{formatRupiah(order.total)}</span>
                     {!allDelivered ? (
                       <button
                         onClick={() => onDeliver(order.id)}
                         className="rounded-lg bg-accent-primary px-4 py-2 text-caption font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
                       >
-                        Tandai Diantar
+                        Antarkan
                       </button>
                     ) : (
                       <span className="text-caption font-semibold uppercase tracking-wide text-status-ready">Sudah diantar</span>

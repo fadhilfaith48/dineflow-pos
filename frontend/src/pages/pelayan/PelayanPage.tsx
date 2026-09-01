@@ -60,6 +60,19 @@ export function PelayanPage() {
     return items.filter((item) => item.categoryId === activeCategory)
   }, [items, activeCategory])
 
+  const seatedAt = useMemo(() => {
+    const map: Record<number, number> = {}
+    for (const order of orders) {
+      if (order.tableId == null) continue
+      if (!['menunggu-konfirmasi', 'baru', 'diproses'].includes(order.status)) continue
+      const ts = new Date(order.createdAt).getTime()
+      if (Number.isFinite(ts) && (map[order.tableId] == null || ts < map[order.tableId])) {
+        map[order.tableId] = ts
+      }
+    }
+    return map
+  }, [orders])
+
   function selectTable(table: DiningTable) {
     cart.clear()
     setSelectedTable(table)
@@ -128,6 +141,7 @@ export function PelayanPage() {
       ) : (
         <TableSelect
           tables={tables}
+          seatedAt={seatedAt}
           onSelect={selectTable}
           onViewOrders={() => setView('orders')}
         />

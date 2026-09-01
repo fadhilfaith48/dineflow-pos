@@ -63,6 +63,12 @@ Sistem Kasir & Manajemen Pesanan Restoran ini adalah platform POS (Point of Sale
 - Cetak/kirim struk pesanan
 - Laporan penjualan harian & menu terlaris untuk admin/owner
 
+- Perhitungan PPN otomatis per transaksi (default 10%, dapat dikonfigurasi admin)
+- Cetak struk dengan logo restoran (upload logo di halaman Admin)
+- Export laporan penjualan ke format CSV
+- Pembatalan (void) pesanan oleh kasir/dapur dengan pencatatan alasan
+- Level kepedasan (0-5) sebagai opsi tambahan pada menu tertentu
+
 ### Di Luar Ruang Lingkup (Out of Scope — Fase Ini)
 - Integrasi payment gateway online penuh untuk pembayaran sebelum datang ke resto (fase awal fokus pembayaran di kasir saat di tempat)
 - Sistem reservasi meja online (booking meja dari jauh-jauh hari) — fase lanjutan
@@ -110,6 +116,26 @@ Sistem Kasir & Manajemen Pesanan Restoran ini adalah platform POS (Point of Sale
 - **Deskripsi**: Dashboard bagi owner untuk melihat total penjualan harian/mingguan/bulanan serta menu apa yang paling laris.
 - **Skenario Penggunaan**: Owner membuka laporan mingguan dan melihat "Nasi Goreng" adalah menu terlaris dengan 120 porsi terjual, sehingga memutuskan menambah stok bahan baku untuk menu tersebut.
 
+### PPN Otomatis
+**Deskripsi:** Sistem menghitung pajak (PPN) secara otomatis pada setiap transaksi berdasarkan persentase yang ditentukan admin (default 10%), ditampilkan terpisah dari subtotal di struk maupun tampilan kasir.
+**Skenario Penggunaan:** Kasir memproses transaksi senilai Rp100.000, sistem otomatis menambahkan PPN 10% (Rp10.000), sehingga total yang harus dibayar pelanggan adalah Rp110.000, tertera jelas rinciannya di struk.
+
+### Cetak Struk dengan Logo Restoran
+**Deskripsi:** Admin dapat mengunggah logo restoran melalui halaman pengaturan, dan logo tersebut otomatis tampil di bagian atas setiap struk yang dicetak/dibagikan ke pelanggan.
+**Skenario Penggunaan:** Owner mengunggah logo "DineFlow POS - Warung Nikmat" di halaman Admin; setiap struk yang dicetak kasir kini menampilkan logo tersebut.
+
+### Export Laporan ke CSV
+**Deskripsi:** Admin dapat mengunduh data laporan penjualan dalam format CSV untuk diolah lebih lanjut di aplikasi spreadsheet.
+**Skenario Penggunaan:** Owner mengklik tombol "Export CSV" di halaman Laporan Penjualan, file terunduh berisi data transaksi periode yang dipilih.
+
+### Void/Batalkan Pesanan
+**Deskripsi:** Kasir atau staf dapur dapat membatalkan item/pesanan yang salah input atau dibatalkan pelanggan, dengan wajib mengisi alasan pembatalan untuk keperluan audit.
+**Skenario Penggunaan:** Pelanggan berubah pikiran setelah pesan "Ayam Bakar", kasir membatalkan item tersebut sebelum diteruskan ke dapur, mengisi alasan "Dibatalkan pelanggan", item hilang dari antrian dapur.
+
+### Level Kepedasan
+**Deskripsi:** Menu tertentu (kategori makanan pedas) memiliki opsi level kepedasan 0-5 yang wajib dipilih pelanggan/kasir/pelayan sebelum menambahkan ke keranjang.
+**Skenario Penggunaan:** Pelanggan memesan "Ayam Geprek" dan diminta memilih level pedas 1-5 sebelum bisa menambahkan ke keranjang; pilihan ini muncul jelas di Kitchen Display agar dapur tidak salah racik.
+
 ---
 
 ## 5. Alur Pengguna & Navigasi
@@ -138,9 +164,10 @@ Login, kelola menu (kategori, harga, status ketersediaan), kelola meja (jumlah, 
 - **Tables/Meja** — nomor meja, status (kosong/terisi/perlu dibersihkan), QR code unik
 - **MenuItems** — nama, kategori, harga, foto, status ketersediaan
 - **Orders** — relasi ke Table (jika dine-in), sumber pesanan (kasir/pelayan/self-order), status keseluruhan, waktu dibuat
-- **OrderItems** — item per pesanan (menu, jumlah, catatan khusus), status per item (baru/dimasak/siap/diantar)
-- **Payments** — detail pembayaran per Order (metode, jumlah, waktu, kasir yang memproses)
+- **OrderItems** — item per pesanan (menu, jumlah, catatan khusus), status per item (baru/dimasak/siap/diantar), ditambah field spice_level (level kepedasan, hanya untuk menu berkategori pedas), void_status, void_reason
+- **Payments** — detail pembayaran per Order (metode, jumlah, waktu, kasir yang memproses), ditambah field subtotal, ppn_amount, total
 - **DailySalesSummary** — agregasi data penjualan harian untuk laporan cepat owner
+- **RestaurantSettings** — (BARU) pengaturan umum: nama restoran, logo (URL/path file), persentase PPN default
 
 ### Catatan Arsitektur
 Arsitektur menggunakan Laravel sebagai backend tunggal yang melayani empat jenis antarmuka frontend berbeda (Kasir, Pelayan, Kitchen Display, dan halaman publik Pesan Mandiri) — semuanya dibangun dengan React sebagai aplikasi/halaman terpisah yang mengonsumsi API yang sama. Update status pesanan secara real-time ke seluruh channel (kasir, pelayan, dapur, pelanggan) ditangani menggunakan Laravel Broadcasting (Reverb) dengan Redis sebagai message layer, sehingga begitu status sebuah item pesanan berubah di satu titik (misal dapur menandai "siap saji"), seluruh antarmuka lain yang relevan langsung menerima pembaruan tanpa perlu polling/refresh manual. Setiap meja memiliki QR code unik yang mengarah ke URL halaman menu publik dengan parameter nomor meja tertanam, sehingga pesanan self-order otomatis terhubung ke meja yang benar.
