@@ -165,8 +165,11 @@ export function MenuPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        <ul className="flex flex-col gap-3">
-          {visibleItems.map((item) => {
+        {visibleItems.length > 0 && (
+          <FeaturedCard item={visibleItems[0]} onAdd={(m, v, l) => cart.addItem(m, v, l)} />
+        )}
+        <ul className="flex flex-col gap-3 mt-3">
+          {visibleItems.slice(1).map((item) => {
             const hasVariants = item.variants && item.variants.length > 0
             return (
               <li
@@ -361,5 +364,71 @@ export function MenuPage() {
         </div>
       )}
     </main>
+  )
+}
+
+interface FeaturedCardProps {
+  item: MenuItem
+  onAdd: (item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) => void
+}
+
+function FeaturedCard({ item, onAdd }: FeaturedCardProps) {
+  const hasVariants = item.variants && item.variants.length > 0
+  return (
+    <div className={`overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card ${item.available ? '' : 'opacity-60'}`}>
+      <div className="relative flex h-48 w-full items-center justify-center overflow-hidden bg-bg-secondary">
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+        ) : (
+          <svg className="h-16 w-16 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 11h18" />
+            <path d="M12 11v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11" />
+            <path d="M21 11v8a3 3 0 0 1-3 3h-3a3 3 0 0 1-3-3" />
+            <circle cx="12" cy="5" r="2" />
+          </svg>
+        )}
+        <span className="absolute right-3 top-3 rounded-full bg-bg-surface/95 px-3 py-1 font-num text-body font-bold text-accent-primary shadow-card">
+          {formatRupiah(item.price)}
+        </span>
+        {!item.available && (
+          <span className="absolute inset-0 flex items-center justify-center bg-bg-surface/60">
+            <span className="rounded bg-bg-surface px-3 py-1 text-caption font-bold uppercase text-status-danger">Habis</span>
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-3 p-4">
+        <div>
+          <div className="text-subheading font-bold text-text-primary">{item.name}</div>
+          {item.description && <p className="mt-1 line-clamp-2 text-caption text-text-secondary">{item.description}</p>}
+        </div>
+        {hasVariants && item.available ? (
+          <div className="flex flex-wrap gap-1.5">
+            {item.variants!.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => onAdd(item, v)}
+                disabled={!v.available}
+                className={`rounded-lg border px-3 py-1.5 text-caption font-semibold transition-colors ${
+                  v.available
+                    ? 'border-accent-primary/30 bg-accent-tint text-accent-primary'
+                    : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
+                }`}
+              >
+                {v.name} {formatRupiah(v.price)}
+              </button>
+            ))}
+          </div>
+        ) : item.available && item.isSpicy ? (
+          <SpicePills onSelect={(level) => onAdd(item, undefined, level)} />
+        ) : item.available ? (
+          <button
+            onClick={() => onAdd(item)}
+            className="h-12 w-full rounded-xl bg-accent-primary font-semibold text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+          >
+            Tambah ke Pesanan
+          </button>
+        ) : null}
+      </div>
+    </div>
   )
 }

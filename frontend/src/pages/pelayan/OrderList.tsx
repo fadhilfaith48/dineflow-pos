@@ -65,7 +65,13 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                     <div>
                       <div className="font-num text-subheading font-bold text-text-primary">{order.orderNumber}</div>
                       <div className="text-caption text-text-secondary">
-                        Meja {order.tableNumber ?? '-'} · {elapsed}
+                        <span className="flex items-center gap-1">
+                          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 6v6l4 2" />
+                          </svg>
+                          <span>Meja {order.tableNumber ?? '-'} · {elapsed}</span>
+                        </span>
                       </div>
                     </div>
                     <StatusBadge variant={orderStatusBadge[order.status]} label={order.status} />

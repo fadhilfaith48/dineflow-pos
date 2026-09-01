@@ -25,7 +25,8 @@ export function useCart(taxRatePercent?: number) {
   function addItem(item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) {
     const vName = variant?.name
     const vPrice = variant?.price ?? item.price
-    const key = lineKey(item.id, vName, spiceLevel)
+    const level = item.isSpicy && typeof spiceLevel !== 'number' ? 0 : spiceLevel
+    const key = lineKey(item.id, vName, level)
 
     setLines((prev) => {
       const existing = prev.find((l) => lineKey(l.menuItemId, l.variantName, l.spiceLevel) === key)
@@ -34,7 +35,7 @@ export function useCart(taxRatePercent?: number) {
           lineKey(l.menuItemId, l.variantName, l.spiceLevel) === key ? { ...l, quantity: l.quantity + 1 } : l,
         )
       }
-      return [...prev, { menuItemId: item.id, name: item.name, price: vPrice, quantity: 1, variantName: vName, spiceLevel }]
+      return [...prev, { menuItemId: item.id, name: item.name, price: vPrice, quantity: 1, variantName: vName, spiceLevel: level }]
     })
   }
 

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import type { DiningTable } from '@/types'
 import { formatElapsed } from '@/lib/format'
 
-const statusStyle: Record<DiningTable['status'], { card: string; label: string; text: string }> = {
-  kosong: { card: 'border-status-ready bg-accent-tint', label: 'Kosong', text: 'text-status-ready' },
-  terisi: { card: 'border-accent-primary bg-bg-secondary', label: 'Terisi', text: 'text-accent-primary' },
-  'perlu-dibersihkan': { card: 'border-status-danger bg-bg-surface', label: 'Perlu Dibersihkan', text: 'text-status-danger' },
+const statusStyle: Record<DiningTable['status'], { card: string; label: string; text: string; pill: string }> = {
+  kosong: { card: 'border-status-ready bg-accent-tint', label: 'Kosong', text: 'text-status-ready', pill: 'bg-status-ready/15' },
+  terisi: { card: 'border-accent-primary bg-bg-secondary', label: 'Terisi', text: 'text-accent-primary', pill: 'bg-accent-primary/15' },
+  'perlu-dibersihkan': { card: 'border-status-danger bg-bg-surface', label: 'Perlu Dibersihkan', text: 'text-status-danger', pill: 'bg-status-danger/15' },
 }
 
 interface TableSelectProps {
@@ -51,7 +51,7 @@ export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableS
               onClick={() => onSelect(table)}
               className={`flex aspect-square min-h-fit flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 transition-transform active:scale-95 sm:p-4 ${s.card}`}
             >
-              <span className="font-num text-subheading font-bold text-text-primary">
+              <span className={`font-num text-heading font-bold ${table.status === 'terisi' ? 'text-accent-primary' : 'text-text-primary'}`}>
                 {table.number}
               </span>
               <span className="flex items-center gap-1 text-text-secondary">
@@ -63,7 +63,7 @@ export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableS
               {duration && (
                 <span className="font-num text-caption font-semibold text-text-secondary">{duration}</span>
               )}
-              <span className={`max-w-full break-words text-center text-caption font-semibold uppercase leading-tight tracking-wide ${s.text}`}>
+              <span className={`mt-auto max-w-full break-words rounded-full px-2 py-0.5 text-center text-caption font-bold uppercase leading-tight tracking-wide ${s.pill} ${s.text}`}>
                 {s.label}
               </span>
             </button>

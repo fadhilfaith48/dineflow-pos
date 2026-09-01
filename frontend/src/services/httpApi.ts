@@ -110,6 +110,34 @@ function appendScalar(formData: FormData, data: Record<string, unknown>): void {
   }
 }
 
+function appendBool(formData: FormData, key: string, value: boolean | undefined): void {
+  if (typeof value === 'boolean') {
+    formData.append(key, value ? '1' : '0')
+  }
+}
+
+function appendArray(formData: FormData, key: string, items: Record<string, unknown>[]): void {
+  items.forEach((item, i) => {
+    for (const [field, value] of Object.entries(item)) {
+      if (value !== undefined && value !== null) {
+        const val = typeof value === 'boolean' ? (value ? '1' : '0') : String(value)
+        formData.append(`${key}[${i}][${field}]`, val)
+      }
+    }
+  })
+}
+
+function toVariantPayload(
+  variants: { name: string; price: number; available?: boolean }[],
+): Record<string, unknown>[] {
+  return variants.map((v, i) => ({
+    name: v.name,
+    price: v.price,
+    available: v.available ?? true,
+    order: i,
+  }))
+}
+
 export class HttpApi implements Api {
   async login(username: string, password: string): Promise<User> {
     const json = await request<{ token: string; user: User }>('/login', {
@@ -219,13 +247,9 @@ export class HttpApi implements Api {
     if (typeof input.isSpicy === 'boolean') {
       payload.isSpicy = input.isSpicy
     }
-    if (input.variants?.length) {
-      payload.variants = input.variants.map((v, i) => ({
-        name: v.name,
-        price: v.price,
-        available: v.available ?? true,
-        order: i,
-      }))
+    const variantPayloads = input.variants?.length ? toVariantPayload(input.variants) : undefined
+    if (variantPayloads) {
+      payload.variants = variantPayloads
     }
     if (input.image instanceof File) {
       const formData = new FormData()
@@ -235,11 +259,9 @@ export class HttpApi implements Api {
         categoryId: input.categoryId,
         description: input.description ?? '',
       })
-      if (typeof input.isSpicy === 'boolean') {
-        formData.append('isSpicy', String(input.isSpicy))
-      }
-      if (input.variants?.length) {
-        formData.append('variants', JSON.stringify(payload.variants))
+      appendBool(formData, 'isSpicy', input.isSpicy)
+      if (variantPayloads) {
+        appendArray(formData, 'variants', variantPayloads)
       }
       formData.append('image', input.image)
       return request<{ data: MenuItem }>('/menu-items', {
@@ -257,22 +279,21 @@ export class HttpApi implements Api {
     id: number,
     data: Partial<MenuItem> & { image?: File; variants?: MenuVariantInput[] },
   ): Promise<MenuItem> {
-    const { image, variants, ...scalars } = data
+    const { image, variants, isSpicy, ...scalars } = data
     const payload: Record<string, unknown> = { ...scalars }
+    if (isSpicy !== undefined) {
+      payload.isSpicy = isSpicy
+    }
     if (variants !== undefined) {
-      payload.variants = variants.map((v, i) => ({
-        name: v.name,
-        price: v.price,
-        available: v.available ?? true,
-        order: i,
-      }))
+      payload.variants = toVariantPayload(variants)
     }
     if (image instanceof File) {
       const formData = new FormData()
       formData.append('_method', 'PUT')
       appendScalar(formData, scalars)
-      if (variants !== undefined) {
-        formData.append('variants', JSON.stringify(payload.variants))
+      appendBool(formData, 'isSpicy', isSpicy)
+      if (variants !== undefined && payload.variants) {
+        appendArray(formData, 'variants', payload.variants as Record<string, unknown>[])
       }
       formData.append('image', image)
       return request<{ data: MenuItem }>(`/menu-items/${id}`, {
