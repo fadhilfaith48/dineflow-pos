@@ -353,7 +353,7 @@ export function MenuManagement({
                         <img src={item.imageUrl} alt={item.name} className="h-10 w-10 rounded-lg object-cover" />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-bg-secondary">
-                          <svg className="h-5 w-5 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg className="h-6 w-6 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 11h18" />
                             <path d="M12 11v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11" />
                             <path d="M21 11v8a3 3 0 0 1-3 3h-3a3 3 0 0 1-3-3" />
@@ -374,7 +374,7 @@ export function MenuManagement({
                         {item.variants && item.variants.length > 0 && (
                           <div className="mt-0.5 flex flex-wrap gap-1">
                             {item.variants.map((v) => (
-                              <span key={v.id} className="rounded bg-accent-tint px-1.5 py-0.5 text-[10px] font-bold text-accent-primary">
+                              <span key={v.id} className="rounded-lg border border-accent-primary/30 bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent-primary">
                                 {v.name} {formatRupiah(v.price)}
                               </span>
                             ))}

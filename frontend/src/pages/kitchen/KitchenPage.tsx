@@ -63,7 +63,7 @@ export function KitchenPage() {
         {activeOrders.length === 0 ? (
           <div className="flex h-full min-h-[60vh] items-center justify-center">
             <div className="text-center">
-              <div className="font-num text-[40px] text-status-ready">✓</div>
+              <div className="font-num text-kitchen-display text-status-ready">✓</div>
               <p className="mt-2 text-heading font-semibold text-text-primary">Tidak ada pesanan aktif</p>
               <p className="mt-1 text-body text-text-secondary">Pesanan baru akan muncul di sini secara real-time.</p>
             </div>

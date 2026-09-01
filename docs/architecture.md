@@ -126,6 +126,9 @@ Backend dikerjakan di folder `backend/` di repo utama `resto_pos/`
 | `confirmOrder` | `PATCH /api/orders/{id}/confirm` |
 | `updateItemStatus` | `PATCH /api/orders/{id}/items/{itemId}` (+ broadcast) |
 | `processPayment` | `POST /api/orders/{id}/payments` (transaction) |
+| *(rencana)* `checkoutOrder` | `POST /api/orders/{id}/checkout` (publik self-order; buat QRIS via gateway) |
+| *(rencana)* `getPaymentStatus` | `GET /api/payments/{reference}/status` (publik; polling Tingkat 2) |
+| *(rencana, driver mock)* `markMockPaid` | `POST /api/payments/{reference}/mock-paid` (hanya Mock, non-production) |
 | CRUD menu-item | CRUD `/api/menu-items` |
 | CRUD user (admin) | CRUD `/api/users` |
 | `getSalesSummary` | `GET /api/sales-summary?period=` |
@@ -149,6 +152,40 @@ Kasir → PaymentModal (tunai: uang+kembalian / QRIS: simulasi QR + sukses)
   → api.processPayment (order → selesai; meja → perlu-dibersihkan)
   → ReceiptModal: Cetak (window.print #print-area) / Salin Struk (clipboard)
 ```
+
+### 5.3 (RENCANA) Bayar di Muka Self-Order — DOKU QRIS (Pola B, Tingkat 2 polling)
+
+> **Status: RENCANA (belum diimplementasikan).** Keputusan user: bayar di muka Wajib
+> hanya untuk self-order; langsung ke dapur setelah pembayaran `paid`; vendor **DOKU
+> (sandbox untuk demo PKL)**; **QRIS tunggal**; pola **B (QRIS tampil di aplikasi +
+> polling)** — pelanggan tidak pindah ke web DOKU, layar menunggu lalu otomatis lanjut.
+
+```
+Pelanggan pilih menu → keranjang → klik "Bayar di Muka"
+  → POST /orders (self-order, status: menunggu; BELUM ke dapur)
+  → POST /orders/{id}/checkout → DOKU buat transaksi QRIS → tampilkan QRIS di layar aplikasi
+  → Pelanggan scan QRIS dgn e-wallet/m-banking (DANA/OVO/GoPay dsb)
+  → sistem POLLING GET /payments/{ref}/status tiap 3–5 detik
+  → status paid → order `diproses` (langsung ke dapur) → layar otomatis lanjut ke tracking
+  → Kasir Nota tampil "Lunas"; tertulis otomatis di Laporan; tombol "Bayar" nonaktif
+```
+
+Abstraksi pembayaran agar mudah ganti/upgrade provider (DOKU → yang lain/Production):
+
+```
+frontend MenuPage → api.checkoutOrder + api.getPaymentStatus
+        │ (POST /orders/{id}/checkout, GET /payments/{ref}/status — publik self-order)
+        ▼
+PaymentService (backend)
+   └─ PaymentGateway (interface)
+        ├─ DokuGateway    (sungguhan; QRIS DOKU + polling status)
+        └─ MockQrisGateway (cadangan/demo tanpa akun/internet; tombol "Saya Sudah Bayar")
+Driver dipilih via config (.env): PAYMENT_DRIVER = doku | mock
+```
+
+Perubahan data: kolom baru di `payments` → `reference` (unique, kode transaksi gateway),
+`status` (`pending|paid|failed|expired|cancelled`), `gateway`, `paid_via`.
+Alur & UI sama untuk kedua driver — swap provider cukup ubah 1 baris env.
 
 ---
 

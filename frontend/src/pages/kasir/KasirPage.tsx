@@ -179,7 +179,7 @@ export function KasirPage() {
   return (
     <div className="flex h-screen flex-col">
       <TopNavBar />
-      <main className="flex min-h-0 flex-1 gap-4 overflow-hidden bg-bg-secondary p-4">
+      <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto bg-bg-secondary p-4 md:flex-row md:overflow-hidden">
         <KasirQueuePanel
           pendingOrders={pendingOrders}
           activeNotes={activeNotes}

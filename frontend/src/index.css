@@ -47,6 +47,22 @@
   --text-caption: 0.8125rem;
   --text-caption--line-height: 1.5;
 
+  /* Kitchen: ukuran besar untuk dibaca dari jarak 1-2 meter (DESIGN.md).
+     Tetap lewat token agar konsisten, bukan pixel hardcoded. */
+  --text-kitchen-display: 1.75rem;
+  --text-kitchen-display--line-height: 1.2;
+  --text-kitchen-display--font-weight: 700;
+
+  --text-kitchen-title: 1.375rem;
+  --text-kitchen-title--line-height: 1.2;
+  --text-kitchen-title--font-weight: 600;
+
+  --text-kitchen-body: 1.0625rem;
+  --text-kitchen-body--line-height: 1.4;
+
+  --text-kitchen-meta: 0.9375rem;
+  --text-kitchen-meta--line-height: 1.4;
+
   --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
   --shadow-dropdown: 0 4px 12px rgba(15, 23, 42, 0.12);
   --shadow-modal: 0 12px 32px rgba(15, 23, 42, 0.18);

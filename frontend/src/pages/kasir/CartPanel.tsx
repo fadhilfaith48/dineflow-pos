@@ -38,7 +38,7 @@ export function CartPanel({
   onSendToKitchen,
 }: CartPanelProps) {
   return (
-    <aside className="flex w-96 shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
+    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card md:w-96">
       <div className="border-b border-dashed border-border-subtle p-4 text-center">
         <button
           onClick={onSelectTable}
@@ -108,7 +108,7 @@ export function CartPanel({
                         onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
                         disabled={line.spiceLevel === 0}
                         aria-label="Turunkan level"
-                        className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle text-text-primary disabled:opacity-40"
                       >
                         −
                       </button>
@@ -117,7 +117,7 @@ export function CartPanel({
                         onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
                         disabled={line.spiceLevel === 5}
                         aria-label="Naikkan level"
-                        className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle text-accent-primary disabled:opacity-40"
                       >
                         +
                       </button>
@@ -130,9 +130,9 @@ export function CartPanel({
                     <button
                       onClick={() => onDecrement(line.menuItemId, line.variantName, line.spiceLevel)}
                       aria-label="Kurangi"
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M5 12h14" />
                       </svg>
                     </button>
@@ -140,9 +140,9 @@ export function CartPanel({
                     <button
                       onClick={() => onIncrement(line.menuItemId, line.variantName, line.spiceLevel)}
                       aria-label="Tambah"
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-border-subtle text-text-primary hover:bg-bg-secondary"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary hover:bg-bg-secondary"
                     >
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M12 5v14M5 12h14" />
                       </svg>
                     </button>

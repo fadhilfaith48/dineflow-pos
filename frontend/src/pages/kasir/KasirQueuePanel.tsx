@@ -106,7 +106,7 @@ function OrderCard({
   onVoid?: () => void
 }) {
   return (
-    <li className="rounded-lg border border-border-subtle p-3">
+    <li className="rounded-xl border border-border-subtle bg-bg-surface p-3 shadow-card">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="font-num text-caption font-bold text-text-primary">{order.orderNumber}</div>
@@ -179,7 +179,7 @@ export function KasirQueuePanel({
   )
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
+    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card md:w-72">
       <header className="flex gap-2 border-b border-border-subtle p-2">
         <button onClick={() => setPanel('aktif')} className={panelPill(panel === 'aktif')}>
           Pesanan Aktif

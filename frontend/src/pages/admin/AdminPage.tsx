@@ -99,7 +99,7 @@ export function AdminPage() {
         {error && (
           <div className="mb-4 rounded-lg bg-status-danger/15 px-4 py-2 text-body font-semibold text-status-danger">{error}</div>
         )}
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex gap-2 overflow-x-auto">
           <button
             onClick={() => setTab('menu')}
             className={`rounded-lg px-4 py-2 text-body font-semibold transition-colors ${

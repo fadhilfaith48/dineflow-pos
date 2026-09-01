@@ -37,21 +37,21 @@ const statusBg: Record<OrderItem['status'], string> = {
 
 export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketProps) {
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-bg-surface shadow-card">
+    <article className="flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
       <header className="flex items-start justify-between gap-3 border-b border-dashed border-border-subtle px-5 py-4">
         <div>
-          <div className="font-num text-[28px] font-bold leading-tight text-text-primary">
+          <div className="font-num text-kitchen-display leading-tight text-text-primary">
             #{order.orderNumber.replace('ORD-', '')}
           </div>
-          <div className="mt-1 text-[17px] font-semibold text-text-secondary">
+          <div className="mt-1 text-kitchen-body font-semibold text-text-secondary">
             Meja {order.tableNumber ?? 'Take Away'}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[17px] font-semibold uppercase tracking-wide text-text-secondary">
+          <div className="text-kitchen-body font-semibold uppercase tracking-wide text-text-secondary">
             {order.source === 'kasir' ? 'Kasir' : order.source === 'pelayan' ? 'Pelayan' : 'QR'}
           </div>
-          <div className="mt-1 font-num text-[15px] text-text-secondary">
+          <div className="mt-1 font-num text-kitchen-meta text-text-secondary">
             {new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
@@ -67,27 +67,27 @@ export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketPr
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[24px] font-semibold leading-tight text-text-primary">
+                  <div className="text-kitchen-title leading-tight text-text-primary">
                     {item.quantity}× {item.name}
-                    {item.variantName && <span className="text-[17px] font-normal text-text-secondary"> ({item.variantName})</span>}
+                    {item.variantName && <span className="text-kitchen-body font-normal text-text-secondary"> ({item.variantName})</span>}
                     {typeof item.spiceLevel === 'number' && (
-                      <span className="ml-1 text-[17px] font-bold text-status-danger">Level {item.spiceLevel}</span>
+                      <span className="ml-1 text-kitchen-body font-bold text-status-danger">Level {item.spiceLevel}</span>
                     )}
                   </div>
                   {item.note && (
-                    <div className="mt-1 text-[16px] font-semibold text-status-danger">
+                    <div className="mt-1 text-kitchen-meta font-semibold text-status-danger">
                       - {item.note}
                     </div>
                   )}
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`inline-flex rounded-full px-4 py-1 text-[16px] font-bold uppercase tracking-wide ${statusBg[item.status]} ${statusText[item.status]}`}>
+                  <span className={`inline-flex rounded-full px-4 py-1 text-kitchen-meta font-bold uppercase tracking-wide ${statusBg[item.status]} ${statusText[item.status]}`}>
                     {item.status}
-                  </div>
+                  </span>
                   {next && (
                     <button
                       onClick={() => onAdvanceItem(order.id, item.id, next)}
-                      className="mt-2 block rounded-lg bg-accent-primary px-4 py-2 text-[16px] font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+                      className="mt-2 block rounded-lg bg-accent-primary px-4 py-2 text-kitchen-meta font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
                     >
                       {next === 'dimasak' ? 'Mulai Masak' : 'Siap Saji'}
                     </button>
@@ -100,12 +100,12 @@ export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketPr
       </ul>
 
       <footer className="flex items-center justify-between border-t border-border-subtle bg-bg-secondary px-5 py-3">
-        <span className="text-[15px] font-semibold text-text-secondary">{order.items.length} item</span>
-        <span className="font-num text-[18px] font-bold text-text-primary">{formatRupiah(order.total)}</span>
+        <span className="text-kitchen-meta font-semibold text-text-secondary">{order.items.length} item</span>
+        <span className="font-num text-kitchen-body font-bold text-text-primary">{formatRupiah(order.total)}</span>
         {onVoidOrder && (
           <button
             onClick={() => onVoidOrder(order)}
-            className="ml-3 rounded-lg border border-status-danger/40 px-3 py-1.5 text-[14px] font-bold uppercase tracking-wide text-status-danger transition-colors hover:bg-status-danger hover:text-text-on-accent"
+            className="ml-3 rounded-lg border border-status-danger/40 px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-status-danger transition-colors hover:bg-status-danger hover:text-text-on-accent"
           >
             Batalkan
           </button>
