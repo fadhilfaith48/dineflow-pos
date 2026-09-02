@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import type { MenuCategory, MenuItem, Order } from '@/types'
 import type { MenuItemVariant } from '@/types'
 import { api } from '@/services/httpApi'
@@ -19,6 +20,7 @@ const itemBadge: Record<string, BadgeVariant> = {
 }
 
 type View = 'menu' | 'cart' | 'payment' | 'tracking'
+type PayMethod = 'choose' | 'qris' | 'kasir'
 
 export function MenuPage() {
   const { table } = useParams<{ table: string }>()
@@ -38,6 +40,7 @@ export function MenuPage() {
   const [payQr, setPayQr] = useState<string | null>(null)
   const [payGateway, setPayGateway] = useState('mock')
   const [payAmount, setPayAmount] = useState(0)
+  const [payMethod, setPayMethod] = useState<PayMethod>('choose')
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -71,14 +74,18 @@ export function MenuPage() {
   }, [table])
 
   useEffect(() => {
-    if (view !== 'tracking' || !orderNumber) return
+    if ((view !== 'tracking' && view !== 'payment') || !orderNumber) return
     echo.channel(`order.${orderNumber}`).listen('OrderStatusChanged', (event: { order?: Order }) => {
-      if (event.order?.orderNumber === orderNumber) setTrackedOrder(event.order)
+      if (event.order?.orderNumber !== orderNumber) return
+      setTrackedOrder(event.order)
+      if (payMethod === 'kasir' && event.order.status === 'diproses') {
+        setView('tracking')
+      }
     })
     return () => {
       echo.leaveChannel(`order.${orderNumber}`)
     }
-  }, [view, orderNumber])
+  }, [view, orderNumber, payMethod])
 
   const visibleItems = useMemo(() => {
     return items.filter((item) => item.categoryId === activeCategory)
@@ -97,23 +104,34 @@ export function MenuPage() {
       setOrderNumber(order.orderNumber)
       setTrackedOrder(order)
       setPayAmount(order.total)
+      setPayMethod('choose')
       cart.clear()
-      try {
-        const checkout = await api.checkoutOrder(order.id)
-        setPayRef(checkout.reference)
-        setPayQr(checkout.qrContent)
-        setPayGateway(checkout.gateway)
-      } catch {
-        setPayRef(String(order.id))
-        setPayQr(null)
-        setPayGateway('mock')
-      }
       setView('payment')
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handlePayQris() {
+    if (!trackedOrder) return
+    setPayMethod('qris')
+    try {
+      const checkout = await api.checkoutOrder(trackedOrder.id)
+      setPayRef(checkout.reference)
+      setPayQr(checkout.qrContent)
+      setPayGateway(checkout.gateway)
+    } catch {
+      setPayRef(String(trackedOrder.id))
+      setPayQr(null)
+      setPayGateway('mock')
+    }
+  }
+
+  function handlePayKasir() {
+    if (!trackedOrder) return
+    setPayMethod('kasir')
   }
 
   async function handleQrisPaid() {
@@ -146,23 +164,116 @@ export function MenuPage() {
           <div className="font-num text-heading font-bold">{orderNumber}</div>
           <div className="mt-1 text-caption opacity-90">Meja {table}</div>
         </header>
-        <div className="flex-1 px-4 py-5">
-          <QrisPay
-            reference={payRef || String(trackedOrder?.id ?? '')}
-            qrContent={payQr}
-            gateway={payGateway}
-            total={payAmount}
-            onPaid={handleQrisPaid}
-          />
-        </div>
-        <div className="border-t border-border-subtle bg-bg-surface p-4">
-          <button
-            onClick={() => setView('menu')}
-            className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
-          >
-            Batal, Kembali ke Menu
-          </button>
-        </div>
+
+        {payMethod === 'choose' && (
+          <>
+            <div className="flex-1 overflow-y-auto px-4 py-5">
+              <p className="text-center text-body text-text-secondary">
+                Total tagihan <span className="font-num font-bold text-accent-primary">{formatRupiah(payAmount)}</span>
+              </p>
+              <p className="mt-1 text-center text-caption text-text-secondary">
+                Pilih cara bayar di muka sebelum dapur memasak pesananmu.
+              </p>
+
+              <button
+                onClick={handlePayQris}
+                className="mt-5 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-tint text-accent-primary">
+                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <path d="M14 14h3v3h-3zM21 14v3M14 21h3" />
+                    </svg>
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-subheading font-bold text-text-primary">Bayar Langsung lewat HP</span>
+                    <span className="mt-0.5 block text-caption text-text-secondary">QRIS / E-Wallet (ShopeePay, GoPay, Dana, dll.)</span>
+                  </span>
+                  <span className="text-text-secondary">›</span>
+                </div>
+              </button>
+
+              <button
+                onClick={handlePayKasir}
+                className="mt-3 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-tint text-accent-primary">
+                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="5" width="14" height="14" rx="2" />
+                      <path d="M16 9h4a1 1 0 0 1 1 1v7a3 3 0 0 1-3 3h-1" />
+                      <circle cx="12" cy="13" r="1.5" />
+                    </svg>
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-subheading font-bold text-text-primary">Bayar di Kasir</span>
+                    <span className="mt-0.5 block text-caption text-text-secondary">Tunai / Debit · tunjukkan kode ke kasir</span>
+                  </span>
+                  <span className="text-text-secondary">›</span>
+                </div>
+              </button>
+            </div>
+            <div className="border-t border-border-subtle bg-bg-surface p-4">
+              <button
+                onClick={() => setView('menu')}
+                className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
+              >
+                Batal, Kembali ke Menu
+              </button>
+            </div>
+          </>
+        )}
+
+        {payMethod === 'qris' && (
+          <>
+            <div className="flex-1 px-4 py-5">
+              <QrisPay
+                reference={payRef || String(trackedOrder?.id ?? '')}
+                qrContent={payQr}
+                gateway={payGateway}
+                total={payAmount}
+                onPaid={handleQrisPaid}
+              />
+            </div>
+            <div className="border-t border-border-subtle bg-bg-surface p-4">
+              <button
+                onClick={() => setPayMethod('choose')}
+                className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
+              >
+                Pilih Metode Lain
+              </button>
+            </div>
+          </>
+        )}
+
+        {payMethod === 'kasir' && (
+          <>
+            <div className="flex-1 px-4 py-5 text-center">
+              <p className="text-body text-text-secondary">Bawa HP ini ke kasir dan tunjukkan kode di bawah.</p>
+              <div className="mt-5 flex flex-col items-center rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-card">
+                <div className="rounded-lg bg-white p-3">
+                  <QRCodeSVG value={orderNumber} size={180} />
+                </div>
+                <div className="mt-4 font-num text-heading font-bold tracking-widest text-text-primary">{orderNumber}</div>
+                <p className="mt-2 text-caption text-text-secondary">Nomor pesanan di atas</p>
+              </div>
+              <p className="mt-4 text-caption text-text-secondary">
+                Bayar di kasir dengan tunai atau kartu. Pesananmu baru dimasak setelah lunas.
+              </p>
+            </div>
+            <div className="border-t border-border-subtle bg-bg-surface p-4">
+              <button
+                onClick={() => setPayMethod('choose')}
+                className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
+              >
+                Pilih Metode Lain
+              </button>
+            </div>
+          </>
+        )}
       </main>
     )
   }
@@ -406,7 +517,7 @@ export function MenuPage() {
                 disabled={cart.lines.length === 0 || submitting}
                 className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
               >
-                {submitting ? 'Memproses...' : 'Bayar di Muka'}
+                {submitting ? 'Memproses...' : 'Lanjut ke Pembayaran'}
               </button>
               {submitError && (
                 <p className="mt-2 text-center text-caption font-semibold text-status-danger">{submitError}</p>
