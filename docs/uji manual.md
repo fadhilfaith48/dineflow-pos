@@ -77,8 +77,8 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | ✅ |
 | 5.3 | Tambah item ke keranjang, isi catatan, **Lanjut ke Pembayaran** | Layar **pilih metode** tampil dengan total tagihan: 2 kartu (**Bayar Langsung lewat HP (QRIS/E-Wallet)** & **Bayar di Kasir**); order jadi `menunggu` di panel Kasir | ✅ |
 | 5.4 | Pilih **Bayar Langsung lewat HP** → klik **"Saya Sudah Bayar"** | QRIS tampil → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
-| 5.5 | Pilih **Bayar di Kasir** | Barcode berisi URL `http://host/order/ORD-XXXX` + nomor besar tampil; order tetap `menunggu` (belum ke dapur) | ✅ |
-| 5.6 | Scan barcode dengan HP (kode hasil scan = link URL) | HP membuka halaman `/order/ORD-XXXX` → status pesanan tampil, live follow real-time | ⬜ |
+| 5.5 | Pilih **Bayar di Kasir** | Barcode berisi URL `http://host/order/ORD-XXXX` + nomor besar tampil (**ditunjukkan ke kasir**, bukan di-scan pelanggan lain); order tetap `menunggu` (belum ke dapur) | ✅ |
+| 5.6 | Pelanggan tetap di layar **Bayar di Kasir** (barcode + nomor besar); kasir membayar lewat tab Masuk (lihat 8.2b/8.2c) | Begitu `paid`, layar pelanggan **otomatis pindah ke halaman tracking** `diproses` **secara real-time tanpa refresh** | ⬜ |
 | 5.7 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---

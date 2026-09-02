@@ -251,7 +251,8 @@ export function MenuPage() {
                   <QRCodeSVG value={`${window.location.origin}/order/${orderNumber}`} size={180} />
                 </div>
                 <div className="mt-4 font-num text-heading font-bold tracking-widest text-text-primary">{orderNumber}</div>
-                <p className="mt-2 text-caption text-text-secondary">Nomor pesanan di atas</p>
+                <p className="mt-2 font-num text-body font-bold text-accent-primary">Total tagihan: {formatRupiah(payAmount)}</p>
+                <p className="mt-1 text-caption text-text-secondary">Nomor pesanan di atas</p>
               </div>
               <p className="mt-4 text-caption text-text-secondary">
                 Bayar di kasir dengan tunai atau kartu. Pesananmu baru dimasak setelah lunas.
