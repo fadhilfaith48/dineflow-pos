@@ -16,7 +16,7 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ variant, label }: StatusBadgeProps) {
-  const c = colorMap[variant]
+  const c = colorMap[variant] ?? colorMap.neutral
   return (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-caption font-bold uppercase tracking-wider ${c.bg} ${c.text}`}

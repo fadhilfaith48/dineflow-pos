@@ -58,7 +58,7 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
               const elapsed = formatElapsed(new Date(order.createdAt).getTime(), now)
               return (
                 <li key={order.id} className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card">
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${orderStatusBar[order.status]}`} />
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${orderStatusBar[order.status] ?? ''}`} />
                   <div className="flex items-center justify-between pl-1">
                     <div>
                       <div className="font-num text-subheading font-bold text-text-primary">{order.orderNumber}</div>
@@ -72,7 +72,7 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                         </span>
                       </div>
                     </div>
-                    <StatusBadge variant={orderStatusBadge[order.status]} label={order.status} />
+                    <StatusBadge variant={orderStatusBadge[order.status] ?? 'neutral'} label={order.status} />
                   </div>
                   <ul className="divide-y divide-border-subtle pl-1">
                     {order.items.map((item) => (

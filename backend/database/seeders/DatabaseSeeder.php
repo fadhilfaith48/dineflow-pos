@@ -192,7 +192,7 @@ class DatabaseSeeder extends Seeder
                 'order_number' => 'ORD-0003',
                 'table' => 'T3',
                 'source' => 'self-order',
-                'status' => 'menunggu-konfirmasi',
+                'status' => 'menunggu',
                 'created_at' => now()->subMinutes(8)->toDateTimeString(),
                 'items' => [
                     ['#M01', 25000, 1, 'baru', null, 'Besar', 2],
