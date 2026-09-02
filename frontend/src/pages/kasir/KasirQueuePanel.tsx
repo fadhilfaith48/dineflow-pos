@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Order, PaymentMethod } from '@/types'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/Button'
+import { KasirScanBox } from '@/components/KasirScanBox'
 
 const sourceLabel: Record<Order['source'], string> = {
   kasir: 'Kasir',
@@ -231,20 +232,23 @@ export function KasirQueuePanel({
 
           <div className="flex-1 overflow-y-auto p-3">
               {tab === 'masuk' ? (
-              pendingOrders.length === 0 ? (
-                <p className="py-10 text-center text-body text-text-secondary">Tidak ada pesanan masuk.</p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {pendingOrders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      action={{ label: 'Bayar di Muka', primary: true, onClick: () => onPayNote(order) }}
-                      onVoid={() => onVoid(order)}
-                    />
-                  ))}
-                </ul>
-              )
+              <div className="flex flex-col gap-3">
+                <KasirScanBox pendingOrders={pendingOrders} onPayNote={onPayNote} />
+                {pendingOrders.length === 0 ? (
+                  <p className="py-10 text-center text-body text-text-secondary">Tidak ada pesanan masuk.</p>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {pendingOrders.map((order) => (
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        action={{ label: 'Bayar di Muka', primary: true, onClick: () => onPayNote(order) }}
+                        onVoid={() => onVoid(order)}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </div>
             ) : activeNotes.length === 0 ? (
               <p className="py-10 text-center text-body text-text-secondary">Tidak ada nota aktif.</p>
             ) : (

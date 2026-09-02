@@ -10,14 +10,7 @@ import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { SpicePills } from '@/components/SpicePills'
-import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
-
-const itemBadge: Record<string, BadgeVariant> = {
-  baru: 'new',
-  dimasak: 'cooking',
-  siap: 'ready',
-  diantar: 'done',
-}
+import { OrderTracking } from '@/components/OrderTracking'
 
 type View = 'menu' | 'cart' | 'payment' | 'tracking'
 type PayMethod = 'choose' | 'qris' | 'kasir'
@@ -255,7 +248,7 @@ export function MenuPage() {
               <p className="text-body text-text-secondary">Bawa HP ini ke kasir dan tunjukkan kode di bawah.</p>
               <div className="mt-5 flex flex-col items-center rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-card">
                 <div className="rounded-lg bg-white p-3">
-                  <QRCodeSVG value={orderNumber} size={180} />
+                  <QRCodeSVG value={`${window.location.origin}/order/${orderNumber}`} size={180} />
                 </div>
                 <div className="mt-4 font-num text-heading font-bold tracking-widest text-text-primary">{orderNumber}</div>
                 <p className="mt-2 text-caption text-text-secondary">Nomor pesanan di atas</p>
@@ -280,42 +273,12 @@ export function MenuPage() {
 
   if (view === 'tracking') {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
-        <header className="bg-accent-primary px-5 py-6 text-center text-text-on-accent">
-          <div className="text-caption font-semibold uppercase tracking-wider opacity-80">Pesanan Terkirim</div>
-          <div className="font-num text-heading font-bold">{orderNumber}</div>
-          <div className="mt-1 text-caption opacity-90">Meja {table}</div>
-        </header>
-        <div className="flex-1 px-4 py-5">
-          <p className="text-body text-text-secondary">
-            Pesananmu sudah terbayar di muka. Statusnya diperbarui otomatis.
-          </p>
-          {trackedOrder && (
-            <ul className="mt-5 flex flex-col gap-3">
-              {trackedOrder.items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card">
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-body font-semibold text-text-primary">
-                      {item.quantity}× {item.name}
-                      {item.variantName && <span className="ml-1 text-caption text-text-secondary">({item.variantName})</span>}
-                      {typeof item.spiceLevel === 'number' && <span className="ml-1 text-caption text-status-danger">Level {item.spiceLevel}</span>}
-                    </div>
-                  </div>
-                  <StatusBadge variant={itemBadge[item.status] ?? 'new'} label={item.status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="border-t border-border-subtle bg-bg-surface p-4">
-          <button
-            onClick={() => setView('menu')}
-            className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
-          >
-            Tambah Pesanan
-          </button>
-        </div>
-      </main>
+      <OrderTracking
+        orderNumber={orderNumber}
+        table={table}
+        order={trackedOrder}
+        footerAction={{ label: 'Tambah Pesanan', onClick: () => setView('menu') }}
+      />
     )
   }
 

@@ -66,7 +66,9 @@ class PaymentController extends Controller
             $this->moveToKitchen($order);
         });
 
-        return (new PaymentResource($order->load('payment')))->response()->setStatusCode(HttpResponse::HTTP_CREATED);
+        $order->refresh();
+
+        return (new PaymentResource($order->payment))->response()->setStatusCode(HttpResponse::HTTP_CREATED);
     }
 
     /**

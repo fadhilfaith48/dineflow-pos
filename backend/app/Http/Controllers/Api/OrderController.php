@@ -23,6 +23,19 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
+    /**
+     * Detail order untuk tracking pelanggan (publik, tanpa login).
+     * Dipanggil halaman /order/ORD-XXXX dari QR barcode kasir.
+     */
+    public function track(string $orderNumber): OrderResource
+    {
+        $order = Order::where('order_number', $orderNumber)
+            ->with(['table', 'items', 'payment'])
+            ->firstOrFail();
+
+        return new OrderResource($order);
+    }
+
     public function store(Request $request): OrderResource
     {
         $validated = $request->validate([

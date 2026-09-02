@@ -19,6 +19,8 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/menu-items', [MenuItemController::class, 'index']);
 Route::get('/tables', [TableController::class, 'index']);
 Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
+// Tracking order publik: dipakai halaman /order/ORD-XXXX hasil scan QR pelanggan.
+Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->middleware('throttle:60,1');
 
 // Bayar di muka (QRIS): checkout & polling pintar — self-order publik, sehingga
 // diletakkan di grup publik; status/mock-paid diproteksi relatif (reference).

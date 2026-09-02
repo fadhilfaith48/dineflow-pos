@@ -70,7 +70,11 @@ class PrepayTest extends TestCase
         $this->postJson("/api/orders/{$order->id}/payments", [
             'method' => 'tunai',
             'cashReceived' => 20000,
-        ])->assertStatus(201);
+        ])->assertStatus(201)
+            ->assertJsonPath('data.method', 'tunai')
+            ->assertJsonPath('data.status', 'paid')
+            ->assertJsonPath('data.total', 19800)
+            ->assertJsonPath('data.change', 200);
 
         $order->refresh();
         $table->refresh();
@@ -150,6 +154,19 @@ class PrepayTest extends TestCase
 
         $this->postJson("/api/orders/{$order->id}/payments", ['method' => 'tunai', 'cashReceived' => 20000])
             ->assertStatus(409);
+    }
+
+    public function test_public_tracking_endpoint_returns_order_without_auth(): void
+    {
+        $order = $this->createOrder('diproses');
+
+        $this->getJson("/api/order-status/{$order->order_number}")
+            ->assertOk()
+            ->assertJsonPath('data.orderNumber', $order->order_number)
+            ->assertJsonPath('data.status', 'diproses')
+            ->assertJsonCount(1, 'data.items');
+
+        $this->getJson('/api/order-status/ORD-9999')->assertNotFound();
     }
 
     public function test_complete_marks_order_selesai_and_releases_table(): void

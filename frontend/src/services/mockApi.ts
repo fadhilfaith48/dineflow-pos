@@ -75,6 +75,10 @@ export class MockApi implements Api {
     return [...orders]
   }
 
+  async getOrderByNumber(orderNumber: string): Promise<Order | null> {
+    return orders.find((o) => o.orderNumber === orderNumber) ?? null
+  }
+
   async createOrder(payload: CreateOrderPayload): Promise<Order> {
     orderCounter += 1
     const now = new Date().toISOString()

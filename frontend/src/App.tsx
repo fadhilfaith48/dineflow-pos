@@ -7,6 +7,7 @@ import { KasirPage } from '@/pages/kasir/KasirPage'
 import { KitchenPage } from '@/pages/kitchen/KitchenPage'
 import { PelayanPage } from '@/pages/pelayan/PelayanPage'
 import { MenuPage } from '@/pages/menu/MenuPage'
+import { OrderTrackingPage } from '@/pages/order/OrderTrackingPage'
 import { AdminPage } from '@/pages/admin/AdminPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 
@@ -52,6 +53,7 @@ export default function App() {
           />
 
           <Route path="/menu/:table" element={<MenuPage />} />
+          <Route path="/order/:orderNumber" element={<OrderTrackingPage />} />
           <Route
             path="*"
             element={<PlaceholderPage title="404" description="Halaman tidak ditemukan." />}

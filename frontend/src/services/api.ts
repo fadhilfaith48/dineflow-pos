@@ -16,6 +16,7 @@ export interface Api {
   updateTable(id: number, data: Partial<DiningTable>): Promise<DiningTable>
   deleteTable(id: number): Promise<void>
   getOrders(): Promise<Order[]>
+  getOrderByNumber(orderNumber: string): Promise<Order | null>
   createOrder(payload: CreateOrderPayload): Promise<Order>
   confirmOrder(orderId: number): Promise<Order>
   completeOrder(orderId: number): Promise<Order>

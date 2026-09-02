@@ -200,6 +200,15 @@ export class HttpApi implements Api {
     return request<{ data: Order[] }>('/orders').then(unwrap)
   }
 
+  async getOrderByNumber(orderNumber: string): Promise<Order | null> {
+    try {
+      const data = await request<{ data: Order }>(`/order-status/${orderNumber}`).then(unwrap)
+      return data
+    } catch {
+      return null
+    }
+  }
+
   async createOrder(payload: CreateOrderPayload): Promise<Order> {
     return request<{ data: Order }>('/orders', {
       method: 'POST',

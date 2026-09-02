@@ -75,8 +75,11 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 |---|---|---|---|
 | 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | ✅ |
 | 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | ✅ |
-| 5.3 | Tambah item ke keranjang, isi catatan, **Bayar di Muka** | View pembayaran QRIS tampil (status `menunggu` di panel Kasir); klik **"Saya Sudah Bayar"** → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
-| 5.4 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
+| 5.3 | Tambah item ke keranjang, isi catatan, **Lanjut ke Pembayaran** | Layar **pilih metode** tampil dengan total tagihan: 2 kartu (**Bayar Langsung lewat HP (QRIS/E-Wallet)** & **Bayar di Kasir**); order jadi `menunggu` di panel Kasir | ✅ |
+| 5.4 | Pilih **Bayar Langsung lewat HP** → klik **"Saya Sudah Bayar"** | QRIS tampil → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
+| 5.5 | Pilih **Bayar di Kasir** | Barcode berisi URL `http://host/order/ORD-XXXX` + nomor besar tampil; order tetap `menunggu` (belum ke dapur) | ✅ |
+| 5.6 | Scan barcode dengan HP (kode hasil scan = link URL) | HP membuka halaman `/order/ORD-XXXX` → status pesanan tampil, live follow real-time | ⬜ |
+| 5.7 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---
 
@@ -121,6 +124,8 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 |---|---|---|---|
 | 8.1 | Order dari **Kasir** buat order → **Bayar di Muka** (Tunai) | Langsung masuk tab **Nota** (`diproses`) tanpa langkah konfirmasi; meja jadi `terisi`; struk tampil | ✅ |
 | 8.2 | Order dari **Pelayan/Self-order** (bayar QRIS di muka) | Masuk "Masuk" (`menunggu`, blm lunas) → setelah **paid** (tombol demo/Saya Sudah Bayar) pindah ke Nota (`diproses`) | ✅ |
+| 8.2b | **Scan barcode kasir**: pelanggan pilih **Bayar di Kasir** (barcode/nomor di HP) → kasir isi kotak scan di tab **Masuk** (scan barcode gun ATAU ketik `ORD-XXXX` ATAU kamera) | Order yang cocok otomatis membuka modal **Bayar** → tunai/QRIS → Nota (`diproses`); input tidak dikenali/tidak ketemu → pesan jelas tanpa crash | ⬜ |
+| 8.2c | Modal **Scan Kamera** (tombol kamera di kotak scan) | Kamera terbuka, tombol ganti Belakang/Depan; barcode terbaca → modal Bayar terbuka; kamera ditutup setelah berhasil | ⬜ |
 | 8.3 | Dapur proses ticket | Mulai Masak → Siap Saji; status item berubah real-time | ✅ |
 | 8.4 | Bayar nota (tunai/QRIS) | Struk tampil: logo → nama restoran **di bawah logo** → alamat; lebar ±80mm, tinggi mengikuti jumlah item; pajak sesuai tarif terkini | ✅ |
 | 8.5 | Tab **Riwayat** panel Kasir setelah bayar | Transaksi `selesai` muncul otomatis (real-time, action=paid) dengan jam, no.order, meja/sumber, total, badge metode (Tunai hijau / QRIS biru); filter chip Hari ini/Semua | ✅ |

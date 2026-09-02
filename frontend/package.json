@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "html5-qrcode": "^2.3.8",
     "laravel-echo": "^2.4.0",
     "pusher-js": "^8.6.0",
     "qrcode.react": "^4.2.0",
