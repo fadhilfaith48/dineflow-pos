@@ -90,7 +90,8 @@ class OrderController extends Controller
                 'order_number' => $orderNumber,
                 'table_id' => $table?->id,
                 'source' => $source,
-                'status' => $source === 'kasir' ? 'diproses' : 'menunggu-konfirmasi',
+                // Bayar di muka: order menunggu pembayaran, BELUM masuk dapur.
+                'status' => 'menunggu',
                 'total' => (int) round($subtotal * (1 + $taxRate)),
             ]);
 
@@ -116,11 +117,6 @@ class OrderController extends Controller
                     'spice_level' => $item['spiceLevel'] ?? null,
                     'status' => 'baru',
                 ]);
-            }
-
-            if ($table) {
-                $table->status = 'terisi';
-                $table->save();
             }
 
             return $order;
@@ -190,6 +186,36 @@ class OrderController extends Controller
         });
 
         OrderStatusChanged::dispatch($order, 'voided');
+
+        return new OrderResource($order->load(['table', 'items']));
+    }
+
+    /**
+     * Tandai pesanan selesai & lepaskan meja (dipakai setelah layanan selesai,
+     * karena pembayaran dilakukan di muka).
+     */
+    public function complete(Request $request, Order $order): OrderResource
+    {
+        if ($order->status !== 'diproses') {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan tidak dalam status diproses'],
+            ]);
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->status = 'selesai';
+            $order->save();
+
+            if ($order->table_id) {
+                $table = Table::lockForUpdate()->find($order->table_id);
+                if ($table && $table->status === 'terisi') {
+                    $table->status = 'perlu-dibersihkan';
+                    $table->save();
+                }
+            }
+        });
+
+        OrderStatusChanged::dispatch($order, 'paid');
 
         return new OrderResource($order->load(['table', 'items']));
     }

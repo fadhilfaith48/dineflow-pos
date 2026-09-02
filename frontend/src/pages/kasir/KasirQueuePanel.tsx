@@ -13,9 +13,9 @@ interface KasirQueuePanelProps {
   pendingOrders: Order[]
   activeNotes: Order[]
   historyOrders: Order[]
-  onConfirm: (orderId: number) => void
   onVoid: (order: Order) => void
   onPayNote: (order: Order) => void
+  onComplete: (orderId: number) => void
   onReprint: (order: Order) => void
 }
 
@@ -100,10 +100,12 @@ function OrderCard({
   order,
   action,
   onVoid,
+  paid,
 }: {
   order: Order
   action: { label: string; onClick: () => void; primary?: boolean }
   onVoid?: () => void
+  paid?: boolean
 }) {
   return (
     <li className="rounded-xl border border-border-subtle bg-bg-surface p-3 shadow-card">
@@ -118,9 +120,16 @@ function OrderCard({
             })}
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-status-new/15 px-2.5 py-0.5 text-caption font-bold uppercase tracking-wide text-status-new">
-          {sourceLabel[order.source]}
-        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {paid && (
+            <span className="shrink-0 rounded-full bg-status-ready/15 px-2.5 py-0.5 text-caption font-bold uppercase tracking-wide text-status-ready">
+              Lunas
+            </span>
+          )}
+          <span className="shrink-0 rounded-full bg-status-new/15 px-2.5 py-0.5 text-caption font-bold uppercase tracking-wide text-status-new">
+            {sourceLabel[order.source]}
+          </span>
+        </div>
       </div>
 
       <ul className="mt-2 divide-y divide-border-subtle">
@@ -164,9 +173,9 @@ export function KasirQueuePanel({
   pendingOrders,
   activeNotes,
   historyOrders,
-  onConfirm,
   onVoid,
   onPayNote,
+  onComplete,
   onReprint,
 }: KasirQueuePanelProps) {
   const [panel, setPanel] = useState<Panel>('aktif')
@@ -230,7 +239,7 @@ export function KasirQueuePanel({
                     <OrderCard
                       key={order.id}
                       order={order}
-                      action={{ label: 'Konfirmasi', primary: true, onClick: () => onConfirm(order.id) }}
+                      action={{ label: 'Bayar di Muka', primary: true, onClick: () => onPayNote(order) }}
                       onVoid={() => onVoid(order)}
                     />
                   ))}
@@ -244,7 +253,8 @@ export function KasirQueuePanel({
                   <OrderCard
                     key={order.id}
                     order={order}
-                    action={{ label: 'Bayar', primary: true, onClick: () => onPayNote(order) }}
+                    paid
+                    action={{ label: 'Tandai Selesai', primary: true, onClick: () => onComplete(order.id) }}
                     onVoid={() => onVoid(order)}
                   />
                 ))}

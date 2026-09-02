@@ -277,7 +277,7 @@ export function WaiterOrder({
               disabled={lines.length === 0}
               className="h-14 w-full rounded-xl bg-accent-primary text-text-on-accent text-subheading font-bold transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
             >
-              Kirim ke Dapur
+              Kirim & Bayar QRIS
             </button>
           </div>
         </div>

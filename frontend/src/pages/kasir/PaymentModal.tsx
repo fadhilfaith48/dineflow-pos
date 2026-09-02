@@ -1,69 +1,56 @@
-import { useEffect, useMemo, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import { useEffect, useRef, useState } from 'react'
 import type { PaymentMethod } from '@/types'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/Button'
+import { QrisPay } from '@/components/QrisPay'
+import { api } from '@/services/httpApi'
 
 interface PaymentModalProps {
   open: boolean
   total: number
-  qrisImageUrl?: string
+  orderId: number
   onClose: () => void
-  onConfirm: (payload: { method: PaymentMethod; cashReceived?: number }) => Promise<void>
+  onTunai: (payload: { cashReceived?: number }) => Promise<void>
+  onQrisPaid: () => Promise<void>
 }
 
-/** CRC-16/CCITT (0x1021) yang dipakai payload QRIS untuk tag 63 */
-function crc16ccitt(data: string): string {
-  let crc = 0xffff
-  for (let i = 0; i < data.length; i++) {
-    crc ^= data.charCodeAt(i) << 8
-    for (let j = 0; j < 8; j++) {
-      crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff
-    }
-  }
-  return crc.toString(16).toUpperCase().padStart(4, '0')
-}
-
-const pad2 = (n: number) => String(n).padStart(2, '0')
-
-/** Payload QRIS dinamis (EMVCo) berisi nominal; merchant fiktif untuk simulasi. */
-function buildQrisPayload(total: number): string {
-  const merchant = 'ID.CO.DINEFLOW.QRIS'
-  const merchantId = 'DINEFLOW01'
-  const name = 'DINEFLOW RESTAURANT'
-  const city = 'JAKARTA'
-  const amount = String(total)
-
-  const merchantAccount =
-    `00${pad2(merchant.length)}${merchant}` + `01${pad2(merchantId.length)}${merchantId}`
-  const body =
-    '000201010212' +
-    `26${pad2(merchantAccount.length)}${merchantAccount}` +
-    '52045678' +
-    '5303360' +
-    `54${pad2(amount.length)}${amount}` +
-    '5802ID' +
-    `59${pad2(name.length)}${name}` +
-    `60${pad2(city.length)}${city}`
-  return body + '6304' + crc16ccitt(body + '6304')
-}
-
-export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: PaymentModalProps) {
+/**
+ * Modal pembayaran kasir — bayar di muka (Tunai atau QRIS dinamis).
+ * Order sudah dibuat berstatus 'menunggu'; setelah lunas otomatis ke dapur.
+ */
+export function PaymentModal({ open, total, orderId, onClose, onTunai, onQrisPaid }: PaymentModalProps) {
   const [method, setMethod] = useState<PaymentMethod>('tunai')
   const [cash, setCash] = useState('')
-  const [qrisPaid, setQrisPaid] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [checkout, setCheckout] = useState<{ reference: string; qrContent: string | null; gateway: string } | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
+  const didQrisPaid = useRef(false)
 
   useEffect(() => {
     if (open) {
       setMethod('tunai')
       setCash('')
-      setQrisPaid(false)
       setSubmitting(false)
+      setCheckout(null)
+      setCheckoutError('')
+      didQrisPaid.current = false
     }
   }, [open])
 
-  const qrisPayload = useMemo(() => buildQrisPayload(total), [total])
+  useEffect(() => {
+    if (!open || method !== 'qris' || checkout) return
+    let cancelled = false
+    api.checkoutOrder(orderId)
+      .then((c) => {
+        if (!cancelled) setCheckout({ reference: c.reference, qrContent: c.qrContent, gateway: c.gateway })
+      })
+      .catch((e) => {
+        if (!cancelled) setCheckoutError(e instanceof Error ? e.message : 'Gagal membuat pembayaran QRIS.')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, method, orderId, checkout])
 
   if (!open) return null
 
@@ -71,16 +58,23 @@ export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: 
   const change = cashAmount - total
   const cashInvalid = method === 'tunai' && cashAmount < total
 
-  async function handleConfirm() {
+  async function handleConfirmTunai() {
     if (submitting) return
     setSubmitting(true)
     try {
-      await onConfirm({
-        method,
-        cashReceived: method === 'tunai' ? cashAmount : undefined,
-      })
+      await onTunai({ cashReceived: cashAmount })
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleQrisPaid() {
+    if (didQrisPaid.current) return
+    didQrisPaid.current = true
+    try {
+      await onQrisPaid()
+    } catch {
+      didQrisPaid.current = false
     }
   }
 
@@ -88,7 +82,7 @@ export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
       <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal">
         <div className="flex items-center justify-between">
-          <h2 className="text-heading font-semibold text-text-primary">Pembayaran</h2>
+          <h2 className="text-heading font-semibold text-text-primary">Bayar di Muka</h2>
           <button
             onClick={onClose}
             aria-label="Tutup"
@@ -151,41 +145,18 @@ export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: 
 
         {method === 'qris' && (
           <div className="mt-4 flex flex-col items-center text-center">
-            <div className="w-fit rounded-xl border border-border-subtle p-4">
-              {qrisImageUrl ? (
-                <img src={qrisImageUrl} alt="QRIS Statis" className="h-[180px] w-[180px] object-contain" />
-              ) : (
-                <QRCodeSVG value={qrisPayload} size={180} />
-              )}
-            </div>
-            <p className="mt-3 text-caption text-text-secondary">
-              {qrisImageUrl ? (
-                <>Pelanggan memindai QR di atas, lalu masukkan nominal <span className="font-num font-semibold text-text-primary">{formatRupiah(total)}</span>. Setelah notifikasi masuk di HP merchant, klik tombol di bawah.</>
-              ) : (
-                <>Minta pelanggan memindai QRIS untuk membayar{' '}
-                <span className="font-num font-semibold text-text-primary">{formatRupiah(total)}</span></>
-              )}
-            </p>
-            {!qrisImageUrl && (
-              <div
-                className={`mt-3 flex items-center gap-2 rounded-lg px-4 py-2 text-caption font-semibold ${
-                  qrisPaid
-                    ? 'bg-status-ready/15 text-status-ready'
-                    : 'bg-accent-tint text-accent-primary'
-                }`}
-              >
-                {qrisPaid ? (
-                  <>Pembayaran berhasil</>
-                ) : (
-                  <>
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-primary opacity-75" />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-primary" />
-                    </span>
-                    Menunggu pembayaran...
-                  </>
-                )}
-              </div>
+            {checkoutError ? (
+              <p className="text-caption font-semibold text-status-danger">{checkoutError}</p>
+            ) : checkout ? (
+              <QrisPay
+                reference={checkout.reference}
+                qrContent={checkout.qrContent}
+                gateway={checkout.gateway}
+                total={total}
+                onPaid={handleQrisPaid}
+              />
+            ) : (
+              <p className="py-8 text-caption text-text-secondary">Membuat pembayaran QRIS...</p>
             )}
           </div>
         )}
@@ -194,30 +165,12 @@ export function PaymentModal({ open, total, qrisImageUrl, onClose, onConfirm }: 
           <Button variant="outline" fullWidth onClick={onClose}>
             Batal
           </Button>
-          {method === 'qris' ? (
-            qrisImageUrl ? (
-              <Button fullWidth onClick={handleConfirm} disabled={submitting}>
-                {submitting ? 'Memproses...' : 'Sudah Terima Bayaran'}
-              </Button>
-            ) : (
-              <Button fullWidth onClick={() => setQrisPaid(true)} disabled={submitting}>
-                Simulasi Pembayaran Sukses
-              </Button>
-            )
-          ) : (
-            <Button fullWidth onClick={handleConfirm} disabled={cashInvalid || submitting}>
+          {method === 'tunai' && (
+            <Button fullWidth onClick={handleConfirmTunai} disabled={cashInvalid || submitting}>
               {submitting ? 'Memproses...' : 'Konfirmasi Bayar'}
             </Button>
           )}
         </div>
-
-        {method === 'qris' && !qrisImageUrl && qrisPaid && (
-          <div className="mt-4">
-            <Button variant="primary" fullWidth onClick={handleConfirm} disabled={submitting}>
-              {submitting ? 'Memproses...' : 'Tandai Lunas'}
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )

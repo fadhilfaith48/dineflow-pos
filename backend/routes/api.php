@@ -20,6 +20,12 @@ Route::get('/menu-items', [MenuItemController::class, 'index']);
 Route::get('/tables', [TableController::class, 'index']);
 Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
 
+// Bayar di muka (QRIS): checkout & polling pintar — self-order publik, sehingga
+// diletakkan di grup publik; status/mock-paid diproteksi relatif (reference).
+Route::post('/orders/{order}/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:20,1');
+Route::get('/payments/{reference}/status', [PaymentController::class, 'status'])->middleware('throttle:60,1');
+Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -52,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/orders', [OrderController::class, 'index'])->middleware('role:kasir,pelayan,dapur,admin');
     Route::patch('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware('role:kasir,admin');
+    Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->middleware('role:kasir,admin');
     Route::patch('/orders/{order}/void', [OrderController::class, 'void'])->middleware('role:kasir,admin,dapur');
     Route::patch('/orders/{order}/items/{itemId}', [OrderController::class, 'updateItemStatus'])->middleware('role:dapur,pelayan,admin');
     Route::post('/orders/{order}/payments', [PaymentController::class, 'store'])->middleware('role:kasir,admin');

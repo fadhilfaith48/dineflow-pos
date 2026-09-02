@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant, Order, PaymentMethod, Settings } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant, Order, Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
@@ -71,7 +71,7 @@ export function KasirPage() {
   }, [])
 
   const pendingOrders = useMemo(
-    () => orders.filter((o) => o.status === 'menunggu-konfirmasi'),
+    () => orders.filter((o) => o.status === 'menunggu'),
     [orders],
   )
 
@@ -105,13 +105,14 @@ export function KasirPage() {
     }
   }
 
-  async function handleConfirmOrder(orderId: number) {
+  async function handleComplete(orderId: number) {
     setError('')
     try {
-      await api.confirmOrder(orderId)
+      await api.completeOrder(orderId)
       setOrders(await api.getOrders())
+      setTables(await api.getTables())
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal konfirmasi pesanan.')
+      setError(e instanceof Error ? e.message : 'Gagal menandai selesai.')
     }
   }
 
@@ -139,14 +140,14 @@ export function KasirPage() {
     setReceipt(orderToReceipt(order, order.payment, settings ?? undefined))
   }
 
-  async function handleConfirmPayment(payload: { method: PaymentMethod; cashReceived?: number }) {
+  async function handleTunai(payload: { cashReceived?: number }) {
+    if (!noteToPay) return
     setError('')
     try {
-      if (!noteToPay) return
       const order = noteToPay
       const payment = await api.processPayment({
         orderId: order.id,
-        method: payload.method,
+        method: 'tunai',
         cashReceived: payload.cashReceived,
       })
       setReceipt(orderToReceipt(order, payment, settings ?? undefined))
@@ -159,20 +160,40 @@ export function KasirPage() {
     }
   }
 
-  async function handleSendToKitchen() {
+  async function handleQrisPaid() {
+    if (!noteToPay) return
+    setError('')
+    try {
+      const orderId = noteToPay.id
+      setNoteToPay(null)
+      setShowPayment(false)
+      const fresh = await api.getOrders()
+      setOrders(fresh)
+      setTables(await api.getTables())
+      const order = fresh.find((o) => o.id === orderId)
+      if (order?.payment) {
+        setReceipt(orderToReceipt(order, order.payment, settings ?? undefined))
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal memproses pembayaran QRIS.')
+    }
+  }
+
+  async function handlePayAndSend() {
     if (cart.lines.length === 0) return
     setError('')
     try {
-      await api.createOrder({
+      const order = await api.createOrder({
         tableId: selectedTable?.id ?? null,
         source: 'kasir',
         items: cart.lines,
       })
       cart.clear()
+      setNoteToPay(order)
+      setShowPayment(true)
       setOrders(await api.getOrders())
-      setTables(await api.getTables())
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan ke dapur.')
+      setError(e instanceof Error ? e.message : 'Gagal membuat pesanan.')
     }
   }
 
@@ -184,9 +205,9 @@ export function KasirPage() {
           pendingOrders={pendingOrders}
           activeNotes={activeNotes}
           historyOrders={paidOrders}
-          onConfirm={handleConfirmOrder}
           onVoid={setVoidTarget}
           onPayNote={handlePayNote}
+          onComplete={handleComplete}
           onReprint={handleReprint}
         />
         <MenuPanel
@@ -213,7 +234,7 @@ export function KasirPage() {
           onSetNote={cart.setNote}
           onSetSpice={cart.setSpiceLevel}
           onHold={handleHold}
-          onSendToKitchen={handleSendToKitchen}
+          onPayAndSend={handlePayAndSend}
         />
       </main>
 
@@ -228,12 +249,13 @@ export function KasirPage() {
       <PaymentModal
         open={showPayment}
         total={noteToPay ? noteToPay.total : cart.summary.total}
-        qrisImageUrl={settings?.qrisImageUrl}
+        orderId={noteToPay?.id ?? 0}
         onClose={() => {
           setShowPayment(false)
           setNoteToPay(null)
         }}
-        onConfirm={handleConfirmPayment}
+        onTunai={handleTunai}
+        onQrisPaid={handleQrisPaid}
       />
 
       <VoidOrderModal

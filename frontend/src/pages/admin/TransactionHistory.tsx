@@ -13,7 +13,7 @@ const sourceLabel: Record<Order['source'], string> = {
 }
 
 type MethodFilter = 'semua' | PaymentMethod
-type StatusFilter = 'semua' | 'selesai' | 'dibatalkan'
+type StatusFilter = 'semua' | 'diproses' | 'selesai' | 'dibatalkan'
 
 function toYmd(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -59,7 +59,10 @@ export function TransactionHistory() {
     }
   }, [])
 
-  const paidOrders = useMemo(() => orders.filter((o) => o.status === 'selesai' || o.status === 'dibatalkan'), [orders])
+  const paidOrders = useMemo(
+    () => orders.filter((o) => o.status === 'diproses' || o.status === 'selesai' || o.status === 'dibatalkan'),
+    [orders],
+  )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -130,6 +133,7 @@ export function TransactionHistory() {
           className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
         >
           <option value="semua">Semua Status</option>
+          <option value="diproses">Diproses</option>
           <option value="selesai">Selesai</option>
           <option value="dibatalkan">Dibatalkan</option>
         </select>

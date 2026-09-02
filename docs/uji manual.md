@@ -75,7 +75,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 |---|---|---|---|
 | 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | ✅ |
 | 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | ✅ |
-| 5.3 | Tambah item ke keranjang, isi catatan, **Kirim Pesanan** | Pesanan masuk ke panel Kasir (status `menunggu-konfirmasi`); tracking tampil real-time. Setelah Kasir **Konfirmasi** → muncul di KDS ≤ 2 detik tanpa refresh | ✅ |
+| 5.3 | Tambah item ke keranjang, isi catatan, **Bayar di Muka** | View pembayaran QRIS tampil (status `menunggu` di panel Kasir); klik **"Saya Sudah Bayar"** → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
 | 5.4 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---
@@ -119,8 +119,8 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Kasus | Hasil Diharapkan | Status |
 |---|---|---|---|
-| 8.1 | Order dari **Kasir** kirim ke dapur | Langsung masuk tab **Nota** (`diproses`), BUKAN "Masuk" — tanpa langkah konfirmasi | ✅ |
-| 8.2 | Order dari **Pelayan/Self-order** | Masuk "Masuk" (`menunggu-konfirmasi`) → Kasir klik Konfirmasi → pindah ke Nota | ✅ |
+| 8.1 | Order dari **Kasir** buat order → **Bayar di Muka** (Tunai) | Langsung masuk tab **Nota** (`diproses`) tanpa langkah konfirmasi; meja jadi `terisi`; struk tampil | ✅ |
+| 8.2 | Order dari **Pelayan/Self-order** (bayar QRIS di muka) | Masuk "Masuk" (`menunggu`, blm lunas) → setelah **paid** (tombol demo/Saya Sudah Bayar) pindah ke Nota (`diproses`) | ✅ |
 | 8.3 | Dapur proses ticket | Mulai Masak → Siap Saji; status item berubah real-time | ✅ |
 | 8.4 | Bayar nota (tunai/QRIS) | Struk tampil: logo → nama restoran **di bawah logo** → alamat; lebar ±80mm, tinggi mengikuti jumlah item; pajak sesuai tarif terkini | ✅ |
 | 8.5 | Tab **Riwayat** panel Kasir setelah bayar | Transaksi `selesai` muncul otomatis (real-time, action=paid) dengan jam, no.order, meja/sumber, total, badge metode (Tunai hijau / QRIS biru); filter chip Hari ini/Semua | ✅ |

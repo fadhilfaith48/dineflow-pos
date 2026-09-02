@@ -1,4 +1,4 @@
-import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, DiningTable, SalesSummary, SalesPeriod, SalesDateRange, User, Role, Settings } from '@/types'
+import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, PaymentStatus, DiningTable, SalesSummary, SalesPeriod, SalesDateRange, User, Role, Settings } from '@/types'
 
 /**
  * Kontrak API yang dipakai seluruh halaman.
@@ -18,9 +18,13 @@ export interface Api {
   getOrders(): Promise<Order[]>
   createOrder(payload: CreateOrderPayload): Promise<Order>
   confirmOrder(orderId: number): Promise<Order>
+  completeOrder(orderId: number): Promise<Order>
   voidOrder(orderId: number, reason: string): Promise<Order>
   updateItemStatus(orderId: number, itemId: number, status: Order['items'][number]['status']): Promise<Order>
   processPayment(payload: PaymentPayload): Promise<Payment>
+  checkoutOrder(orderId: number): Promise<CheckoutResult>
+  getPaymentStatus(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }>
+  markMockPaid(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }>
   createMenuItem(input: CreateMenuItemInput): Promise<MenuItem>
   updateMenuItem(id: number, data: Omit<Partial<MenuItem>, 'variants'> & { image?: File; variants?: MenuVariantInput[] }): Promise<MenuItem>
   deleteMenuItem(id: number): Promise<void>
@@ -75,4 +79,14 @@ export interface PaymentPayload {
   orderId: number
   method: PaymentMethod
   cashReceived?: number
+}
+
+export interface CheckoutResult {
+  reference: string
+  gateway: string
+  qrContent: string | null
+  status: PaymentStatus
+  orderId: number
+  orderNumber: string
+  payment: Payment
 }

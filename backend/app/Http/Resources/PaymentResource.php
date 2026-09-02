@@ -12,7 +12,11 @@ class PaymentResource extends JsonResource
         return [
             'id' => $this->id,
             'orderId' => $this->order_id,
+            'reference' => $this->reference,
             'method' => $this->method,
+            'status' => $this->status,
+            'gateway' => $this->gateway,
+            'paidVia' => $this->paid_via,
             'amount' => $this->amount,
             'subtotal' => $this->subtotal,
             'ppnAmount' => $this->ppn_amount,

@@ -93,7 +93,7 @@ export const mockOrders: Order[] = [
     tableId: 3,
     tableNumber: 'T3',
     source: 'self-order',
-    status: 'menunggu-konfirmasi',
+    status: 'menunggu',
     items: [
       { id: 1, menuItemId: 1, name: 'Nasi Goreng Spesial', price: 18000, quantity: 1, status: 'baru' },
       { id: 2, menuItemId: 8, name: 'Es Teh Manis', price: 5000, quantity: 1, status: 'baru' },

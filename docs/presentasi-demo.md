@@ -1,7 +1,7 @@
 # Panduan Demo / Presentasi DineFlow POS (PKL)
 
 Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate:fresh --seed`):
-4 user, 19 menu, 8 meja (T1–T8), 3 order (ORD-0001/2 = `diproses`, ORD-0003 = `menunggu-konfirmasi`).
+4 user, 19 menu, 8 meja (T1–T8), 3 order (ORD-0001/2 = `diproses`, ORD-0003 = `menunggu` — menunggu pembayaran di muka).
 
 ---
 
@@ -21,11 +21,11 @@ Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate
 | 3 | **Admin — Meja** | Tambah meja, ubah status, **Lihat QR** → modal QR ke `/menu/:qr` | QR per meja; link ke halaman publik |
 | 4 | **Admin — Staf** | Tambah staf + role | Bisa langsung login |
 | 5 | **Admin — Laporan** | Filter Hari ini / 7 Hari / Bulan ini / Semua | Total, transaksi, menu terlaris sesuai periode |
-| 6 | **Menu QR (publik)** | Tab baru `http://localhost:5173/menu/T1` **tanpa login** → pilih item + catatan → Kirim | Halaman publik; pesanan masuk ke Kasir `menunggu-konfirmasi` |
-| 7 | **Kasir — Konfirmasi** | Login `kasir` (tab lain) → panel "Masuk" → **Konfirmasi** ORD baru | Order diteruskan ke dapur; KDS update **≤2s tanpa refresh** |
+| 6 | **Menu QR (publik)** | Tab baru `http://localhost:5173/menu/T1` **tanpa login** → pilih item + catatan → **Bayar di Muka** → QRIS tampil → demo: klik **"Saya Sudah Bayar"** | Halaman publik; bayar di muka wajib; otomatis ke tracking saat paid |
+| 7 | **Kasir — bayar di muka** | Login `kasir` (tab lain) → buat order → **Bayar di Muka** → pilih **Tunai** (input uang, lihat kembalian) | Tunai di muka; order langsung ke dapur (tanpa Konfirmasi); struk + **Cetak/Salin** |
 | 8 | **KDS (Dapur)** | Login `dapur` → /kitchen → **Mulai Masak** → **Siap Saji** | Ticket besar teks kontras; status item naik; pembaruan real-time |
-| 9 | **Pelayan** | Login `pelayan` → pilih meja kosong → isi pesanan + catatan → Kirim → **Daftar Pesanan** → tandai **diantar** | Mobile-first; peta meja status |
-| 10 | **Kasir — Bayar** | Kembali ke Kasir → tab "Nota" → **Bayar** → pilih **Tunai** (input uang, lihat kembalian) lalu **QRIS** (simulasi QR → Tandai Lunas) | Struk tampil + tombol **Cetak** & **Salin**; QRIS tanpa kembalian |
+| 9 | **Pelayan** | Login `pelayan` → pilih meja kosong → isi pesanan + catatan → **Kirim & Bayar QRIS** → QR tampil di layar → demo: **"Saya Sudah Bayar"** → **Daftar Pesanan** → tandai **diantar** | Mobile-first; peta meja status; QRIS di muka tanpa konfirmasi kasir |
+| 10 | **Kasir — Tandai Selesai** | Kembali ke Kasir → tab "Nota" (badge **Lunas**) → **Tandai Selesai** | Nota lunas nonaktif Bayar; meja jadi perlu dibersihkan |
 | 11 | **Uji negatif (singkat)** | Login `pelayan` lalu buka `/admin` | Ditolak, diarahkan ke `/pelayan` |
 
 ## 3. Poin Pembeda (highlight saat sidang)
@@ -39,6 +39,8 @@ Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate
 4. **Integritas data**: pembayaran ganda ditolak (409) & stok/order dilindungi
    transaction + `lockForUpdate()` (bukan proses berlebihan).
 5. **Upload foto menu** disimpan di server (bukan URL eksternal).
+6. **Bayar di muka semua kanal** (DOKU QRIS + Tunai): order masuk dapur hanya setelah
+   lunas; abstraksi `PaymentGateway` (`mock` default utk demo, swap ke DOKU cukup 1 env).
 
 ## 4. Teknologi & Arsitektur (untuk pertanyaan)
 

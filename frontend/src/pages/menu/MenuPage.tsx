@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import type { MenuCategory, MenuItem, Order } from '@/types'
 import type { MenuItemVariant } from '@/types'
 import { api } from '@/services/httpApi'
+import { QrisPay } from '@/components/QrisPay'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
@@ -17,7 +18,7 @@ const itemBadge: Record<string, BadgeVariant> = {
   diantar: 'done',
 }
 
-type View = 'menu' | 'cart' | 'tracking'
+type View = 'menu' | 'cart' | 'payment' | 'tracking'
 
 export function MenuPage() {
   const { table } = useParams<{ table: string }>()
@@ -33,6 +34,10 @@ export function MenuPage() {
   const [orderNumber, setOrderNumber] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [payRef, setPayRef] = useState('')
+  const [payQr, setPayQr] = useState<string | null>(null)
+  const [payGateway, setPayGateway] = useState('mock')
+  const [payAmount, setPayAmount] = useState(0)
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -91,13 +96,34 @@ export function MenuPage() {
       })
       setOrderNumber(order.orderNumber)
       setTrackedOrder(order)
+      setPayAmount(order.total)
       cart.clear()
-      setView('tracking')
+      try {
+        const checkout = await api.checkoutOrder(order.id)
+        setPayRef(checkout.reference)
+        setPayQr(checkout.qrContent)
+        setPayGateway(checkout.gateway)
+      } catch {
+        setPayRef(String(order.id))
+        setPayQr(null)
+        setPayGateway('mock')
+      }
+      setView('payment')
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleQrisPaid() {
+    try {
+      const list = await api.getOrders()
+      setTrackedOrder(list.find((o) => o.orderNumber === orderNumber) ?? trackedOrder)
+    } catch {
+      // abaikan, pakai order yang sudah dipegang
+    }
+    setView('tracking')
   }
 
   if (tableNotFound || (tableChecked && tableId === null)) {
@@ -112,6 +138,35 @@ export function MenuPage() {
     )
   }
 
+  if (view === 'payment') {
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
+        <header className="bg-accent-primary px-5 py-6 text-center text-text-on-accent">
+          <div className="text-caption font-semibold uppercase tracking-wider opacity-80">Bayar di Muka</div>
+          <div className="font-num text-heading font-bold">{orderNumber}</div>
+          <div className="mt-1 text-caption opacity-90">Meja {table}</div>
+        </header>
+        <div className="flex-1 px-4 py-5">
+          <QrisPay
+            reference={payRef || String(trackedOrder?.id ?? '')}
+            qrContent={payQr}
+            gateway={payGateway}
+            total={payAmount}
+            onPaid={handleQrisPaid}
+          />
+        </div>
+        <div className="border-t border-border-subtle bg-bg-surface p-4">
+          <button
+            onClick={() => setView('menu')}
+            className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
+          >
+            Batal, Kembali ke Menu
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   if (view === 'tracking') {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
@@ -122,7 +177,7 @@ export function MenuPage() {
         </header>
         <div className="flex-1 px-4 py-5">
           <p className="text-body text-text-secondary">
-            Status pesananmu diperbarui otomatis. Silakan menunggu dan bayar di kasir saat selesai makan.
+            Pesananmu sudah terbayar di muka. Statusnya diperbarui otomatis.
           </p>
           {trackedOrder && (
             <ul className="mt-5 flex flex-col gap-3">
@@ -351,13 +406,13 @@ export function MenuPage() {
                 disabled={cart.lines.length === 0 || submitting}
                 className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
               >
-                {submitting ? 'Mengirim...' : 'Kirim Pesanan'}
+                {submitting ? 'Memproses...' : 'Bayar di Muka'}
               </button>
               {submitError && (
                 <p className="mt-2 text-center text-caption font-semibold text-status-danger">{submitError}</p>
               )}
               <p className="mt-2 text-center text-caption text-text-secondary">
-                Pembayaran dilakukan di kasir setelah menikmati hidangan.
+                Kamu akan membayar di muka sebelum dapur memasak pesananmu.
               </p>
             </div>
           </div>

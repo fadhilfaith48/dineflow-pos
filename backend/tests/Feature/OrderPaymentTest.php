@@ -41,7 +41,7 @@ class OrderPaymentTest extends TestCase
             'order_number' => 'ORD-0001',
             'table_id' => $table->id,
             'source' => 'kasir',
-            'status' => 'baru',
+            'status' => 'menunggu',
             'total' => 19800,
         ]);
         $order->items()->create([

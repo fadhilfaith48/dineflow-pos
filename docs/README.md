@@ -8,10 +8,10 @@ Self-order QR di meja, Kitchen Display System) + dashboard Admin. Prototype PKL 
 
 | Kanal | Fungsi |
 |---|---|
-| **Kasir** | Input pesanan manual, terima & konfirmasi pesanan masuk, bayar nota meja (tunai + QRIS simulasi), cetak/salin struk |
-| **Pelayan** | Peta meja, input pesanan dari meja (dengan catatan khusus), tandai diantar |
-| **Kitchen Display** | Grid ticket pesanan aktif, urut antrian waktu masuk, update status per item (baru/dimasak/siap) |
-| **Menu Pesan Mandiri** | Pelanggan scan QR di meja → katalog → pesan → tracking status |
+| **Kasir** | Input pesanan manual, **bayar di muka** (tunai / QRIS DOKU), tandai selesai, cetak/salin struk |
+| **Pelayan** | Peta meja, input pesanan dari meja (catatan khusus), bayar QRIS di muka via HP/tablet, tandai diantar |
+| **Kitchen Display** | Grid ticket pesanan aktif (`diproses` = sudah lunas), urut antrian waktu masuk, update status per item (baru/dimasak/siap) |
+| **Menu Pesan Mandiri** | Pelanggan scan QR di meja → katalog → pesan → **bayar QRIS di muka** → tracking status |
 | **Admin** | Manajemen menu (kategori/harga/foto/habis), meja (+ QR per meja), staf & role, laporan penjualan (filter periode) + menu terlaris |
 
 ## Tech Stack

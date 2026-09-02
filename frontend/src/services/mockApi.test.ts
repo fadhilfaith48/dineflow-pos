@@ -22,45 +22,51 @@ describe('MockApi — login', () => {
   })
 })
 
-describe('MockApi — createOrder', () => {
-  it('order dari pelayan berstatus menunggu-konfirmasi dan total sudah termasuk pajak', async () => {
+describe('MockApi — createOrder (bayar di muka)', () => {
+  it('order dari pelayan berstatus menunggu (belum ke dapur) dan total termasuk pajak', async () => {
     const order = await api.createOrder({ tableId: 1, source: 'pelayan', items: baseItems })
-    expect(order.status).toBe('menunggu-konfirmasi')
+    expect(order.status).toBe('menunggu')
     expect(order.total).toBe(Math.round(18000 * 2 * 1.1))
   })
 
-  it('order dari self-order juga menunggu-konfirmasi', async () => {
+  it('order dari self-order juga menunggu', async () => {
     const order = await api.createOrder({ tableId: 3, source: 'self-order', items: baseItems })
-    expect(order.status).toBe('menunggu-konfirmasi')
+    expect(order.status).toBe('menunggu')
   })
 
-  it('order dari kasir langsung berstatus baru', async () => {
+  it('order dari kasir juga menunggu (prepay sebelum dapur)', async () => {
     const order = await api.createOrder({ tableId: null, source: 'kasir', items: baseItems })
-    expect(order.status).toBe('baru')
+    expect(order.status).toBe('menunggu')
   })
 
-  it('meja dine-in menjadi terisi saat ada order', async () => {
+  it('meja belum terisi saat order menunggu pembayaran', async () => {
     await api.createOrder({ tableId: 1, source: 'pelayan', items: baseItems })
+    const tables = await api.getTables()
+    expect(tables.find((t) => t.id === 1)?.status).not.toBe('terisi')
+  })
+})
+
+describe('MockApi — QRIS bayar di muka (checkout + mock-paid)', () => {
+  it('checkout membuat pembayaran pending lalu mock-paid ke dapur & meja terisi', async () => {
+    const order = await api.createOrder({ tableId: 1, source: 'self-order', items: baseItems })
+    const checkout = await api.checkoutOrder(order.id)
+    expect(checkout.status).toBe('pending')
+    expect(checkout.gateway).toBe('mock')
+
+    const result = await api.markMockPaid(checkout.reference)
+    expect(result.status).toBe('paid')
+
+    const after = (await api.getOrders()).find((o) => o.id === order.id)
+    expect(after?.status).toBe('diproses')
+    expect(after?.payment?.status).toBe('paid')
+
     const tables = await api.getTables()
     expect(tables.find((t) => t.id === 1)?.status).toBe('terisi')
   })
 })
 
-describe('MockApi — confirmOrder', () => {
-  it('mengubah menunggu-konfirmasi menjadi diproses', async () => {
-    const order = await api.createOrder({ tableId: 1, source: 'pelayan', items: baseItems })
-    const confirmed = await api.confirmOrder(order.id)
-    expect(confirmed.status).toBe('diproses')
-  })
-
-  it('menolak konfirmasi order yang bukan menunggu-konfirmasi', async () => {
-    const order = await api.createOrder({ tableId: null, source: 'kasir', items: baseItems })
-    await expect(api.confirmOrder(order.id)).rejects.toThrow('menunggu konfirmasi')
-  })
-})
-
-describe('MockApi — processPayment', () => {
-  it('menandai order selesai, mencatat kembalian, dan meja jadi perlu dibersihkan', async () => {
+describe('MockApi — processPayment (kasir tunai di muka)', () => {
+  it('menandai order diproses, mencatat kembalian, meja jadi terisi', async () => {
     const order = await api.createOrder({ tableId: 1, source: 'pelayan', items: baseItems })
     const payment = await api.processPayment({ orderId: order.id, method: 'tunai', cashReceived: 50000 })
 
@@ -68,10 +74,10 @@ describe('MockApi — processPayment', () => {
     expect(payment.change).toBe(50000 - order.total)
 
     const after = (await api.getOrders()).find((o) => o.id === order.id)
-    expect(after?.status).toBe('selesai')
+    expect(after?.status).toBe('diproses')
 
     const tables = await api.getTables()
-    expect(tables.find((t) => t.id === 1)?.status).toBe('perlu-dibersihkan')
+    expect(tables.find((t) => t.id === 1)?.status).toBe('terisi')
   })
 })
 
@@ -86,13 +92,13 @@ describe('MockApi — getSalesSummary', () => {
     expect(summary.topItems.some((t) => t.name === 'Nasi Goreng Spesial')).toBe(true)
   })
 
-  it('order yang masih menunggu konfirmasi tidak dihitung sebagai penjualan', async () => {
+  it('order yang masih menunggu bayar tidak dihitung sebagai penjualan', async () => {
     const before = await api.getSalesSummary('semua')
     const pending = await api.createOrder({ tableId: null, source: 'self-order', items: baseItems })
 
     const after = await api.getSalesSummary('semua')
     expect(after.orderCount).toBe(before.orderCount)
     expect(after.totalRevenue).toBe(before.totalRevenue)
-    expect(pending.status).toBe('menunggu-konfirmasi')
+    expect(pending.status).toBe('menunggu')
   })
 })

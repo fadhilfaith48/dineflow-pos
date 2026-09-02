@@ -137,31 +137,39 @@ Backend dikerjakan di folder `backend/` di repo utama `resto_pos/`
 
 ## 5. Alur Kunci (end-to-end)
 
-### 5.1 Pesanan dari Pelayan / Self-order
+### 5.1 Pesanan & bayar di muka (semua kanal)
 ```
-Pelayan/MenuQR → api.createOrder (status: menunggu-konfirmasi)
-  → Kasir: panel "Masuk" (badge) → api.confirmOrder (status: diproses)
+Pelayan/MenuQR/Kasir → api.createOrder (status: menunggu — BELUM ke dapur)
+  → bayar di muka:
+      self-order & pelayan: api.checkoutOrder → QRIS DOKU tampil di layar → polling api.getPaymentStatus (3–5s) → paid
+      kasir: api.processPayment (Tunai) ATAU api.checkoutOrder (QRIS DOKU) → paid
+  → status paid → order diproses (otomatis ke dapur, tanpa konfirmasi kasir) + meja terisi [broadcast]
   → KDS: tampil sebagai ticket aktif (urut waktu masuk)
   → Dapur update status per item (baru → dimasak → siap) [broadcast]
   → Pelayan tandai diantar; Pelanggan lihat status di tracking [broadcast]
 ```
 
-### 5.2 Pembayaran & Struk
+### 5.2 Pembayaran di muka, struk & selesai
 ```
-Kasir → PaymentModal (tunai: uang+kembalian / QRIS: simulasi QR + sukses)
-  → api.processPayment (order → selesai; meja → perlu-dibersihkan)
-  → ReceiptModal: Cetak (window.print #print-area) / Salin Struk (clipboard)
+Kasir/self-order/pelayan bayar di muka (lihat 5.1) → status paid [broadcast]
+  → ReceiptModal (kasir): Cetak (window.print #print-area) / Salin Struk (clipboard)
+  → Selesai makan → Kasir klik "Tandai Selesai" (api.completeOrder PATCH /orders/{id}/complete)
+  → order selesai + meja perlu-dibersihkan [broadcast]
+```
 ```
 
-### 5.3 (RENCANA) Bayar di Muka Wajib — Semua Kanal (DOKU QRIS + Tunai Kasir)
+### 5.3 Bayar di Muka Wajib — Semua Kanal (DOKU QRIS + Tunai Kasir)
 
-> **Status: RENCANA (belum diimplementasikan).** Keputusan user (revisi dari "self-order
+> **Status: TERIMPLEMENTASI (D1 backend ✅ + D2 frontend ✅); D3 (deploy DOKU sandbox
+> online) belum.** Keputusan user (revisi dari "self-order
 > saja" → **semua kanal**): bayar di muka **wajib di self-order, kasir, dan pelayan**;
 > order baru dibuat `menunggu` (belum ke dapur) dan baru masuk dapur (`diproses`) setelah
 > pembayaran `paid`. Vendor **DOKU (sandbox untuk demo PKL)**; pola **B (QRIS tampil di
 > aplikasi + polling)** — pelanggan tidak pindah ke web DOKU, layar menunggu lalu otomatis
 > lanjut. Tombol **Konfirmasi kasir DIHAPUS** (prepay otomatis ke dapur). Meja jadi `terisi`
-> saat order `paid` & mulai dimasak.
+> saat order `paid` & mulai dimasak. Driver aktif default `mock` (`PAYMENT_DRIVER=mock`);
+> komponen UI memakai `api.checkoutOrder` + `api.getPaymentStatus` + `api.markMockPaid`
+> sehingga swap ke `doku` hanya ubah 1 baris env + set kredensial.
 
 Per-role:
 

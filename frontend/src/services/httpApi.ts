@@ -1,5 +1,6 @@
 import type {
   Api,
+  CheckoutResult,
   CreateMenuItemInput,
   CreateOrderPayload,
   MenuVariantInput,
@@ -11,6 +12,7 @@ import type {
   MenuItem,
   Order,
   Payment,
+  PaymentStatus,
   Role,
   SalesPeriod,
   SalesDateRange,
@@ -211,6 +213,12 @@ export class HttpApi implements Api {
     }).then(unwrap)
   }
 
+  async completeOrder(orderId: number): Promise<Order> {
+    return request<{ data: Order }>(`/orders/${orderId}/complete`, {
+      method: 'PATCH',
+    }).then(unwrap)
+  }
+
   async voidOrder(orderId: number, reason: string): Promise<Order> {
     return request<{ data: Order }>(`/orders/${orderId}/void`, {
       method: 'PATCH',
@@ -234,6 +242,20 @@ export class HttpApi implements Api {
       method: 'POST',
       ...jsonBody({ method: payload.method, cashReceived: payload.cashReceived }),
     }).then(unwrap)
+  }
+
+  async checkoutOrder(orderId: number): Promise<CheckoutResult> {
+    return request<CheckoutResult>(`/orders/${orderId}/checkout`, { method: 'POST' })
+  }
+
+  async getPaymentStatus(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    return request<{ status: PaymentStatus; orderNumber: string }>(`/payments/${reference}/status`)
+  }
+
+  async markMockPaid(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    return request<{ status: PaymentStatus; orderNumber: string }>(`/payments/${reference}/mock-paid`, {
+      method: 'POST',
+    })
   }
 
   async createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {

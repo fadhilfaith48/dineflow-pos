@@ -46,7 +46,7 @@ export interface MenuItemVariant {
 
 export type OrderSource = 'kasir' | 'pelayan' | 'self-order'
 
-export type OrderStatus = 'menunggu-konfirmasi' | 'baru' | 'diproses' | 'selesai' | 'dibatalkan'
+export type OrderStatus = 'menunggu' | 'diproses' | 'selesai' | 'dibatalkan'
 
 export type ItemStatus = 'baru' | 'dimasak' | 'siap' | 'diantar'
 
@@ -80,17 +80,23 @@ export interface Order {
 
 export type PaymentMethod = 'tunai' | 'qris'
 
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled'
+
 export interface Payment {
   id: number
   orderId: number
+  reference?: string
   method: PaymentMethod
+  status: PaymentStatus
+  gateway?: string
+  paidVia?: 'tunai' | 'qris'
   amount: number
   subtotal?: number
   ppnAmount?: number
   cashReceived?: number
   change?: number
   paidBy: number
-  paidAt: string
+  paidAt?: string
 }
 
 export type SalesPeriod = 'harian' | 'mingguan' | 'bulanan' | 'semua'

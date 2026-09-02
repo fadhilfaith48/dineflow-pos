@@ -4,16 +4,14 @@ import { formatRupiah, formatElapsed } from '@/lib/format'
 import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
 
 const orderStatusBadge: Record<Order['status'], BadgeVariant> = {
-  'menunggu-konfirmasi': 'new',
-  baru: 'new',
+  menunggu: 'new',
   diproses: 'neutral',
   selesai: 'done',
   dibatalkan: 'danger',
 }
 
 const orderStatusBar: Record<Order['status'], string> = {
-  'menunggu-konfirmasi': 'bg-status-new',
-  baru: 'bg-status-new',
+  menunggu: 'bg-status-new',
   diproses: 'bg-status-cooking',
   selesai: 'bg-status-done',
   dibatalkan: 'bg-status-danger',

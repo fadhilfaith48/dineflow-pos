@@ -1,5 +1,5 @@
-import type { Api, CartItemInput, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
-import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
+import type { Api, CartItemInput, CheckoutResult, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
+import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, PaymentStatus, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
 import { DEFAULT_PASSWORD, TAX_RATE } from '@/lib/constants'
 import { mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
 
@@ -8,6 +8,7 @@ let menuItems: MenuItem[] = [...mockMenuItems]
 let tables: DiningTable[] = [...mockTables]
 let users: User[] = [...mockUsers]
 let orderCounter = mockOrders.length
+const pendingPayments = new Map<string, { orderId: number; payment: Payment }>()
 
 /**
  * Implementasi API memakai mock data (in-memory).
@@ -93,9 +94,8 @@ export class MockApi implements Api {
       orderNumber: `ORD-${String(orderCounter).padStart(4, '0')}`,
       tableId: payload.tableId,
       source: payload.source,
-      // Pesanan dari Pelayan & Self-order menunggu konfirmasi Kasir sebelum
-      // diteruskan ke dapur. Pesanan dari Kasir langsung aktif.
-      status: payload.source === 'kasir' ? 'baru' : 'menunggu-konfirmasi',
+      // Bayar di muka: semua kanal menunggu pembayaran sebelum masuk dapur.
+      status: 'menunggu',
       items,
       total: Math.round(
         items.reduce((sum, item) => sum + item.price * item.quantity, 0) * (1 + TAX_RATE),
@@ -104,22 +104,24 @@ export class MockApi implements Api {
       updatedAt: now,
     }
     orders = [order, ...orders]
-    if (payload.tableId) {
-      const table = tables.find((t) => t.id === payload.tableId)
-      if (table) table.status = 'terisi'
+    return order
+  }
+
+  async completeOrder(orderId: number): Promise<Order> {
+    const order = orders.find((o) => o.id === orderId)
+    if (!order) throw new Error('Pesanan tidak ditemukan')
+    if (order.status !== 'diproses') throw new Error('Pesanan tidak dalam status diproses')
+    order.status = 'selesai'
+    order.updatedAt = new Date().toISOString()
+    if (order.tableId) {
+      const table = tables.find((t) => t.id === order.tableId)
+      if (table && table.status === 'terisi') table.status = 'perlu-dibersihkan'
     }
     return order
   }
 
-  async confirmOrder(orderId: number): Promise<Order> {
-    const order = orders.find((o) => o.id === orderId)
-    if (!order) throw new Error('Pesanan tidak ditemukan')
-    if (order.status !== 'menunggu-konfirmasi') {
-      throw new Error('Pesanan tidak dalam status menunggu konfirmasi')
-    }
-    order.status = 'diproses'
-    order.updatedAt = new Date().toISOString()
-    return order
+  async confirmOrder(): Promise<Order> {
+    throw new Error('Konfirmasi manual tidak dipakai lagi. Pesanan otomatis ke dapur setelah lunas.')
   }
 
   async voidOrder(orderId: number, reason: string): Promise<Order> {
@@ -154,23 +156,73 @@ export class MockApi implements Api {
   async processPayment(payload: PaymentPayload): Promise<Payment> {
     const order = orders.find((o) => o.id === payload.orderId)
     if (!order) throw new Error('Order tidak ditemukan')
-    order.status = 'selesai'
+    if (order.status !== 'menunggu') throw new Error('Pesanan tidak dalam status menunggu pembayaran')
+    order.status = 'diproses'
     order.updatedAt = new Date().toISOString()
     if (order.tableId) {
       const table = tables.find((t) => t.id === order.tableId)
-      if (table) table.status = 'perlu-dibersihkan'
+      if (table) table.status = 'terisi'
     }
     const payment: Payment = {
       id: order.id,
       orderId: order.id,
       method: payload.method,
+      status: 'paid',
+      paidVia: payload.method,
       amount: order.total,
       cashReceived: payload.cashReceived,
       change: payload.cashReceived ? payload.cashReceived - order.total : undefined,
       paidBy: 1,
       paidAt: new Date().toISOString(),
     }
+    order.payment = payment
     return payment
+  }
+
+  async checkoutOrder(orderId: number): Promise<CheckoutResult> {
+    const order = orders.find((o) => o.id === orderId)
+    if (!order) throw new Error('Order tidak ditemukan')
+    if (order.status !== 'menunggu') throw new Error('Pesanan tidak dalam status menunggu pembayaran')
+    const reference = `MOCK-${Math.random().toString(36).slice(2, 12).toUpperCase()}`
+    const payment: Payment = {
+      id: order.id,
+      orderId: order.id,
+      reference,
+      method: 'qris',
+      status: 'pending',
+      gateway: 'mock',
+      paidVia: 'qris',
+      amount: order.total,
+      paidBy: 0,
+      paidAt: undefined,
+    }
+    pendingPayments.set(reference, { orderId: order.id, payment })
+    return { reference, gateway: 'mock', qrContent: reference, status: 'pending', orderId: order.id, orderNumber: order.orderNumber, payment }
+  }
+
+  async getPaymentStatus(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    const entry = pendingPayments.get(reference)
+    if (!entry) throw new Error('Pembayaran tidak ditemukan')
+    const order = orders.find((o) => o.id === entry.orderId)!
+    return { status: entry.payment.status, orderNumber: order.orderNumber }
+  }
+
+  async markMockPaid(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    const entry = pendingPayments.get(reference)
+    if (!entry) throw new Error('Pembayaran tidak ditemukan')
+    entry.payment.status = 'paid'
+    entry.payment.paidAt = new Date().toISOString()
+    const order = orders.find((o) => o.id === entry.orderId)
+    if (order) {
+      order.status = 'diproses'
+      order.updatedAt = new Date().toISOString()
+      order.payment = entry.payment
+      if (order.tableId) {
+        const table = tables.find((t) => t.id === order.tableId)
+        if (table) table.status = 'terisi'
+      }
+    }
+    return { status: 'paid', orderNumber: order?.orderNumber ?? '' }
   }
 
   async updateMenuItem(id: number, data: Partial<MenuItem>): Promise<MenuItem> {

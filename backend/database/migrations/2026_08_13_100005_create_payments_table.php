@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('cash_received')->nullable();
             $table->integer('change')->nullable();
             $table->foreignId('paid_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('paid_at');
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
     }

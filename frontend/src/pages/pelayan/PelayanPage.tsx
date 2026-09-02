@@ -7,6 +7,7 @@ import { TopNavBar } from '@/components/TopNavBar'
 import { TableSelect } from './TableSelect'
 import { WaiterOrder } from './WaiterOrder'
 import { OrderList } from './OrderList'
+import { QrisPay } from '@/components/QrisPay'
 
 type View = 'tables' | 'order' | 'orders'
 
@@ -20,6 +21,12 @@ export function PelayanPage() {
   const [selectedTable, setSelectedTable] = useState<DiningTable | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
+  const [payOpen, setPayOpen] = useState(false)
+  const [payRef, setPayRef] = useState('')
+  const [payQr, setPayQr] = useState<string | null>(null)
+  const [payGateway, setPayGateway] = useState('mock')
+  const [payAmount, setPayAmount] = useState(0)
+  const [payOrderNumber, setPayOrderNumber] = useState('')
 
   function loadOrders() {
     api.getOrders().then(setOrders).catch(() => {
@@ -64,7 +71,7 @@ export function PelayanPage() {
     const map: Record<number, number> = {}
     for (const order of orders) {
       if (order.tableId == null) continue
-      if (!['menunggu-konfirmasi', 'baru', 'diproses'].includes(order.status)) continue
+      if (!['menunggu', 'diproses'].includes(order.status)) continue
       const ts = new Date(order.createdAt).getTime()
       if (Number.isFinite(ts) && (map[order.tableId] == null || ts < map[order.tableId])) {
         map[order.tableId] = ts
@@ -82,18 +89,35 @@ export function PelayanPage() {
   async function handleSubmitOrder() {
     if (!selectedTable || cart.lines.length === 0) return
     try {
-      await api.createOrder({
+      const order = await api.createOrder({
         tableId: selectedTable.id,
         source: 'pelayan',
         items: cart.lines,
       })
       cart.clear()
-      setView('orders')
-      loadOrders()
-      loadTables()
+      setPayAmount(order.total)
+      setPayOrderNumber(order.orderNumber)
+      try {
+        const checkout = await api.checkoutOrder(order.id)
+        setPayRef(checkout.reference)
+        setPayQr(checkout.qrContent)
+        setPayGateway(checkout.gateway)
+      } catch {
+        setPayRef(String(order.id))
+        setPayQr(null)
+        setPayGateway('mock')
+      }
+      setPayOpen(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
     }
+  }
+
+  async function handlePaid() {
+    setPayOpen(false)
+    setView('orders')
+    loadOrders()
+    loadTables()
   }
 
   async function handleDeliver(orderId: number) {
@@ -145,6 +169,25 @@ export function PelayanPage() {
           onSelect={selectTable}
           onViewOrders={() => setView('orders')}
         />
+      )}
+      {payOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-bg-surface p-5 shadow-xl">
+            <div className="mb-4 text-center">
+              <div className="text-caption font-semibold uppercase tracking-wider text-text-secondary">
+                Minta Pelanggan Memindai QRIS
+              </div>
+              <div className="font-num text-heading font-bold text-accent-primary">{payOrderNumber}</div>
+            </div>
+            <QrisPay
+              reference={payRef || String(payAmount)}
+              qrContent={payQr}
+              gateway={payGateway}
+              total={payAmount}
+              onPaid={handlePaid}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

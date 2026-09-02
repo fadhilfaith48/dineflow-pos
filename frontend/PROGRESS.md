@@ -49,6 +49,7 @@ Dokumen progres & roadmap pengembangan frontend. **Baca di awal setiap sesi**, u
 | 41 | Panduan deploy Nevacloud (VPS 1GB hemat) | ✅ Selesai | Riset & keputusan hosting: pilih **Nevacloud Nevalite 1GB** (DDR4, 1 vCPU/1GB/20GB, Ubuntu 24.04, **Fixed Term** Rp42.240/bln, bayar QRIS tanpa kartu kredit) untuk backend + Reverb, dengan layanan **gratis eksternal**: Neon (PostgreSQL), Upstash (Redis), Supabase S3 (foto menu), Vercel (frontend), DuckDNS + Let's Encrypt (domain/SSL/`wss`). Keputusan: **1GB cukup untuk 1 proyek** karena DB/Redis/foto di luar VPS (RAM hanya Nginx+PHP+Reverb); upgrade 1GB→2GB via Scale Up bila nanti butuh 2 proyek. `docs/deployment.md` ditambah **§1.Opsi-D** + **§1.Opsi-D-Setup**: panduan lengkap order Nevalite, install (tanpa cPanel/DB/Redis lokal), setup `.env` ikut template produksi `.env.example`, Supervisor (Reverb), Nginx, DuckDNS+certbot, deploy Vercel, verifikasi, troubleshooting RAM 1GB (swap, `pm.max_children`, `QUEUE_CONNECTION=sync`), dan catatan upgrade 2 proyek. Tidak ada perubahan kode aplikasi (murni dokumentasi deploy) |
 | 42 | Konversi mockup Stitch ke React + durasi duduk | ✅ Selesai | Menyesuaikan 4 komponen frontend agar mengikuti 4 mockup Google Stitch (Table Map, Menu Ordering, Active Orders, Customer Self-Order) — **warna tetap token `DESIGN.md`** (tanpa hex baru), **Bahasa Indonesia**, harga **Rupiah**, ikon **SVG**, **tanpa** sidebar/bottom-nav (tetap `TopNavBar`). **(1) `TableSelect`** — kartu persegi + ikon + "N Pax" + **durasi duduk** meja `terisi` (dari order aktif terawal, auto-refresh 30s). **(2) `WaiterOrder`** — kartu menu vertikal → **horizontal** + thumbnail foto item (fallback placeholder). **(3) `OrderList`** — garis status kiri berwarna, elapsed time, note item jadi badge merah, tombol "Antarkan". **(4) `MenuPage`** — grid 2 kolom → kartu horizontal + overlay "Habis". **(5) DRY** — `formatElapsed` pindah ke `lib/format.ts`. Backend: seeder `created_at` order aktif relatif `now()` agar durasi tidak puluhan jam. Verifikasi: build ✓, lint ✓, 18/18 tes FE ✓ |
 | 43 | Perdalam 4 layar ke mockup Stitch (pendalaman lanjutan) | ✅ Selesai | Menambah elemen mockup yang belum teradopsi di step 42 (tetap token DESIGN.md, ikon SVG, Bahasa Indonesia, Rupiah). **(1) `TableSelect`** — nomor meja diperbesar `text-subheading`→`text-heading` (berwarna accent utk `terisi`), label status jadi **pill** (`rounded-full bg-status-*/15`) di bawah kartu. **(2) `OrderList`** — tambah **ikon jam** (SVG) di samping elapsed `Meja X · durasi`. **(3) `WaiterOrder`** — Review Order bar sticky (jumlah item + total + "Lihat & Kirim") **sudah ada**, tidak perlu diubah. **(4) `MenuPage`** — tambah **Featured Card** ("menu pertama" kategori aktif, keputusan user): gambar besar h-48 + badge harga di kanan atas + nama + deskripsi + tombol "Tambah ke Pesanan" lebar (menangani varian & item pedas via SpicePills); daftar reguler pakai `slice(1)` agar unggulan tidak duplikat. Keputusan: **skip** floor tabs & tombol Filter (aplikasi single-outlet tanpa data floor); tombol OrderList tetap satu "Antarkan" (tanpa View Details/Add Note). Verifikasi: build ✓, lint ✓, 18/18 tes FE ✓ |
+| 44 | Bayar di Muka (Prepay) semua kanal + integrasi DOKU QRIS | ✅ Selesai | D1 backend ✅ (22 tes) & D2 frontend ✅ (tsc/build/lint/17 tes). Alur: semua kanal order dibuat `menunggu` (belum ke dapur) → bayar di muka (kasir: Tunai ATAU QRIS DOKU; self-order & pelayan: QRIS DOKU — pelayan tunjukkan QR di HP/tablet) → status `paid` → order `diproses` (KDS) + meja `terisi`. Tombol "Konfirmasi" kasir **dihapus** (lunas → otomatis ke dapur). Tambah endpoint/aksi `complete` (Tandai Selesai) → `selesai` + meja `perlu-dibersihkan`. `PAYMENT_DRIVER=mock` default (demo tanpa kredensial DOKU); switch ke `doku` cukup 1 env + set kredensial. D3 (deploy DOKU produksi/sandbox) belum dimulai |
 
 ## 2. Cara Kerja (konvensi wajib)
 
@@ -74,13 +75,14 @@ Dokumen progres & roadmap pengembangan frontend. **Baca di awal setiap sesi**, u
 | `services/mockApi.ts` | Implementasi `Api` in-memory (state module-level agar lintas halaman berbagi data) — kini hanya dipakai tes service layer |
 | `services/httpApi.ts` | **Implementasi `Api` aktif** memakai fetch ke Laravel (unwrap `{data}`, Bearer token, 401) |
 | `services/echo.ts` | **Klien real-time** Laravel Echo + Reverb (protokol Pusher); subscribe channel `orders` & `order.{orderNumber}`. Wajib `cluster:'mt1'` (agar pusher-js tidak error) & `namespace:''` (agar nama event cocok dengan `broadcastAs()` server) |
-| `services/mockApi.test.ts` | Tes service layer: login, createOrder (status + pajak), confirmOrder, processPayment (meja), getSalesSummary |
+| `services/mockApi.test.ts` | Tes service layer: login, createOrder (prepay `menunggu` + pajak), QRIS checkout+mock-paid → `diproses` + meja `terisi`, processPayment tunai prepay, getSalesSummary |
 | `context/AuthContext.tsx` | Sesi login (mock), simpan user aktif di localStorage |
 | `hooks/useCart.ts` | State keranjang bersama (Kasir, Pelayan, Menu QR): add(increment)/decrement/note/clear + summary; key compound `menuItemId-variantName` untuk dukung varian |
 | `lib/format.ts` | `formatRupiah()` |
 | `lib/receipt.ts` | `orderToReceipt(order, payment, settings)` — bangun data struk dari order; dipakai Kasir (bayar & cetak ulang) dan Admin |
 | `lib/roles.ts` | Label & aturan role (`roleLabel`, role yang boleh akses tiap halaman) |
 | `components/Button.tsx` | Tombol primary/outline/danger, ukuran sm/md/lg |
+| `components/QrisPay.tsx` | Komponen QRIS bayar di muka (self-order, pelayan, kasir): tampil QR + polling `getPaymentStatus` tiap 3s + tombol "Saya Sudah Bayar (Demo)" bila driver `mock`; bila `paid` → `onPaid` |
 | `components/Card.tsx` | Kartu dasar (radius 12, shadow level 1) |
 | `components/StatusBadge.tsx` | Badge pill status (new/cooking/ready/done/danger/neutral/cancelled), bg 15% + teks warna solid |
 | `components/CategoryTabs.tsx` | Tab kategori menu (aktif = biru) |
@@ -91,25 +93,25 @@ Dokumen progres & roadmap pengembangan frontend. **Baca di awal setiap sesi**, u
 | `components/ReceiptModal.tsx` | Struk digital (dipakai Kasir & Admin): cetak printer + salin teks struk — dipindah dari `pages/kasir/` saat fitur riwayat; kini gaya thermal 80mm (lebar tetap, tinggi mengikuti item), header logo → nama di bawah logo → alamat, cetak terpusat tanpa header/footer browser |
 | `pages/PlaceholderPage.tsx` | Halaman kosong untuk rute placeholder/404 |
 | `pages/auth/LoginPage.tsx` | Halaman login mock (username = role, password 1234) |
-| `pages/kasir/KasirPage.tsx` | Orkestrasi Kasir (load data, filter, bayar nota/cart, struk, konfirmasi pesanan masuk); subscribe channel `orders` (order & meja) + `menu` (reload menu saat berubah) + `settings` (PPN/logo/nama live) |
-| `pages/kasir/KasirQueuePanel.tsx` | Panel queue Kasir ber-tab pill "Pesanan Aktif" (sub-tab "Masuk" order `menunggu-konfirmasi` + Konfirmasi + Batalkan & "Nota" order `diproses` + Bayar + Batalkan) dan "Riwayat" (order `selesai`/`dibatalkan`, filter Hari ini/Semua, badge Batal untuk dibatalkan, klik baris → cetak ulang), badge jumlah |
+| `pages/kasir/KasirPage.tsx` | Orkestrasi Kasir (load data, filter, bayar di muka cart/nota → tunai/QRIS DOKU, struk, Tandai Selesai); subscribe channel `orders` (order & meja) + `menu` (reload menu saat berubah) + `settings` (PPN/logo/nama live) |
+| `pages/kasir/KasirQueuePanel.tsx` | Panel queue Kasir ber-tab pill "Pesanan Aktif" (sub-tab "Masuk" order `menunggu` + tombol "Bayar di Muka" + Batalkan & "Nota" order `diproses` + badge "Lunas" + "Tandai Selesai" + Batalkan) dan "Riwayat" (order `diproses`/`selesai`/`dibatalkan`, filter Hari ini/Semua, badge Batal untuk dibatalkan, klik baris → cetak ulang), badge jumlah |
 | `pages/kasir/MenuPanel.tsx` | Kolom kiri Kasir: kategori + cari + daftar menu (pill varian Reguler/Besar untuk item yang punya varian) |
-| `pages/kasir/CartPanel.tsx` | Kolom kanan Kasir: keranjang nota (tampil varian di samping nama item) + subtotal/pajak/total + Hold/Bayar |
-| `pages/kasir/PaymentModal.tsx` | Modal pembayaran tunai (input uang + kembalian) / QRIS (simulasi QR dinamis EMVCo + status menunggu → sukses) |
+| `pages/kasir/CartPanel.tsx` | Kolom kanan Kasir: keranjang nota (tampil varian di samping nama item) + subtotal/pajak/total + Hold/Bayar di Muka |
+| `pages/kasir/PaymentModal.tsx` | Modal bayar di muka kasir: Tunai (input uang + kembalian) / QRIS DOKU dinamis (`checkoutOrder` → `QrisPay`: polling status + tombol demo for driver `mock`) |
 | `pages/kasir/TablePickerModal.tsx` | Pilih meja / take-away sebelum bayar (status per meja) |
-| `pages/pelayan/PelayanPage.tsx` | Orkestrasi Pelayan: view tables → order → orders, dengan `TopNavBar` (logout/navigasi) |
+| `pages/pelayan/PelayanPage.tsx` | Orkestrasi Pelayan: view tables → order → orders, dengan `TopNavBar` (logout/navigasi); setelah submit order muncul overlay `QrisPay` (QRIS DOKU bayar di muka, QR ditunjukkan ke pelanggan) |
 | `pages/pelayan/TableSelect.tsx` | Peta meja (status Kosong/Terisi/Perlu Dibersihkan) |
-| `pages/pelayan/WaiterOrder.tsx` | Input pesanan mobile + bottom sheet keranjang + kirim ke dapur |
+| `pages/pelayan/WaiterOrder.tsx` | Input pesanan mobile + bottom sheet keranjang + kirim → bayar QRIS di muka |
 | `pages/pelayan/OrderList.tsx` | Daftar pesanan + tandai diantar |
-| `pages/kitchen/KitchenPage.tsx` | KDS: grid ticket + polling 5s, dengan `TopNavBar` (logout/navigasi) |
+| `pages/kitchen/KitchenPage.tsx` | KDS: grid ticket (hanya order `diproses` = sudah lunas), dengan `TopNavBar` (logout/navigasi) |
 | `pages/kitchen/OrderTicket.tsx` | Kartu ticket besar, border kiri warna status, tombol Mulai Masak/Siap Saji; tampilkan varian di samping nama item |
-| `pages/menu/MenuPage.tsx` | Pesan mandiri publik: katalog (pill varian), keranjang (tampil varian), tracking, validasi meja; subscribe channel `menu` (reload katalog saat menu berubah) & `order.{orderNumber}` (tracking) |
+| `pages/menu/MenuPage.tsx` | Pesan mandiri publik: katalog (pill varian), keranjang ("Bayar di Muka"), view pembayaran (`QrisPay`) → tracking, validasi meja; subscribe channel `menu` (reload katalog saat menu berubah) & `order.{orderNumber}` (tracking) |
 | `pages/admin/AdminPage.tsx` | Tab Manajemen Menu / Meja / Staf / Laporan Penjualan |
 | `pages/admin/MenuManagement.tsx` | Kelola menu: tambah/hapus, edit nama/kategori/deskripsi/foto, ubah harga, tandai tersedia/habis; modal edit kini termasuk CRUD varian (nama, harga, aktif) |
 | `pages/admin/TableManagement.tsx` | Kelola meja: tambah/hapus, atur status, lihat QR per meja |
 | `pages/admin/StaffManagement.tsx` | Kelola staf: tambah, ubah role, hapus |
 | `pages/admin/SalesReport.tsx` | Laporan: kartu total/transaksi/rata-rata + menu terlaris, filter periode (harian/7 hari/bulan ini/semua) |
-| `pages/admin/TransactionHistory.tsx` | Riwayat transaksi: daftar order `selesai`/`dibatalkan` (tanggal+jam, no.order, meja/sumber, item, total, metode/status), filter rentang tanggal + cari no.order + dropdown metode + dropdown status, klik baris → cetak ulang struk; real-time subscribe `orders` action=`paid`/`voided` + `settings` (struk cetak ulang selalu pakai identitas terbaru) |
+| `pages/admin/TransactionHistory.tsx` | Riwayat transaksi: daftar order `diproses`/`selesai`/`dibatalkan` (sudah bayar; `menunggu` belum lunas tidak tampil) — tanggal+jam, no.order, meja/sumber, item, total, metode/status, filter rentang tanggal + cari no.order + dropdown metode + dropdown status, klik baris → cetak ulang struk; real-time subscribe `orders` action=`paid`/`voided` + `settings` |
 
 Catatan: `mockApi.ts` memakai state module-level (`orders`, `menuItems`) sehingga pesanan baru dari satu halaman ikut terlihat di halaman lain dalam 1 sesi browser. Saat pindah ke Laravel, ini menjadi data server.
 
@@ -138,6 +140,7 @@ Urutan dibagi dua: **A) fitur frontend murni (tidak butuh backend, bisa dikerjak
 
 ## 5. Log Keputusan
 
+- **Bayar di Muka (Prepay) — keputusan user**: semua kanal (self-order, kasir, pelayan) WAJIB bayar di muka sebelum dapur memasak. Semua order dibuat `menunggu` (tidak masuk KDS); pindah ke `diproses` + meja `terisi` HANYA setelah pembayaran `paid`. Kanal kasir pilih **Tunai ATAU QRIS DOKU**; self-order & pelayan **QRIS DOKU** saja (pelayan tunjukkan QR di HP/tablet ke pelanggan). Tombol "Konfirmasi" kasir DIHAPUS (lunas otomatis ke dapur). `selesai` kini dicapai lewat aksi baru "Tandai Selesai" (`complete`) karena pembayaran sudah di muka. Vendor: **DOKU** (QRIS, sandbox untuk demo PKL) lewat interface `PaymentGateway` (`DokuGateway` + `MockQrisGateway`), switch lewat `PAYMENT_DRIVER` di `.env` — default `mock` agar berfungsi penuh tanpa kredensial; ke `doku` cukup 1 env + set key.
 - **Desain**: layout ikuti mockup Stitch, tetapi warna/komponen wajib dari DESIGN.md (putih + aksen biru `#2563EB`) — bukan gaya industrial mockup (diputuskan user).
 - **Struktur app**: satu SPA React dengan routing, bukan 4 aplikasi terpisah (user pilih rekomendasi).
 - **Sumber data**: mock dulu via `MockApi`, service layer siap ditukar ke Laravel (user pilih).
