@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
 
     private function seedMenu(): void
     {
-        $categories = ['Makanan', 'Minuman', 'Dessert', 'Special'];
+        $categories = ['Makanan', 'Minuman', 'Penutup', 'Spesial'];
         foreach ($categories as $i => $name) {
             MenuCategory::updateOrCreate(['name' => $name], ['order' => $i + 1]);
         }
@@ -72,14 +72,14 @@ class DatabaseSeeder extends Seeder
             ['#M11', 'Es Kelapa Muda', '', 15000, 'Minuman'],
             ['#M12', 'Kopi Hitam', '', 8000, 'Minuman'],
             ['#M13', 'Teh Hangat', '', 4000, 'Minuman'],
-            // Dessert
-            ['#M14', 'Pisang Goreng', 'Pisang goreng dengan cokelat dan keju', 12000, 'Dessert'],
-            ['#M15', 'Es Krim Vanilla', '', 10000, 'Dessert'],
-            ['#M16', 'Puding Cokelat', '', 9000, 'Dessert'],
-            ['#M17', 'Roti Bakar', 'Roti bakar isi cokelat keju', 13000, 'Dessert'],
-            // Special
-            ['#M18', 'Paket Nasi Ayam + Es Teh', 'Hemat: ayam bakar + nasi + es teh manis', 25000, 'Special'],
-            ['#M19', 'Paket Nasi Goreng + Es Jeruk', 'Hemat: nasi goreng spesial + es jeruk', 23000, 'Special'],
+            // Penutup
+            ['#M14', 'Pisang Goreng', 'Pisang goreng dengan cokelat dan keju', 12000, 'Penutup'],
+            ['#M15', 'Es Krim Vanilla', '', 10000, 'Penutup'],
+            ['#M16', 'Puding Cokelat', '', 9000, 'Penutup'],
+            ['#M17', 'Roti Bakar', 'Roti bakar isi cokelat keju', 13000, 'Penutup'],
+            // Spesial
+            ['#M18', 'Paket Nasi Ayam + Es Teh', 'Hemat: ayam bakar + nasi + es teh manis', 25000, 'Spesial'],
+            ['#M19', 'Paket Nasi Goreng + Es Jeruk', 'Hemat: nasi goreng spesial + es jeruk', 23000, 'Spesial'],
         ];
 
         foreach ($items as $item) {

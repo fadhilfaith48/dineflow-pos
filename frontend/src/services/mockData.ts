@@ -15,8 +15,8 @@ export const mockUsers: User[] = [
 export const mockCategories: MenuCategory[] = [
   { id: 1, name: 'Makanan', order: 1 },
   { id: 2, name: 'Minuman', order: 2 },
-  { id: 3, name: 'Dessert', order: 3 },
-  { id: 4, name: 'Special', order: 4 },
+  { id: 3, name: 'Penutup', order: 3 },
+  { id: 4, name: 'Spesial', order: 4 },
 ]
 
 export const mockMenuItems: MenuItem[] = [
@@ -35,12 +35,12 @@ export const mockMenuItems: MenuItem[] = [
   { id: 11, code: '#M11', name: 'Es Kelapa Muda', description: '', price: 15000, categoryId: 2, available: true },
   { id: 12, code: '#M12', name: 'Kopi Hitam', description: '', price: 8000, categoryId: 2, available: true },
   { id: 13, code: '#M13', name: 'Teh Hangat', description: '', price: 4000, categoryId: 2, available: true },
-  // Dessert
+  // Penutup
   { id: 14, code: '#M14', name: 'Pisang Goreng', description: 'Pisang goreng dengan cokelat dan keju', price: 12000, categoryId: 3, available: true },
   { id: 15, code: '#M15', name: 'Es Krim Vanilla', description: '', price: 10000, categoryId: 3, available: true },
   { id: 16, code: '#M16', name: 'Puding Cokelat', description: '', price: 9000, categoryId: 3, available: true },
   { id: 17, code: '#M17', name: 'Roti Bakar', description: 'Roti bakar isi cokelat keju', price: 13000, categoryId: 3, available: true },
-  // Special
+  // Spesial
   { id: 18, code: '#M18', name: 'Paket Nasi Ayam + Es Teh', description: 'Hemat: ayam bakar + nasi + es teh manis', price: 25000, categoryId: 4, available: true },
   { id: 19, code: '#M19', name: 'Paket Nasi Goreng + Es Jeruk', description: 'Hemat: nasi goreng spesial + es jeruk', price: 23000, categoryId: 4, available: true },
 ]
