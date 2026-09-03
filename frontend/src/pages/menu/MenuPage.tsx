@@ -323,6 +323,9 @@ export function MenuPage() {
           <FeaturedCard item={visibleItems[0]} onAdd={(m, v, l) => cart.addItem(m, v, l)} />
         )}
         <ul className="flex flex-col gap-3 mt-3">
+          {visibleItems.length === 0 && (
+            <li className="py-10 text-center text-body text-text-secondary">Tidak ada menu ditemukan.</li>
+          )}
           {visibleItems.slice(1).map((item) => {
             const hasVariants = item.variants && item.variants.length > 0
             return (
