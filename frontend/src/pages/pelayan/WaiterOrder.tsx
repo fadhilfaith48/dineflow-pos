@@ -140,7 +140,7 @@ export function WaiterOrder({
                               : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
                           }`}
                         >
-                          {v.name} {formatRupiah(v.price)}
+                          {v.name} <span className="font-num">{formatRupiah(v.price)}</span>
                         </button>
                       ))}
                     </div>

@@ -375,7 +375,7 @@ export function MenuManagement({
                           <div className="mt-0.5 flex flex-wrap gap-1">
                             {item.variants.map((v) => (
                               <span key={v.id} className="rounded-lg border border-accent-primary/30 bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent-primary">
-                                {v.name} {formatRupiah(v.price)}
+                                {v.name} <span className="font-num">{formatRupiah(v.price)}</span>
                               </span>
                             ))}
                           </div>
