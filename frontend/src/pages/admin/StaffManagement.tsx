@@ -124,11 +124,11 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        if (window.confirm(`Reset password ${user.name} ke 1234?`)) onResetPassword(user.id)
+                        if (window.confirm(`Atur ulang password ${user.name} ke 1234?`)) onResetPassword(user.id)
                       }}
                       className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-accent-primary hover:bg-accent-tint"
                     >
-                      Reset
+                      Atur Ulang
                     </button>
                     <button
                       onClick={() => {

@@ -11,7 +11,7 @@ export function orderToReceipt(order: Order, payment: Order['payment'], settings
   const tax = typeof payment?.ppnAmount === 'number' ? payment.ppnAmount : Math.round(order.total - subtotal)
   return {
     orderNumber: order.orderNumber,
-    tableLabel: order.tableNumber ? `Meja ${order.tableNumber}` : 'Take Away',
+    tableLabel: order.tableNumber ? `Meja ${order.tableNumber}` : 'Bawa Pulang',
     createdAt: order.createdAt,
     items: order.items.map((item) => {
       const parts = [item.name]

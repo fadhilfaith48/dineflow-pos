@@ -173,7 +173,7 @@ export function SalesReport() {
           disabled={exporting}
           className="rounded-lg bg-bg-surface px-4 py-2 text-body font-semibold text-text-secondary transition-colors hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none"
         >
-          {exporting ? 'Export...' : 'Export CSV'}
+          {exporting ? 'Mengekspor...' : 'Ekspor CSV'}
         </button>
       </div>
 

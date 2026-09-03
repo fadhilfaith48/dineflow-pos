@@ -206,7 +206,7 @@ export function AdminPage() {
                 await api.updateUser(id, { role })
                 loadUsers()
               } catch (e) {
-                setError(e instanceof Error ? e.message : 'Gagal mengubah role staf.')
+                setError(e instanceof Error ? e.message : 'Gagal mengubah peran staf.')
               }
             }}
             onDelete={async (id) => {
@@ -222,7 +222,7 @@ export function AdminPage() {
                 await api.resetUserPassword(id)
                 loadUsers()
               } catch (e) {
-                setError(e instanceof Error ? e.message : 'Gagal mereset password staf.')
+                setError(e instanceof Error ? e.message : 'Gagal mengatur ulang password staf.')
               }
             }}
           />

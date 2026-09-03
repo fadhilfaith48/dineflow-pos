@@ -180,7 +180,7 @@ export function CartPanel({
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant="outline" onClick={onHold} disabled={lines.length === 0}>
-            Hold
+            Tahan
           </Button>
           <Button onClick={onPayAndSend} disabled={lines.length === 0}>
             Bayar di Muka

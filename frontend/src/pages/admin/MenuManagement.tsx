@@ -229,7 +229,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
                     <input
                       value={v.name}
                       onChange={(e) => updateVariant(i, 'name', e.target.value)}
-                      placeholder="Nama (e.g. Reguler)"
+                      placeholder="Nama (mis. Reguler)"
                       className="flex-1 rounded-md border border-border-subtle px-2 py-1 text-caption focus:border-accent-primary focus:outline-none"
                     />
                     <input
@@ -433,7 +433,7 @@ export function MenuManagement({
                             onClick={() => setEditingItem(item)}
                             className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-primary hover:bg-bg-secondary"
                           >
-                            Edit
+                            Ubah
                           </button>
                           <button
                             onClick={() => startEdit(item)}
@@ -481,7 +481,7 @@ export function MenuManagement({
       )}
       {editingItem && (
         <MenuFormModal
-          title={`Edit ${editingItem.name}`}
+          title={`Ubah ${editingItem.name}`}
           initial={editFormData}
           categories={categories}
           onClose={() => setEditingItem(null)}

@@ -9,7 +9,7 @@ import { ReceiptModal } from '@/components/ReceiptModal'
 const sourceLabel: Record<Order['source'], string> = {
   kasir: 'Kasir',
   pelayan: 'Pelayan',
-  'self-order': 'Self-Order',
+  'self-order': 'Pesan Mandiri',
 }
 
 type MethodFilter = 'semua' | PaymentMethod
@@ -142,7 +142,7 @@ export function TransactionHistory() {
             onClick={resetFilters}
             className="rounded-lg bg-bg-surface px-3 py-2 text-caption font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
           >
-            Reset filter
+            Atur Ulang Filter
           </button>
         )}
       </div>
@@ -150,7 +150,7 @@ export function TransactionHistory() {
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
         <div className={`${gridCols} border-b border-border-subtle py-3 text-caption font-bold uppercase tracking-wide text-text-secondary`}>
           <span>Waktu</span>
-          <span>No. Order</span>
+          <span>No. Pesanan</span>
           <span>Meja/Sumber</span>
           <span>Item</span>
           <span className="text-right">Total</span>

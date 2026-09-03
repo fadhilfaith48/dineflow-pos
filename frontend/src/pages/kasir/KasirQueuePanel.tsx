@@ -7,7 +7,7 @@ import { KasirScanBox } from '@/components/KasirScanBox'
 const sourceLabel: Record<Order['source'], string> = {
   kasir: 'Kasir',
   pelayan: 'Pelayan',
-  'self-order': 'Self-Order',
+  'self-order': 'Pesan Mandiri',
 }
 
 interface KasirQueuePanelProps {

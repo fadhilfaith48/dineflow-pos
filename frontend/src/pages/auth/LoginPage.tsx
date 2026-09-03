@@ -29,7 +29,7 @@ export function LoginPage() {
       const user = await login(username.trim(), password)
       navigate(roleHome[user.role], { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login gagal')
+      setError(err instanceof Error ? err.message : 'Masuk gagal')
     } finally {
       setLoading(false)
     }

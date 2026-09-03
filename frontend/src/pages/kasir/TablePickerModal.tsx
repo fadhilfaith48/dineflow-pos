@@ -43,8 +43,8 @@ export function TablePickerModal({ open, tables, selectedTableId, onSelect, onCl
                 : 'border-border-subtle text-text-secondary hover:bg-bg-secondary'
             }`}
           >
-            <span className="text-caption font-bold uppercase tracking-wide">Take</span>
-            <span className="text-caption font-bold uppercase tracking-wide">Away</span>
+            <span className="text-caption font-bold uppercase tracking-wide">Bawa</span>
+            <span className="text-caption font-bold uppercase tracking-wide">Pulang</span>
           </button>
           {tables.map((table) => {
             const s = statusStyle[table.status]

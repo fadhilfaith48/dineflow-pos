@@ -406,7 +406,7 @@ export function MenuPage() {
           className="flex h-14 w-full items-center justify-between rounded-xl bg-accent-primary px-5 text-text-on-accent shadow-modal transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
         >
           <span className="font-num text-body font-bold">{cart.itemCount} item</span>
-          <span className="text-subheading font-bold">Lihat Pesanan</span>
+          <span className="text-subheading font-bold">Lihat Keranjang</span>
           <span className="font-num text-body font-bold">{formatRupiah(cart.summary.total)}</span>
         </button>
       </div>
@@ -415,7 +415,7 @@ export function MenuPage() {
         <div className="fixed inset-0 z-30 flex justify-center bg-text-primary/40">
           <div className="flex w-full max-w-md flex-col bg-bg-surface">
             <header className="flex items-center justify-between border-b border-border-subtle px-4 py-4">
-              <h2 className="text-heading font-semibold text-text-primary">Pesanan Anda</h2>
+              <h2 className="text-heading font-semibold text-text-primary">Keranjang Anda</h2>
               <button
                 onClick={() => setView('menu')}
                 aria-label="Tutup"

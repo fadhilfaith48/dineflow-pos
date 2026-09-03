@@ -226,7 +226,7 @@ export function KasirPage() {
           tax={cart.summary.tax}
           total={cart.summary.total}
           taxRatePercent={settings?.taxRate ?? 10}
-          tableLabel={selectedTable ? `Meja ${selectedTable.number}` : 'Take Away'}
+          tableLabel={selectedTable ? `Meja ${selectedTable.number}` : 'Bawa Pulang'}
           onSelectTable={() => setShowTablePicker(true)}
           onIncrement={cart.increment}
           onDecrement={cart.decrement}

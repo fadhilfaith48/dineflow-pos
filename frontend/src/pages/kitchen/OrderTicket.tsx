@@ -45,7 +45,7 @@ export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketPr
             #{order.orderNumber.replace('ORD-', '')}
           </div>
           <div className="mt-1 text-kitchen-body font-semibold text-text-secondary">
-            Meja {order.tableNumber ?? 'Take Away'}
+            Meja {order.tableNumber ?? 'Bawa Pulang'}
           </div>
         </div>
         <div className="text-right">
