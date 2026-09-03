@@ -187,7 +187,12 @@ export function PelayanPage() {
               onPaid={handlePaid}
             />
             <button
-              onClick={() => setPayOpen(false)}
+              onClick={() => {
+                setPayOpen(false)
+                setView('tables')
+                setSelectedTable(null)
+                cart.clear()
+              }}
               className="mt-4 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
             >
               Batal

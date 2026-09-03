@@ -55,6 +55,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 3.5 | Tombol **Daftar Pesanan** → tandai **diantar** | Status item jadi diantar (badge item + label "Sudah diantar") | ✅ |
 | 3.6 | Navbar ada tombol **Keluar** | Klik → kembali ke `/login` | ✅ |
 | 3.7 | Kirim & Bayar QRIS → klik **"Saya Sudah Bayar (Demo)"** | Pindah ke **Daftar Pesanan** tanpa error/halaman putih; order `menunggu`→`diproses`, meja jadi terisi (real-time) | ⬜ |
+| 3.7b | Kirim & Bayar QRIS → klik **"Batal"** (tutup overlay tanpa bayar) | Kembali ke **peta meja**, layar bersih (bukan tersangkut "Keranjang kosong"); order tetap `menunggu` dan muncul di tab **Masuk** kasir | ⬜ |
 
 ---
 

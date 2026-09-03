@@ -71,10 +71,6 @@ Sistem Kasir & Manajemen Pesanan Restoran ini adalah platform POS (Point of Sale
 
 ### Di Luar Ruang Lingkup (Out of Scope — Fase Ini)
 - Integrasi payment gateway online penuh untuk pembayaran sebelum datang ke resto (fase awal fokus pembayaran di kasir saat di tempat)
-- Sistem reservasi meja online (booking meja dari jauh-jauh hari) — fase lanjutan
-- Program loyalty/membership pelanggan tetap
-- Manajemen inventori bahan baku mendetail (fase awal cukup status "tersedia/habis" per menu, bukan tracking stok bahan mentah per gram/kg)
-- Multi-cabang/multi-outlet dalam satu sistem terpusat (fase awal untuk 1 outlet/cabang)
 
 ---
 
