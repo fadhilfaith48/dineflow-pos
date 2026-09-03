@@ -165,6 +165,8 @@ Daftar tugas proyek DineFlow POS. **Sumber kebenaran pekerjaan** selain `PROGRES
 - [x] Verifikasi: `npm run build` + `lint` + `npm test` (tsc/build/lint ✓, **22 tes FE ✓**), **23 tes backend ✓** (72 assertion); E2E curl kasir bayar tunai → `diproses` + payment berisi data benar.
 
 ### D3. Deployment online untuk penilaian PKL (Opsi A — DOKU Sandbox)
+- [x] **Fix `DokuGateway::getStatus`** (prasyarat D3): dulu `getStatus` kirim `invoice_number => reference` sedangkan `createPayment` kirim `invoice_number => orderNumber` → DOKU tak menemukan invoice → status selalu `pending` → QRIS tak auto-confirm. Interface diubah jadi `getStatus($reference, $invoiceNumber)`, controller meneruskan `order_number`. Backend 23/23 ✓.
+- [x] **Tombol Batal overlay QRIS Pelayan**: sebelumnya QrisPay mock cuma punya "Saya Sudah Bayar (Demo)" → pelayan terjebak bila pelanggan tak jadi bayar. Kini ada tombol "Batal" → tutup overlay, order kembali `menunggu` (tetap di tab Masuk kasir). FE lint/build/24 tes ✓.
 - [ ] Ikuti `docs/deployment.md` (Vercel frontend + VPS backend + DuckDNS + SSL) atau pilih jalur §0.
 - [ ] `.env` server: `PAYMENT_DRIVER=doku`, `DOKU_CLIENT_ID`/`DOKU_SECRET_KEY` (sandbox), `DOKU_SANDBOX=true`.
 - [ ] Uji dari HP asli: scan QR meja → pilih → QRIS DOKU tampil → bayar (simulasi) → otomatis ke dapur.

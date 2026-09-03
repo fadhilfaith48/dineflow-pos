@@ -63,12 +63,11 @@ class DokuGateway implements PaymentGateway
         ];
     }
 
-    public function getStatus(string $reference): string
+    public function getStatus(string $reference, string $invoiceNumber): string
     {
         $response = $this->http()->post('/payment/v1/payment/direct', [
             'order' => [
-                'invoice_number' => $reference,
-                'amount' => null,
+                'invoice_number' => $invoiceNumber,
                 'currency' => 'IDR',
             ],
         ]);

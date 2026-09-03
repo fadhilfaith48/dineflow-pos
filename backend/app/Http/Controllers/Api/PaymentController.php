@@ -123,7 +123,7 @@ class PaymentController extends Controller
 
         if ($payment->status !== 'paid') {
             $gateway = app(PaymentGateway::class);
-            $gatewayStatus = $gateway->getStatus($reference);
+            $gatewayStatus = $gateway->getStatus($reference, $payment->order->order_number);
 
             if ($gatewayStatus === 'paid') {
                 $this->confirmPaid($payment);

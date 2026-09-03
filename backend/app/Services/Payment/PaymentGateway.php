@@ -14,9 +14,11 @@ interface PaymentGateway
     /**
      * Ambil status pembayaran dari gateway.
      *
+     * @param  string  $reference  reference transaksi yang dibuat gateway (createPayment)
+     * @param  string  $invoiceNumber  no. invoice/order (DOKU memakai ini untuk query status)
      * @return 'pending'|'paid'|'failed'|'expired'|'cancelled'
      */
-    public function getStatus(string $reference): string;
+    public function getStatus(string $reference, string $invoiceNumber): string;
 
     /**
      * Tandai pembayaran lunas secara manual (hanya untuk driver Mock / demo).

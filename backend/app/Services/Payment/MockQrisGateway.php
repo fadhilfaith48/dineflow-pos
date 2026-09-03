@@ -28,7 +28,7 @@ class MockQrisGateway implements PaymentGateway
         ];
     }
 
-    public function getStatus(string $reference): string
+    public function getStatus(string $reference, string $invoiceNumber): string
     {
         return 'pending';
     }

@@ -186,6 +186,12 @@ export function PelayanPage() {
               total={payAmount}
               onPaid={handlePaid}
             />
+            <button
+              onClick={() => setPayOpen(false)}
+              className="mt-4 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
+            >
+              Batal
+            </button>
           </div>
         </div>
       )}
