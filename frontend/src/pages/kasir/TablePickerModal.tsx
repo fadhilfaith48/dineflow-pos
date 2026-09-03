@@ -1,5 +1,6 @@
 import type { DiningTable } from '@/types'
 import { Button } from '@/components/Button'
+import { tableStatusLabel } from '@/lib/statusConfig'
 
 interface TablePickerModalProps {
   open: boolean
@@ -62,7 +63,7 @@ export function TablePickerModal({ open, tables, selectedTableId, onSelect, onCl
               >
                 <span className="font-num text-body font-bold">{table.number}</span>
                 <span className="max-w-full break-words text-center text-caption font-semibold uppercase leading-tight tracking-wide">
-                  {table.status === 'perlu-dibersihkan' ? 'Bersihkan' : table.status}
+                  {tableStatusLabel[table.status] ?? table.status}
                 </span>
               </button>
             )

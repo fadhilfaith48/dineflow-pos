@@ -1,21 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Order } from '@/types'
 import { formatRupiah, formatElapsed } from '@/lib/format'
-import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
-
-const orderStatusBadge: Record<Order['status'], BadgeVariant> = {
-  menunggu: 'new',
-  diproses: 'neutral',
-  selesai: 'done',
-  dibatalkan: 'danger',
-}
-
-const orderStatusBar: Record<Order['status'], string> = {
-  menunggu: 'bg-status-new',
-  diproses: 'bg-status-cooking',
-  selesai: 'bg-status-done',
-  dibatalkan: 'bg-status-danger',
-}
+import { StatusBadge } from '@/components/StatusBadge'
+import { itemStatusBadge, orderStatusBadge, orderStatusBar } from '@/lib/statusConfig'
 
 interface OrderListProps {
   orders: Order[]
@@ -88,7 +75,7 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                             </span>
                           )}
                         </div>
-                        <StatusBadge variant={item.status === 'diantar' ? 'done' : item.status === 'siap' ? 'ready' : item.status === 'dimasak' ? 'cooking' : 'new'} label={item.status} />
+                        <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={item.status} />
                       </li>
                     ))}
                   </ul>

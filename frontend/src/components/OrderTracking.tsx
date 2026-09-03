@@ -1,19 +1,6 @@
 import type { Order } from '@/types'
-import { StatusBadge, type BadgeVariant } from '@/components/StatusBadge'
-
-const itemBadge: Record<string, BadgeVariant> = {
-  baru: 'new',
-  dimasak: 'cooking',
-  siap: 'ready',
-  diantar: 'done',
-}
-
-const orderStatusLabel: Record<string, string> = {
-  menunggu: 'Menunggu Pembayaran',
-  diproses: 'Sedang Dimasak',
-  selesai: 'Selesai',
-  dibatalkan: 'Dibatalkan',
-}
+import { StatusBadge } from '@/components/StatusBadge'
+import { itemStatusBadge, orderStatusBadge, orderStatusLabel } from '@/lib/statusConfig'
 
 interface OrderTrackingProps {
   orderNumber: string
@@ -49,7 +36,7 @@ export function OrderTracking({
               Status Pesanan
             </span>
             <StatusBadge
-              variant={orderStatusBadge(order.status)}
+              variant={orderStatusBadge[order.status] ?? 'neutral'}
               label={orderStatusLabel[order.status] ?? order.status}
             />
           </div>
@@ -72,7 +59,7 @@ export function OrderTracking({
                     )}
                   </div>
                 </div>
-                <StatusBadge variant={itemBadge[item.status] ?? 'new'} label={item.status} />
+                <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={item.status} />
               </li>
             ))}
           </ul>
@@ -90,17 +77,4 @@ export function OrderTracking({
       )}
     </main>
   )
-}
-
-function orderStatusBadge(status: string): BadgeVariant {
-  switch (status) {
-    case 'menunggu':
-      return 'new'
-    case 'diproses':
-      return 'cooking'
-    case 'selesai':
-      return 'done'
-    default:
-      return 'new'
-  }
 }
