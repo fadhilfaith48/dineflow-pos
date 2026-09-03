@@ -12,6 +12,8 @@ interface WaiterOrderProps {
   items: MenuItem[]
   activeCategory: number
   onCategoryChange: (id: number) => void
+  search: string
+  onSearchChange: (value: string) => void
   lines: CartLine[]
   itemCount: number
   total: number
@@ -31,6 +33,8 @@ export function WaiterOrder({
   items,
   activeCategory,
   onCategoryChange,
+  search,
+  onSearchChange,
   lines,
   itemCount,
   total,
@@ -65,14 +69,34 @@ export function WaiterOrder({
         </div>
       </header>
 
-      <div className="px-4 pt-3">
+      <div className="flex flex-col gap-3 px-4 pt-3">
         <CategoryTabs categories={categories} activeId={activeCategory} onChange={onCategoryChange} />
+        <div className="relative">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Cari menu..."
+            className="w-full rounded-lg border border-border-subtle bg-bg-surface py-2.5 pl-10 pr-4 text-body placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
+          />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
         <ul className="flex flex-col gap-3">
           {items.length === 0 && (
-            <li className="py-10 text-center text-body text-text-secondary">Tidak ada menu.</li>
+            <li className="py-10 text-center text-body text-text-secondary">Tidak ada menu ditemukan.</li>
           )}
           {items.map((item) => {
             const hasVariants = item.variants && item.variants.length > 0

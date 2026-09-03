@@ -18,6 +18,7 @@ export function PelayanPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
+  const [search, setSearch] = useState('')
   const [selectedTable, setSelectedTable] = useState<DiningTable | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
@@ -64,8 +65,11 @@ export function PelayanPage() {
   }, [])
 
   const visibleItems = useMemo(() => {
-    return items.filter((item) => item.categoryId === activeCategory)
-  }, [items, activeCategory])
+    const q = search.trim().toLowerCase()
+    return items.filter(
+      (item) => item.categoryId === activeCategory && (q === '' || item.name.toLowerCase().includes(q)),
+    )
+  }, [items, activeCategory, search])
 
   const seatedAt = useMemo(() => {
     const map: Record<number, number> = {}
@@ -148,6 +152,8 @@ export function PelayanPage() {
           items={visibleItems}
           activeCategory={activeCategory ?? 0}
           onCategoryChange={setActiveCategory}
+          search={search}
+          onSearchChange={setSearch}
           lines={cart.lines}
           itemCount={cart.itemCount}
           total={cart.summary.total}

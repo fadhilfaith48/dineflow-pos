@@ -21,6 +21,7 @@ export function MenuPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
+  const [search, setSearch] = useState('')
   const [tableId, setTableId] = useState<number | null>(null)
   const [tableChecked, setTableChecked] = useState(false)
   const [tableNotFound, setTableNotFound] = useState(false)
@@ -81,8 +82,11 @@ export function MenuPage() {
   }, [view, orderNumber, payMethod])
 
   const visibleItems = useMemo(() => {
-    return items.filter((item) => item.categoryId === activeCategory)
-  }, [items, activeCategory])
+    const q = search.trim().toLowerCase()
+    return items.filter(
+      (item) => item.categoryId === activeCategory && (q === '' || item.name.toLowerCase().includes(q)),
+    )
+  }, [items, activeCategory, search])
 
   async function handleSubmitOrder() {
     if (tableId === null || cart.lines.length === 0 || submitting) return
@@ -290,12 +294,32 @@ export function MenuPage() {
         <p className="text-caption text-text-secondary">Scan & pesan sendiri · Meja {table}</p>
       </header>
 
-      <div className="px-4 pt-3">
+      <div className="flex flex-col gap-3 px-4 pt-3">
         <CategoryTabs categories={categories} activeId={activeCategory ?? 0} onChange={setActiveCategory} />
+        <div className="relative">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari menu..."
+            className="w-full rounded-lg border border-border-subtle bg-bg-surface py-2.5 pl-10 pr-4 text-body placeholder:text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
+          />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        {visibleItems.length > 0 && (
+        {visibleItems.length > 0 && search.trim() === '' && (
           <FeaturedCard item={visibleItems[0]} onAdd={(m, v, l) => cart.addItem(m, v, l)} />
         )}
         <ul className="flex flex-col gap-3 mt-3">
