@@ -1,6 +1,6 @@
 import type { Order } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
-import { itemStatusBadge, orderStatusBadge, orderStatusLabel } from '@/lib/statusConfig'
+import { itemStatusBadge, itemStatusLabel, orderStatusBadge, orderStatusLabel } from '@/lib/statusConfig'
 
 interface OrderTrackingProps {
   orderNumber: string
@@ -59,7 +59,7 @@ export function OrderTracking({
                     )}
                   </div>
                 </div>
-                <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={item.status} />
+                <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={itemStatusLabel[item.status] ?? item.status} />
               </li>
             ))}
           </ul>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Order } from '@/types'
 import { formatRupiah, formatElapsed } from '@/lib/format'
 import { StatusBadge } from '@/components/StatusBadge'
-import { itemStatusBadge, orderStatusBadge, orderStatusBar } from '@/lib/statusConfig'
+import { itemStatusBadge, itemStatusLabel, orderStatusBadge, orderStatusBar, orderStatusLabel } from '@/lib/statusConfig'
 
 interface OrderListProps {
   orders: Order[]
@@ -59,7 +59,7 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                         </span>
                       </div>
                     </div>
-                    <StatusBadge variant={orderStatusBadge[order.status] ?? 'neutral'} label={order.status} />
+                    <StatusBadge variant={orderStatusBadge[order.status] ?? 'neutral'} label={orderStatusLabel[order.status] ?? order.status} />
                   </div>
                   <ul className="divide-y divide-border-subtle pl-1">
                     {order.items.map((item) => (
@@ -75,7 +75,7 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                             </span>
                           )}
                         </div>
-                        <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={item.status} />
+                        <StatusBadge variant={itemStatusBadge[item.status] ?? 'new'} label={itemStatusLabel[item.status] ?? item.status} />
                       </li>
                     ))}
                   </ul>

@@ -1,5 +1,6 @@
 import type { Order, OrderItem } from '@/types'
 import { formatRupiah } from '@/lib/format'
+import { itemStatusLabel } from '@/lib/statusConfig'
 
 interface OrderTicketProps {
   order: Order
@@ -82,7 +83,7 @@ export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketPr
                 </div>
                 <div className="shrink-0 text-right">
                   <span className={`inline-flex rounded-full px-4 py-1 text-kitchen-meta font-bold uppercase tracking-wide ${statusBg[item.status]} ${statusText[item.status]}`}>
-                    {item.status}
+                    {itemStatusLabel[item.status] ?? item.status}
                   </span>
                   {next && (
                     <button
