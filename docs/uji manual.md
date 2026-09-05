@@ -146,17 +146,17 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Kasus | Hasil Diharapkan | Status |
 |---|---|---|---|
-| 9.1 | Admin → **Manajemen Menu** → edit menu **Nasi Goreng** (#M01) | Muncul bagian **Varian** dengan 2 baris: Reguler / Besar, masing-masing punya nama, harga, toggle aktif | ⬜ |
+| 9.1 | Admin → **Manajemen Menu** → edit menu **Nasi Goreng** (#M01) | Muncul bagian **Varian** dengan 2 baris: Original / Jumbo, masing-masing punya nama, harga, toggle aktif, dan **foto varian** | ⬜ |
 | 9.2 | Tambah varian baru (klik tombol tambah) | Baris varian kosong baru muncul | ⬜ |
 | 9.3 | Isi nama (mis. "Jumbo") + harga, klik **Simpan** | Varian tersimpan; harga varian pertama ikut dijadikan harga dasar menu | ⬜ |
 | 9.4 | Matikan toggle **aktif** pada satu varian, Simpan | Varian tidak bisa dipilih di Kasir/Pelayan/Menu QR (tidak tampil/disabled) | ⬜ |
 | 9.5 | Hapus satu varian (tombol hapus), Simpan | Varian hilang dari daftar | ⬜ |
-| 9.6 | Buka **Kasir** → kategori Makanan | Item Nasi Goreng menampilkan **pill varian** (Reguler/Besar) | ⬜ |
-| 9.7 | Pilih varian **Besar**, tambah ke keranjang | Masuk keranjang sebagai baris terpisah dengan harga varian (lebih mahal dari Reguler), label "Besar" tampil | ⬜ |
-| 9.8 | Tambah item sama dengan varian berbeda (Reguler + Besar) | Muncul sebagai **2 baris terpisah** di keranjang (bukan digabung) | ⬜ |
+| 9.6 | Buka **Kasir** → kategori Makanan | Item Nasi Goreng menampilkan **pill varian** (Original/Jumbo) | ⬜ |
+| 9.7 | Pilih varian **Jumbo**, tambah ke keranjang | Masuk keranjang sebagai baris terpisah dengan harga varian (lebih mahal dari Original), label "Jumbo" tampil | ⬜ |
+| 9.8 | Tambah item sama dengan varian berbeda (Original + Jumbo) | Muncul sebagai **2 baris terpisah** di keranjang (bukan digabung) | ⬜ |
 | 9.9 | Buka **Pelayan** → pilih meja → tambah item ber-varian | Pill varian muncul & pilihan berfungsi seperti di Kasir | ⬜ |
 | 9.10 | Buka **Menu QR** (`/menu/T1`) → item ber-varian | Pill varian muncul; pilih varian → harga menyesuaikan → kirim pesanan | ⬜ |
-| 9.11 | Lihat struk (Kasir) / OrderTicket (KDS) setelah order ber-varian | Nama item diikuti label varian (mis. "Nasi Goreng - Besar") di struk & ticket | ⬜ |
+| 9.11 | Lihat struk (Kasir) / OrderTicket (KDS) setelah order ber-varian | Nama item diikuti label varian (mis. "Nasi Goreng - Jumbo") di struk & ticket | ⬜ |
 
 ### 9b. Void / Cancel Order (Admin & Kasir)
 
@@ -172,6 +172,19 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 9.19 | Order dibatalkan tidak bisa dibayar | Klik bayar → ditolak / tidak tersedia (guard `dibatalkan`) | ⬜ |
 | 9.20 | Void order via backend langsung (curl `PATCH /api/orders/{id}/void` sebagai kasir/admin) | Response sukses, status jadi `dibatalkan`; event `OrderStatusChanged` action=voided terkirim (bisa dicek listener WS) | ⬜ |
 
+### 9c. Foto per Varian Ukuran (Original/Jumbo)
+
+> Fitur foto berbeda per **ukuran** saja (keputusan user). Rasa "pedas" tetap level 0-5 tanpa foto terpisah. Foto varian diunggah oleh Admin; simpan otomatis ke `storage/menu-items/variants`.
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 9.21 | Admin → edit **Nasi Goreng** → baris varian **Original** → pilih file foto (PNG/JPG/WebP ≤2 MB) → **Simpan** | Foto tersimpan untuk varian Original; tampil di preview baris varian & tabel halaman Admin | ⬜ |
+| 9.22 | Ulangi untuk varian **Jumbo** dengan foto berbeda → Simpan | Kedua varian punya foto berbeda | ⬜ |
+| 9.23 | **Kasir** → kategori Makanan → Nasi Goreng | Foto awal = varian pertama yang punya foto; klik pill **Jumbo** → foto kartu berganti foto Jumbo; klik **Original** → berganti foto Original | ⬜ |
+| 9.24 | Sama di **Pelayan** & **Menu QR** (`/menu/T1`) | Thumbnail berganti mengikuti varian yang diklik (termasuk kartu unggulan/Featured) | ⬜ |
+| 9.25 | Edit varian tanpa ganti foto, klik Simpan | Foto varian yang lama tetap ada (tidak hilang) | ⬜ |
+| 9.26 | Menu ber-varian tanpa foto (item & varian kosong) | Thumbnail memakai placeholder SVG (bukan error gambar) | ⬜ |
+
 ## 10. Level Kepedasan 0-5, PPN Persisten, Void Alasan (fitur PRD batch 2)
 
 > Prasyarat: seed demo menandai #M01 (Nasi Goreng Spesial), #M02 (Ayam Bakar), #M03 (Mie Ayam), #M07 (Nasi Uduk) sebagai item **pedas**. #M01 & #M03 juga ber-varian.
@@ -182,7 +195,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 |---|---|---|---|
 | 10.1 | Buka **Kasir** → kategori Makanan → item **Ayam Bakar** (#M02, pedas tanpa varian) | Tampil pill **Level 0 1 2 3 4 5** (bukan tombol +) | ⬜ |
 | 10.2 | Klik pill **Level 3** pada Ayam Bakar | Masuk keranjang sebagai baris dengan label "Level 3"; harga item dasar | ⬜ |
-| 10.3 | Item pedas **Nasi Goreng** (#M01, pedas + ber-varian) | Pill varian (Reguler/Besar) tampil; klik varian → masuk keranjang (level diatur di keranjang) | ⬜ |
+| 10.3 | Item pedas **Nasi Goreng** (#M01, pedas + ber-varian) | Pill varian (Original/Jumbo) tampil; klik varian → masuk keranjang (level diatur di keranjang) | ⬜ |
 | 10.4 | Di keranjang, baris item pedas menampilkan stepper **Level Pedas − N +** | Klik **+** naik ke 4, **−** turun; batas 0-5 (tombol nonaktif di ujung) | ⬜ |
 | 10.5 | Tambah Ayam Bakar Level 2 lalu tambah lagi Level 4 | Muncul **2 baris terpisah** (level berbeda = baris berbeda); tambah lagi Level 2 → digabung qty baris Level 2 | ⬜ |
 | 10.6 | Kirim order ber-level ke dapur → buka **KDS** (`/kitchen`) | Item ditampilkan "Level N" jelas di ticket agar dapur tepat racik | ⬜ |

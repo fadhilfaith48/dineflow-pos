@@ -40,6 +40,9 @@ interface VariantDraft {
   name: string
   price: number
   available: boolean
+  imageUrl?: string
+  image?: File
+  preview?: string
 }
 
 interface MenuFormModalProps {
@@ -56,7 +59,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     categoryId: initial.categoryId || categories[0]?.id || 0,
   })
   const [variants, setVariants] = useState<VariantDraft[]>(
-    (initial.variants ?? []).map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available ?? true }))
+    (initial.variants ?? []).map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available ?? true, imageUrl: v.imageUrl }))
   )
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -80,6 +83,11 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     setVariants(variants.map((v, i) => (i === index ? { ...v, [field]: value } : v)))
   }
 
+  function handleVariantFile(index: number, file: File | undefined) {
+    if (!file) return
+    setVariants(variants.map((v, i) => (i === index ? { ...v, image: file, preview: URL.createObjectURL(file) } : v)))
+  }
+
   async function handleSave() {
     if (!form.name.trim() || form.price <= 0 || !form.categoryId) {
       setError('Nama, harga, dan kategori wajib diisi.')
@@ -100,7 +108,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     try {
       const variantInputs: MenuVariantInput[] | undefined =
         validVariants.length > 0
-          ? validVariants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available }))
+          ? validVariants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available, imageUrl: v.imageUrl, image: v.image }))
           : undefined
       await onSave({ ...form, variants: variantInputs })
       onClose()
@@ -226,18 +234,37 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
               <div className="mt-2 flex flex-col gap-2">
                 {variants.map((v, i) => (
                   <div key={i} className="flex items-center gap-2 rounded-lg border border-border-subtle p-2">
+                    <label className="relative block h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-md bg-bg-secondary">
+                      {v.preview ?? v.imageUrl ? (
+                        <img src={v.preview ?? v.imageUrl} alt={`Foto ${v.name || 'varian'}`} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center">
+                          <svg className="h-5 w-5 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="m21 15-5-5L5 21" />
+                          </svg>
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(e) => handleVariantFile(i, e.target.files?.[0])}
+                        className="sr-only"
+                      />
+                    </label>
                     <input
                       value={v.name}
                       onChange={(e) => updateVariant(i, 'name', e.target.value)}
-                      placeholder="Nama (mis. Reguler)"
-                      className="flex-1 rounded-md border border-border-subtle px-2 py-1 text-caption focus:border-accent-primary focus:outline-none"
+                      placeholder="Nama (mis. Original)"
+                      className="min-w-0 flex-1 rounded-md border border-border-subtle px-2 py-1 text-caption focus:border-accent-primary focus:outline-none"
                     />
                     <input
                       value={v.price === 0 ? '' : String(v.price)}
                       onChange={(e) => updateVariant(i, 'price', Number(e.target.value.replace(/\D/g, '')) || 0)}
                       inputMode="numeric"
                       placeholder="Harga"
-                      className="w-24 rounded-md border border-border-subtle px-2 py-1 font-num text-caption focus:border-accent-primary focus:outline-none"
+                      className="w-20 rounded-md border border-border-subtle px-2 py-1 font-num text-caption focus:border-accent-primary focus:outline-none"
                     />
                     <label className="flex items-center gap-1 text-[11px] text-text-secondary">
                       <input
@@ -319,6 +346,7 @@ export function MenuManagement({
           name: v.name,
           price: v.price,
           available: v.available,
+          imageUrl: v.imageUrl,
         })),
       }
     : emptyForm

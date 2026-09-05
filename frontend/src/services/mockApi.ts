@@ -248,6 +248,16 @@ export class MockApi implements Api {
       available: true,
       imageUrl: input.imageUrl,
       isSpicy: input.isSpicy,
+      variants: input.variants?.length
+        ? input.variants.map((v, i) => ({
+            id: i + 1,
+            name: v.name,
+            price: v.price,
+            available: v.available ?? true,
+            order: i,
+            imageUrl: v.imageUrl,
+          }))
+        : undefined,
     }
     menuItems = [...menuItems, item]
     return { ...item }

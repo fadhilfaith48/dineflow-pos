@@ -130,14 +130,30 @@ function appendArray(formData: FormData, key: string, items: Record<string, unkn
 }
 
 function toVariantPayload(
-  variants: { name: string; price: number; available?: boolean }[],
+  variants: { name: string; price: number; available?: boolean; imageUrl?: string }[],
 ): Record<string, unknown>[] {
   return variants.map((v, i) => ({
     name: v.name,
     price: v.price,
     available: v.available ?? true,
     order: i,
+    ...(v.imageUrl ? { imageUrl: v.imageUrl } : {}),
   }))
+}
+
+function hasVariantImageFiles(variants?: { image?: File }[]): boolean {
+  return variants?.some((v) => v.image instanceof File) ?? false
+}
+
+function appendVariantImageFiles(
+  formData: FormData,
+  variants: { image?: File }[],
+): void {
+  variants.forEach((v, i) => {
+    if (v.image instanceof File) {
+      formData.append(`variants[${i}][image]`, v.image)
+    }
+  })
 }
 
 export class HttpApi implements Api {
@@ -282,7 +298,7 @@ export class HttpApi implements Api {
     if (variantPayloads) {
       payload.variants = variantPayloads
     }
-    if (input.image instanceof File) {
+    if (input.image instanceof File || hasVariantImageFiles(input.variants)) {
       const formData = new FormData()
       appendScalar(formData, {
         name: input.name,
@@ -294,7 +310,12 @@ export class HttpApi implements Api {
       if (variantPayloads) {
         appendArray(formData, 'variants', variantPayloads)
       }
-      formData.append('image', input.image)
+      if (input.variants) {
+        appendVariantImageFiles(formData, input.variants)
+      }
+      if (input.image instanceof File) {
+        formData.append('image', input.image)
+      }
       return request<{ data: MenuItem }>('/menu-items', {
         method: 'POST',
         body: formData,
@@ -318,7 +339,7 @@ export class HttpApi implements Api {
     if (variants !== undefined) {
       payload.variants = toVariantPayload(variants)
     }
-    if (image instanceof File) {
+    if (image instanceof File || hasVariantImageFiles(variants)) {
       const formData = new FormData()
       formData.append('_method', 'PUT')
       appendScalar(formData, scalars)
@@ -326,7 +347,12 @@ export class HttpApi implements Api {
       if (variants !== undefined && payload.variants) {
         appendArray(formData, 'variants', payload.variants as Record<string, unknown>[])
       }
-      formData.append('image', image)
+      if (variants) {
+        appendVariantImageFiles(formData, variants)
+      }
+      if (image instanceof File) {
+        formData.append('image', image)
+      }
       return request<{ data: MenuItem }>(`/menu-items/${id}`, {
         method: 'POST',
         body: formData,

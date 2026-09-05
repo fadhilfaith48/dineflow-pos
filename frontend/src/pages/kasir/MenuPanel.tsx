@@ -1,7 +1,9 @@
 import type { MenuCategory, MenuItem, MenuItemVariant } from '@/types'
+import { useState } from 'react'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { SpicePills } from '@/components/SpicePills'
 import { formatRupiah } from '@/lib/format'
+import { displayPhoto } from '@/lib/menuPhoto'
 
 interface MenuPanelProps {
   categories: MenuCategory[]
@@ -22,6 +24,7 @@ export function MenuPanel({
   onSearchChange,
   onAdd,
 }: MenuPanelProps) {
+  const [selectedVariant, setSelectedVariant] = useState<Record<number, string>>({})
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">
       <div className="flex flex-col gap-3">
@@ -57,6 +60,7 @@ export function MenuPanel({
           <ul className="flex flex-col gap-3">
             {items.map((item) => {
               const hasVariants = item.variants && item.variants.length > 0
+              const photo = displayPhoto(item, selectedVariant[item.id])
               return (
                 <li
                   key={item.id}
@@ -65,8 +69,8 @@ export function MenuPanel({
                   }`}
                 >
                   <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg-secondary">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                    {photo ? (
+                      <img src={photo} alt={item.name} className="h-full w-full object-cover" />
                     ) : (
                       <svg className="h-10 w-10 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 11h18" />
@@ -94,7 +98,10 @@ export function MenuPanel({
                         {item.variants!.map((v) => (
                           <button
                             key={v.id}
-                            onClick={() => onAdd(item, v)}
+                            onClick={() => {
+                              setSelectedVariant((prev) => ({ ...prev, [item.id]: v.name }))
+                              onAdd(item, v)
+                            }}
                             disabled={!v.available}
                             className={`rounded-md border px-2.5 py-1 text-caption font-semibold transition-colors ${
                               v.available

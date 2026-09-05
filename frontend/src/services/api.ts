@@ -47,6 +47,8 @@ export interface MenuVariantInput {
   name: string
   price: number
   available?: boolean
+  imageUrl?: string
+  image?: File
 }
 
 export interface CreateMenuItemInput {

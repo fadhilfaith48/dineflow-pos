@@ -24,7 +24,7 @@ describe('OrderList terhadap status legacy seeder', () => {
       voidReason: null,
       voidedBy: null,
       items: [
-        { id: 5, menuItemId: 1, name: 'Nasi Goreng Spesial', variantName: 'Besar', price: 25000, quantity: 1, note: null, spiceLevel: 2, status: 'baru' },
+        { id: 5, menuItemId: 1, name: 'Nasi Goreng Spesial', variantName: 'Jumbo', price: 25000, quantity: 1, note: null, spiceLevel: 2, status: 'baru' },
       ],
       total: 35750,
       createdAt: new Date().toISOString(),

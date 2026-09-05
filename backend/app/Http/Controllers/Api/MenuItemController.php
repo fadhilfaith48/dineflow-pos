@@ -40,6 +40,8 @@ class MenuItemController extends Controller
             'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
             'variants.*.price' => ['required_with:variants', 'integer', 'min:0'],
             'variants.*.available' => ['nullable', 'boolean'],
+            'variants.*.imageUrl' => ['nullable', 'string'],
+            'variants.*.image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $last = DB::transaction(function () {
@@ -63,6 +65,7 @@ class MenuItemController extends Controller
                     'name' => $v['name'],
                     'price' => $v['price'],
                     'available' => $v['available'] ?? true,
+                    'image_url' => $this->resolveVariantImageUrl($request, $i) ?? $v['imageUrl'] ?? null,
                     'order' => $i,
                 ]);
             }
@@ -88,6 +91,8 @@ class MenuItemController extends Controller
             'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
             'variants.*.price' => ['required_with:variants', 'integer', 'min:0'],
             'variants.*.available' => ['nullable', 'boolean'],
+            'variants.*.imageUrl' => ['nullable', 'string'],
+            'variants.*.image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $map = [
@@ -121,6 +126,7 @@ class MenuItemController extends Controller
                     'name' => $v['name'],
                     'price' => $v['price'],
                     'available' => $v['available'] ?? true,
+                    'image_url' => $this->resolveVariantImageUrl($request, $i) ?? $v['imageUrl'] ?? null,
                     'order' => $i,
                 ]);
             }
@@ -139,6 +145,18 @@ class MenuItemController extends Controller
 
         $disk = config('filesystems.photo_disk');
         $path = $request->file('image')->store('menu-items', $disk);
+
+        return Storage::disk($disk)->url($path);
+    }
+
+    private function resolveVariantImageUrl(Request $request, int $index): ?string
+    {
+        if (! $request->hasFile("variants.$index.image")) {
+            return null;
+        }
+
+        $disk = config('filesystems.photo_disk');
+        $path = $request->file("variants.$index.image")->store('menu-items/variants', $disk);
 
         return Storage::disk($disk)->url($path);
     }

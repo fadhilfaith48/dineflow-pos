@@ -5,6 +5,7 @@ import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { SpicePills } from '@/components/SpicePills'
 import { StatusBadge } from '@/components/StatusBadge'
+import { displayPhoto } from '@/lib/menuPhoto'
 
 interface WaiterOrderProps {
   table: DiningTable
@@ -48,6 +49,7 @@ export function WaiterOrder({
   onBack,
 }: WaiterOrderProps) {
   const [showCart, setShowCart] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState<Record<number, string>>({})
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-bg-secondary">
@@ -100,6 +102,7 @@ export function WaiterOrder({
           )}
           {items.map((item) => {
             const hasVariants = item.variants && item.variants.length > 0
+            const photo = displayPhoto(item, selectedVariant[item.id])
             return (
               <li
                 key={item.id}
@@ -108,8 +111,8 @@ export function WaiterOrder({
                 }`}
               >
                 <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg-secondary">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                  {photo ? (
+                    <img src={photo} alt={item.name} className="h-full w-full object-cover" />
                   ) : (
                     <svg className="h-10 w-10 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 11h18" />
@@ -132,7 +135,10 @@ export function WaiterOrder({
                       {item.variants!.map((v) => (
                         <button
                           key={v.id}
-                          onClick={() => onAdd(item, v)}
+                          onClick={() => {
+                            setSelectedVariant((prev) => ({ ...prev, [item.id]: v.name }))
+                            onAdd(item, v)
+                          }}
                           disabled={!v.available}
                           className={`rounded-lg border px-2.5 py-1 text-caption font-semibold transition-colors ${
                             v.available

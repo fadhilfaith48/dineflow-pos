@@ -15,6 +15,7 @@ class MenuItemVariantResource extends JsonResource
             'price' => $this->price,
             'available' => $this->available,
             'order' => $this->order,
+            'imageUrl' => $this->image_url,
         ];
     }
 }

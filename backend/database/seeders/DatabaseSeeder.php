@@ -102,20 +102,20 @@ class DatabaseSeeder extends Seeder
     {
         $variants = [
             '#M01' => [
-                ['Reguler', 18000, true],
-                ['Besar', 25000, true],
+                ['Original', 18000, true],
+                ['Jumbo', 25000, true],
             ],
             '#M03' => [
-                ['Reguler', 16000, true],
-                ['Besar', 22000, true],
+                ['Original', 16000, true],
+                ['Jumbo', 22000, true],
             ],
             '#M08' => [
-                ['Reguler', 5000, true],
-                ['Besar', 8000, true],
+                ['Original', 5000, true],
+                ['Jumbo', 8000, true],
             ],
             '#M09' => [
-                ['Reguler', 7000, true],
-                ['Besar', 10000, true],
+                ['Original', 7000, true],
+                ['Jumbo', 10000, true],
             ],
         ];
 
@@ -124,7 +124,7 @@ class DatabaseSeeder extends Seeder
             if (! $menuItem) {
                 continue;
             }
-            // Base price = price of first variant (Reguler)
+            // Base price = price of first variant (Original)
             $menuItem->price = $items[0][1];
             $menuItem->save();
 
@@ -173,7 +173,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'diproses',
                 'created_at' => now()->subMinutes(47)->toDateTimeString(),
                 'items' => [
-                    ['#M03', 16000, 1, 'dimasak', null, 'Reguler', 3],
+                    ['#M03', 16000, 1, 'dimasak', null, 'Original', 3],
                     ['#M10', 12000, 1, 'baru'],
                 ],
             ],
@@ -185,7 +185,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now()->subMinutes(25)->toDateTimeString(),
                 'items' => [
                     ['#M02', 22000, 1, 'dimasak', 'Tidak pedas', null, 0],
-                    ['#M09', 10000, 2, 'baru', null, 'Besar'],
+                    ['#M09', 10000, 2, 'baru', null, 'Jumbo'],
                 ],
             ],
             [
@@ -195,8 +195,8 @@ class DatabaseSeeder extends Seeder
                 'status' => 'menunggu',
                 'created_at' => now()->subMinutes(8)->toDateTimeString(),
                 'items' => [
-                    ['#M01', 25000, 1, 'baru', null, 'Besar', 2],
-                    ['#M08', 8000, 1, 'baru', null, 'Besar'],
+                    ['#M01', 25000, 1, 'baru', null, 'Jumbo', 2],
+                    ['#M08', 8000, 1, 'baru', null, 'Jumbo'],
                 ],
             ],
             [

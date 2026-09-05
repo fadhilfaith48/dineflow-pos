@@ -42,6 +42,7 @@ export interface MenuItemVariant {
   price: number
   available: boolean
   order: number
+  imageUrl?: string
 }
 
 export type OrderSource = 'kasir' | 'pelayan' | 'self-order'

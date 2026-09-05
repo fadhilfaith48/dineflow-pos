@@ -11,6 +11,7 @@ import { formatRupiah } from '@/lib/format'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { SpicePills } from '@/components/SpicePills'
 import { OrderTracking } from '@/components/OrderTracking'
+import { displayPhoto } from '@/lib/menuPhoto'
 
 type View = 'menu' | 'cart' | 'payment' | 'tracking'
 type PayMethod = 'choose' | 'qris' | 'kasir'
@@ -35,6 +36,7 @@ export function MenuPage() {
   const [payGateway, setPayGateway] = useState('mock')
   const [payAmount, setPayAmount] = useState(0)
   const [payMethod, setPayMethod] = useState<PayMethod>('choose')
+  const [selectedVariant, setSelectedVariant] = useState<Record<number, string>>({})
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -320,7 +322,12 @@ export function MenuPage() {
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {visibleItems.length > 0 && search.trim() === '' && (
-          <FeaturedCard item={visibleItems[0]} onAdd={(m, v, l) => cart.addItem(m, v, l)} />
+          <FeaturedCard
+            item={visibleItems[0]}
+            onAdd={(m, v, l) => cart.addItem(m, v, l)}
+            selectedVariantName={selectedVariant[visibleItems[0].id]}
+            onSelectVariant={(name) => setSelectedVariant((prev) => ({ ...prev, [visibleItems[0].id]: name }))}
+          />
         )}
         <ul className="flex flex-col gap-3 mt-3">
           {visibleItems.length === 0 && (
@@ -328,6 +335,7 @@ export function MenuPage() {
           )}
           {visibleItems.slice(1).map((item) => {
             const hasVariants = item.variants && item.variants.length > 0
+            const photo = displayPhoto(item, selectedVariant[item.id])
             return (
               <li
                 key={item.id}
@@ -336,8 +344,8 @@ export function MenuPage() {
                 }`}
               >
                 <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-bg-secondary">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                  {photo ? (
+                    <img src={photo} alt={item.name} className="h-full w-full object-cover" />
                   ) : (
                     <svg className="h-10 w-10 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 11h18" />
@@ -360,7 +368,10 @@ export function MenuPage() {
                       {item.variants!.map((v: MenuItemVariant) => (
                         <button
                           key={v.id}
-                          onClick={() => cart.addItem(item, v)}
+                          onClick={() => {
+                            setSelectedVariant((prev) => ({ ...prev, [item.id]: v.name }))
+                            cart.addItem(item, v)
+                          }}
                           disabled={!v.available}
                           className={`rounded-md border px-2 py-0.5 text-caption font-semibold transition-colors ${
                             v.available
@@ -527,15 +538,18 @@ export function MenuPage() {
 interface FeaturedCardProps {
   item: MenuItem
   onAdd: (item: MenuItem, variant?: MenuItemVariant, spiceLevel?: number) => void
+  selectedVariantName?: string
+  onSelectVariant?: (name: string) => void
 }
 
-function FeaturedCard({ item, onAdd }: FeaturedCardProps) {
+function FeaturedCard({ item, onAdd, selectedVariantName, onSelectVariant }: FeaturedCardProps) {
   const hasVariants = item.variants && item.variants.length > 0
+  const photo = displayPhoto(item, selectedVariantName)
   return (
     <div className={`overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card ${item.available ? '' : 'opacity-60'}`}>
       <div className="relative flex h-48 w-full items-center justify-center overflow-hidden bg-bg-secondary">
-        {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+        {photo ? (
+          <img src={photo} alt={item.name} className="h-full w-full object-cover" />
         ) : (
           <svg className="h-16 w-16 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 11h18" />
@@ -563,7 +577,10 @@ function FeaturedCard({ item, onAdd }: FeaturedCardProps) {
             {item.variants!.map((v) => (
               <button
                 key={v.id}
-                onClick={() => onAdd(item, v)}
+                onClick={() => {
+                  onSelectVariant?.(v.name)
+                  onAdd(item, v)
+                }}
                 disabled={!v.available}
                 className={`rounded-lg border px-3 py-1.5 text-caption font-semibold transition-colors ${
                   v.available
