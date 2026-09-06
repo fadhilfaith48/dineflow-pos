@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { MenuCategory, MenuItem } from '@/types'
 import type { MenuVariantInput } from '@/services/api'
 import { formatRupiah } from '@/lib/format'
+import { photoUrl } from '@/lib/menuPhoto'
 import { Button } from '@/components/Button'
 
 interface MenuManagementProps {
@@ -63,7 +64,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
   )
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [preview, setPreview] = useState<string | null>(initial.imageUrl ?? null)
+  const [preview, setPreview] = useState<string | null>(photoUrl(initial.imageUrl ?? undefined) ?? null)
 
   function handleFileChange(file: File | undefined) {
     if (!file) return
@@ -236,7 +237,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
                   <div key={i} className="flex items-center gap-2 rounded-lg border border-border-subtle p-2">
                     <label className="relative block h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-md bg-bg-secondary">
                       {v.preview ?? v.imageUrl ? (
-                        <img src={v.preview ?? v.imageUrl} alt={`Foto ${v.name || 'varian'}`} className="h-full w-full object-cover" />
+                        <img src={photoUrl(v.preview ?? v.imageUrl)} alt={`Foto ${v.name || 'varian'}`} className="h-full w-full object-cover" />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center">
                           <svg className="h-5 w-5 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -378,7 +379,7 @@ export function MenuManagement({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="h-10 w-10 rounded-lg object-cover" />
+                        <img src={photoUrl(item.imageUrl)} alt={item.name} className="h-10 w-10 rounded-lg object-cover" />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-bg-secondary">
                           <svg className="h-6 w-6 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
