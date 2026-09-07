@@ -94,7 +94,7 @@ class OrderController extends Controller
                 $subtotal += $unitPrice * $item['quantity'];
             }
 
-            $lastId = Order::lockForUpdate()->max('id') ?? 0;
+            $lastId = Order::lockForUpdate()->orderByDesc('id')->value('id') ?? 0;
             $orderNumber = 'ORD-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
 
             $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
