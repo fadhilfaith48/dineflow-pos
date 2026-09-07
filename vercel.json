@@ -7,7 +7,7 @@
   },
   "rewrites": [
     {
-      "source": "/.*",
+      "source": "/(.*)",
       "destination": {
         "service": "frontend",
         "path": "index.html"
