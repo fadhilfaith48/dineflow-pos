@@ -1,16 +1,14 @@
 {
   "services": {
     "frontend": {
-      "root": "frontend",
-      "framework": "vite"
+      "root": "frontend"
     }
   },
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": {
-        "service": "frontend",
-        "path": "index.html"
+        "service": "frontend"
       }
     }
   ]
