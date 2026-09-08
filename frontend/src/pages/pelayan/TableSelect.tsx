@@ -20,7 +20,7 @@ export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableS
   const [, setTick] = useState(0)
 
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 30000)
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
     return () => clearInterval(id)
   }, [])
 
