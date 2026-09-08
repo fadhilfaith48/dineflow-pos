@@ -8,7 +8,7 @@ Self-order QR di meja, Kitchen Display System) + dashboard Admin. Prototype PKL 
 
 | Kanal | Fungsi |
 |---|---|
-| **Kasir** | Input pesanan manual, **bayar di muka** (tunai / QRIS DOKU), tandai selesai, cetak/salin struk |
+| **Kasir** | Input pesanan manual, **bayar di muka** (tunai / QRIS ), tandai selesai, cetak/salin struk |
 | **Pelayan** | Peta meja, input pesanan dari meja (catatan khusus), bayar QRIS di muka via HP/tablet, tandai diantar |
 | **Kitchen Display** | Grid ticket pesanan aktif (`diproses` = sudah lunas), urut antrian waktu masuk, update status per item (baru/dimasak/siap) |
 | **Menu Pesan Mandiri** | Pelanggan scan QR di meja → katalog → pesan → **bayar QRIS di muka** → tracking status |
@@ -18,10 +18,10 @@ Self-order QR di meja, Kitchen Display System) + dashboard Admin. Prototype PKL 
 
 | Komponen | Teknologi |
 |---|---|
-| Frontend | React (TypeScript), Vite, Tailwind CSS v4 |
-| Backend | Laravel (PHP) — REST API (fase B) |
-| Real-time | Laravel Broadcasting (Reverb) + Redis (fase B) |
-| Database | MySQL/MariaDB (fase B) |
+| Frontend | React (TypeScript), Vite, Tailwind CSS v4 | ---
+| Backend | Laravel (PHP) — REST API (fase B) | Sudah Berjalan 
+| Real-time | Laravel Broadcasting (Reverb) + Redis (fase B) | Deplyoments Laravel Broadcasting (Reverb) + Redis Sudah Berjalan
+| Database | MySQL/MariaDB (fase B) | Deplyoments Postgresql 
 
 ## Struktur Repo
 
