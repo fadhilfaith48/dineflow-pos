@@ -45,8 +45,9 @@ class SettingController extends Controller
             'logo' => ['required', 'image', 'max:2048'],
         ]);
 
-        $path = $request->file('logo')->store('logos', 'public');
-        $url = Storage::disk('public')->url($path);
+        $disk = config('filesystems.photo_disk');
+        $path = $request->file('logo')->store('logos', $disk);
+        $url = Storage::disk($disk)->url($path);
         Setting::setValue('logo_url', $url);
 
         SettingsChanged::dispatch($this->payload());
@@ -60,8 +61,9 @@ class SettingController extends Controller
             'qris' => ['required', 'image', 'max:2048'],
         ]);
 
-        $path = $request->file('qris')->store('qris', 'public');
-        $url = Storage::disk('public')->url($path);
+        $disk = config('filesystems.photo_disk');
+        $path = $request->file('qris')->store('qris', $disk);
+        $url = Storage::disk($disk)->url($path);
         Setting::setValue('qris_image_url', $url);
 
         SettingsChanged::dispatch($this->payload());
