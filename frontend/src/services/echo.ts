@@ -11,14 +11,27 @@ import { getToken } from './httpApi'
  * Bearer yang dibaca DINAMIS dari sessionStorage tiap subscribe (custom authorizer),
  * sehingga ganti login/logout per tab tidak membuat header Echo basi.
  *
- * WS selalu same-origin (host halaman) → lewat proxy `/app` di vite.config.ts
- * (dev: ws→127.0.0.1:8080; produksi: wss:443 via Nginx). Keuntungan dev:
- * HP di WiFi lokal tidak perlu buka port 8080 di firewall. Env VITE_REVERB_HOST/
- * PORT/SCHEME tetap didukung sebagai override opsional.
+ * WS same-origin saat dev (host halaman × proxy `/app` di vite.config.ts:
+ * ws→127.0.0.1:8080). Saat produksi frontend ≠ backend origin (Vercel vs VPS
+ * DuckDNS), host WS & endpoint auth diturunkan dari VITE_API_URL yang ABSOLUTE
+ * (mis. https://dineflow.duckdns.org/api) supaya koneksi tetap menuju backend,
+ * bukan domain frontend. Env VITE_REVERB_HOST/PORT/SCHEME tetap override opsional.
  */
 const isPreview = import.meta.env.PROD
+const API_BASE = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/+$/, '')
 
-const AUTH_ENDPOINT = '/api/broadcasting/auth'
+// dev: '/api' (relatif, same-origin via proxy Vite) → '/api/broadcasting/auth'
+// prod: 'https://dineflow.duckdns.org/api' (absolute) → endpoint nyata di VPS
+const AUTH_ENDPOINT = `${API_BASE}/broadcasting/auth`
+
+function defaultWsHost(): string {
+  if (import.meta.env.VITE_REVERB_HOST) return import.meta.env.VITE_REVERB_HOST
+  try {
+    return new URL(API_BASE).hostname
+  } catch {
+    return window.location.hostname
+  }
+}
 
 const echo = new Echo({
   broadcaster: 'pusher',
@@ -26,7 +39,7 @@ const echo = new Echo({
   Pusher,
   cluster: 'mt1',
   namespace: '',
-  wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+  wsHost: defaultWsHost(),
   wsPort:
     Number(import.meta.env.VITE_REVERB_PORT) ||
     Number(window.location.port) ||

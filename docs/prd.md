@@ -241,3 +241,18 @@ Arsitektur menggunakan Laravel sebagai backend tunggal yang melayani empat jenis
 | Fase 4 — Kitchen Display & Broadcasting Real-Time | Layar dapur real-time, notifikasi status lintas channel (Laravel Reverb) |
 | Fase 5 — Halaman Pesan Mandiri (QR Code) & Pembayaran | Menu publik via QR, generator QR per meja, proses pembayaran & struk |
 | Fase 6 — QA & Deployment | Pengujian alur end-to-end lintas channel, rilis & pelatihan staf resto |
+
+
+Batch 1 — Bug fungsional (4 fix, 1 selesai, 3 sisa)
+#	Fix	File yang disentuh	Status
+1	Foto menu rusak saat HP/tablet (URL absolut localhost:8000) → pakai URL relatif /storage + proxy Vite	lib/menuPhoto.ts, vite.config.ts, MenuManagement.tsx	✅ Selesai (commit 1654a15)
+2	Menghapus semua varian tidak tersimpan di DB (frontend kirim undefined → backend tak delete) → selalu kirim variants: []	MenuManagement.tsx (+ kontrak MenuVariantInput[])	⬜ Sisa
+3	FeaturedCard badge harga tidak mengikuti varian terpilih (selalu item.price) → pakai harga varian	lib/menuPhoto.ts (helper displayPrice), MenuPage.tsx:561	⬜ Sisa
+4	Foto varian yang non-available masih bisa tampil → displayPhoto skip varian available === false	lib/menuPhoto.ts	⬜ Sisa
+Batch 2 — Perkuatan & kendala masa depan (belum dikerjakan, 5 item)
+#	Perbaikan	Cakupan
+5	Bersihkan file foto yatim (dihapus dari disk saat foto diganti / varian dihapus / menu dihapus)	Backend: Storage::delete saat update/delete (opsional utk prototype)
+6	Payload MenuChanged variants kosong — dispatch() sebelum load('variants') → tambah load dulu	MenuItemController.php:74,135
+7	Tes otomatis fitur baru — BE: upload foto varian + preserve saat update + hapus semua varian (regresi #2); FE: displayPhoto + photoUrl	backend/tests, frontend/*.test.ts
+8	(Catatan) update pakai delete+recreate varian → id berubah tiap simpan; opsional refactor ke upsert-by-name	dicatat saja
+9	(Kecil) URL.createObjectURL preview tidak di-revoke → memory leak kecil	MenuManagement.tsx

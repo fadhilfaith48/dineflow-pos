@@ -189,3 +189,57 @@ Temuan yang **disengaja dibiarkan** untuk skala prototype (aman sekarang), tapi 
 1. **Agregasi laporan masih in-PHP** — `SalesSummaryController` memuat SEMUA order + items ke memori lalu dirangkum di PHP; ekspor CSV juga pre-build semua baris (bukan streaming). → Saat order >±10 ribu: ganti ke SQL `GROUP BY` / agregasi query builder, dan streaming response untuk CSV.
 2. **`GET /orders` unlimited tanpa pagination** (keputusan v1, terdokumentasi di kode) — Riwayat memuat semua order. → Saat data besar: tambah pagination (limit/cursor) + filter tanggal di sisi server.
 3. **Code splitting frontend belum dikerjakan** (temuan P2 audit) — bundle tunggal 433 KB karena `App.tsx` mengimpor semua halaman secara statis; pelanggan Menu QR ikut mengunduh halaman Kasir/Kitchen/Admin. → Terapkan `React.lazy()` + `Suspense` per halaman (estimasi bundle awal turun >50%).
+
+
+
+Rencana Lanjutan (Setelah Kamu Login Ulang)
+Step 1 — Login ulang ke VPS (karena tadi koneksi putus)
+Di Git Bash:
+ssh root@163.61.58.129
+Lalu masuk ke folder backend:
+cd /var/www/dineflow-pos/backend
+Step 2 — Buka editor .env
+nano .env
+Ini membuka file konfigurasi di terminal.
+Step 3 — Ubah baris-baris berikut (kamu isi nilainya sendiri dari dashboard, TANPA kirim password ke chat)
+A. Database (Neon) — non-sensitif bisa saya bantu:
+DB_CONNECTION=pgsql
+DB_HOST=ep-falling-tooth-azkqvz0d.c-3.ap-southeast-1.aws.neon.tech (direct host, TANPA -pooler; pooler membuat lockForUpdate/transaksi 25P02)
+DB_PORT=5432
+DB_DATABASE=neondb
+DB_USERNAME=neondb_owner
+DB_PASSWORD=ISI_SENDIRI_DARI_DASHBOARD
+DB_HOST/NAMA/USER aman (tidak rahasia). Hanya DB_PASSWORD yang kamu isi sendiri di nano, tanpa pernah mengetikkannya di chat.
+B. Redis (Upstash) — REDIS_URL kamu isi sendiri:
+REDIS_CLIENT=predis
+REDIS_URL=ISI_SENDIRI_DARI_UPSTASH
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+BROADCAST_CONNECTION=reverb
+QUEUE_CONNECTION=sync
+C. Foto (Supabase) — kolom AWS_* kamu isi sendiri:
+FILESYSTEM_DISK=s3
+PHOTO_DISK=s3
+AWS_ACCESS_KEY_ID=ISI_SENDIRI
+AWS_SECRET_ACCESS_KEY=ISI_SENDIRI
+AWS_DEFAULT_REGION=...
+AWS_BUCKET=...
+AWS_ENDPOINT=...
+AWS_URL=...
+AWS_USE_PATH_STYLE_ENDPOINT=true
+D. App & Reverb (saya bantu struktur, isi host sendiri):
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://dineflow.duckdns.org
+FRONTEND_URL=https://<proyek>.vercel.app
+REVERB_* (host dineflow.duckdns.org, port 443)
+Step 4 — Cara simpan di nano
+Tekan Ctrl + X → Y → Enter
+Step 5 — Setelah .env tersimpan
+php artisan config:clear
+php artisan migrate --force
+php artisan db:seed
+Penting (dari konflik tadi)
+- Jangan power off VPS biar pekerjaan lanjut mulus
+- Jangan bagikan DB_PASSWORD, REDIS_URL, AWS_SECRET di chat — isi langsung di nano
+- Baris DB_HOST dll yang sudah saya sebut tidak rahasia, aman
