@@ -39,7 +39,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-bg-secondary p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <img src="/favicon.png" alt="Logo DineFlow" className="mx-auto mb-3 h-16 w-16 rounded-xl object-contain" />
+          <img src="/favicon.png" alt="Logo DineFlow" className="mx-auto mb-4 h-24 w-auto object-contain" />
           <div className="font-num text-display font-bold tracking-tighter text-text-primary">
             DineFlow<span className="text-accent-primary">POS</span>
           </div>

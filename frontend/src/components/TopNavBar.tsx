@@ -28,7 +28,7 @@ export function TopNavBar() {
   return (
     <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b border-border-subtle bg-bg-surface px-4 md:px-6">
       <div className="flex items-center gap-2">
-        <img src="/favicon.png" alt="Logo DineFlow" className="h-8 w-8 rounded-lg object-contain" />
+        <img src="/favicon.png" alt="Logo DineFlow" className="h-10 w-auto object-contain" />
         <div className="font-num text-heading font-bold tracking-tighter text-text-primary md:text-display">
           DineFlow<span className="text-accent-primary">POS</span>
         </div>
