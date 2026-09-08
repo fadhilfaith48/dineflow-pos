@@ -3,6 +3,15 @@
 > Daftar kerja hasil analisis (19 Agu 2026). Centang saat selesai + sinkronkan dengan
 > `todo.md` & `frontend/PROGRESS.md`.
 
+## Sesi 8 Sep 2026 — Real-time mati total di produksi (root cause: REVERB_ALLOWED_ORIGINS)
+
+- [x] **Gejala**: seluruh real-time produksi mati (self-order→kasir, dapur→pelayan) harus refresh manual; lokal jalan.
+- [x] **Diagnosis**: tes WS dari laptop langsung ke `wss://dineflow.duckdns.org/app` → `{"code":4009,"message":"Origin not allowed"}` — Reverb **menolak origin**; bukan frontend, bukan Redis (Redis hanya dipakai Reverb untuk scaling, `REVERB_SCALING_ENABLED=false` → tidak relevan untuk jalur broadcast normal).
+- [x] **Perbaikan**: `.env` backend VPS `REVERB_ALLOWED_ORIGINS=*` + `php artisan config:clear` + `sudo supervisorctl restart reverb`.
+- [x] **Also fixed (frontend, dorongan buat robustness)**: `echo.ts` cross-origin — `AUTH_ENDPOINT` & default `wsHost` diturunkan dari `VITE_API_URL` agar semua origin frontend-terpisah (Vercel) bekerja; commit `7f342f5`.
+- [x] **Verifikasi end-to-end (laptop → produksi)**: login OK → WS `connected` → subscribe `private-orders` `succeeded` → buat order 201 → `EVENT RECEIVED action=created` ≤2 detik. Order test ORD-0014/15/16 di-void (200) setelah verifikasi.
+- [ ] **Catatan**: opsional mengunci origin (mis. `REVERB_ALLOWED_ORIGINS=https://dineflow-pos-tau.vercel.app,http://localhost:5173`) bila tak ingin `*`.
+
 ## Langkah 1 — Opsi A: Order kasir lewat dapur
 - [x] `OrderController::store`: order kasir langsung `diproses`
 - [x] `KasirPage.tsx`: tombol keranjang → "Kirim ke Dapur" (create order, tanpa bayar)
