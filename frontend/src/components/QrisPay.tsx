@@ -19,6 +19,8 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
+  const onPaidRef = useRef(onPaid)
+  onPaidRef.current = onPaid
 
   useEffect(() => {
     timer.current = setInterval(async () => {
@@ -27,7 +29,7 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
         if (res.status === 'paid') {
           if (timer.current) clearInterval(timer.current)
           setDone(true)
-          onPaid()
+          onPaidRef.current()
         }
       } catch {
         // abaikan error polling, coba lagi pada interval berikutnya
@@ -37,7 +39,7 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
     return () => {
       if (timer.current) clearInterval(timer.current)
     }
-  }, [reference, onPaid])
+  }, [reference])
 
   async function handleMockPaid() {
     setError('')
@@ -45,7 +47,7 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
       await api.markMockPaid(reference)
       if (timer.current) clearInterval(timer.current)
       setDone(true)
-      onPaid()
+      onPaidRef.current()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menandai pembayaran.')
     }

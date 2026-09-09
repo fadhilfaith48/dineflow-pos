@@ -28,6 +28,8 @@ export function PelayanPage() {
   const [payGateway, setPayGateway] = useState('mock')
   const [payAmount, setPayAmount] = useState(0)
   const [payOrderNumber, setPayOrderNumber] = useState('')
+  const [isDelivering, setIsDelivering] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   function loadOrders() {
     api.getOrders().then(setOrders).catch(() => {
@@ -42,13 +44,16 @@ export function PelayanPage() {
   }
 
   useEffect(() => {
-    api.getTables().then(setTables)
-    api.getCategories().then((cats) => {
-      setCategories(cats)
-      setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
-    })
-    api.getMenuItems().then(setItems)
-    loadOrders()
+    setIsLoading(true)
+    Promise.all([
+      api.getTables().then(setTables).catch(() => setError('Gagal memuat meja. Cek koneksi ke server.')),
+      api.getCategories().then((cats) => {
+        setCategories(cats)
+        setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
+      }).catch(() => setError('Gagal memuat kategori menu. Cek koneksi ke server.')),
+      api.getMenuItems().then(setItems).catch(() => setError('Gagal memuat menu. Cek koneksi ke server.')),
+      api.getOrders().then(setOrders).catch(() => setError('Gagal memuat pesanan. Cek koneksi ke server.')),
+    ]).finally(() => setIsLoading(false))
 
     echo.private('orders').listen('OrderStatusChanged', () => {
       loadOrders()
@@ -126,16 +131,16 @@ export function PelayanPage() {
 
   async function handleDeliver(orderId: number) {
     const order = orders.find((o) => o.id === orderId)
-    if (!order) return
+    if (!order || isDelivering) return
+    setIsDelivering(true)
     try {
-      for (const item of order.items) {
-        if (item.status !== 'diantar') {
-          await api.updateItemStatus(order.id, item.id, 'diantar')
-        }
-      }
+      const pending = order.items.filter((item) => item.status !== 'diantar')
+      await Promise.all(pending.map((item) => api.updateItemStatus(order.id, item.id, 'diantar')))
       loadOrders()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menandai diantar.')
+    } finally {
+      setIsDelivering(false)
     }
   }
 
@@ -145,7 +150,16 @@ export function PelayanPage() {
       {error && (
         <div className="bg-status-danger/15 px-4 py-2 text-center text-body font-semibold text-status-danger">{error}</div>
       )}
-      {view === 'order' && selectedTable ? (
+      {isLoading ? (
+        <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-4 bg-bg-secondary px-4 py-4">
+          <div className="h-7 w-32 animate-pulse rounded bg-border-subtle" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex aspect-square animate-pulse flex-col items-center justify-center gap-2 rounded-xl border-2 border-border-subtle bg-bg-surface" />
+            ))}
+          </div>
+        </main>
+      ) : view === 'order' && selectedTable ? (
         <WaiterOrder
           table={selectedTable}
           categories={categories}
@@ -167,7 +181,7 @@ export function PelayanPage() {
           onBack={() => setView('tables')}
         />
       ) : view === 'orders' ? (
-        <OrderList orders={orders} onDeliver={handleDeliver} onBack={() => setView('tables')} />
+        <OrderList orders={orders} onDeliver={handleDeliver} onBack={() => setView('tables')} isDelivering={isDelivering} />
       ) : (
         <TableSelect
           tables={tables}

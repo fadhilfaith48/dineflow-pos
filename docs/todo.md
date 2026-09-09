@@ -240,6 +240,31 @@ php artisan config:clear
 php artisan migrate --force
 php artisan db:seed
 Penting (dari konflik tadi)
-- Jangan power off VPS biar pekerjaan lanjut mulus
-- Jangan bagikan DB_PASSWORD, REDIS_URL, AWS_SECRET di chat — isi langsung di nano
-- Baris DB_HOST dll yang sudah saya sebut tidak rahasia, aman
+
+Analisis Performa — Kenapa Klik Lambat?
+Masalah Kritis (P1):
+1. handleDeliver — API sequential dalam loop (PelayanPage.tsx:131-135)
+Setiap item order di-await satu per satu. Jika order 5 item → 5 request HTTP sequential → 1-2.5 detik blocking. Seharusnya Promise.all().
+2. QRIS polling restart terus-menerus (BUG) (QrisPay.tsx:40 + PelayanPage.tsx:120)
+handlePaid() tidak pakai  useCallback, dibuat ulang setiap render → onPaid di useEffect dependency menyebabkan interval polling di-restart terus. Polling 3 detik tidak pernah selesai.
+3. Tidak ada loading indicator saat mount (PelayanPage.tsx:44-51)
+4 API call dilepas fire-and-forget tanpa isLoading state. User lihat layar kosong.
+4. Tidak ada disabled state saat submit order (WaiterOrder.tsx:308)
+Tombol "Kirim & Bayar QRIS" bisa diklik berulang → duplikasi order.
+Masalah Performa (P2):
+5. TableSelect & OrderList re-render setiap 1 detik — setInterval(tick) memaksa full re-render tiap detik untuk timer elapsed.
+6. Tidak ada React.lazy / code splitting (App.tsx:6-12) — semua 6 halaman di-bundle jadi satu.
+7. Tidak ada debounce pada search input & cart note.
+8. 15 useState di PelayanPage — fan-out re-render lebar; payment state bisa dikonsolidasi.
+Analisis Desain — Standar Umum Web App
+Aspek	Skor	Catatan
+Touch target	7/10	SpicePills & tombol kecil masih 32px (seharusnya ≥44px)
+Loading indicators	3/10	Tidak ada spinner/skeleton sama sekali
+Error handling	5/10	Ada, tapi tidak auto-dismiss, tidak ada retry button
+Responsive	8/10	Mobile-first sudah baik
+Color contrast	6/10	Badge cooking (#F59E0B) & ready (#16A34A) dengan teks putih gagal WCAG AA
+Typography	8/10	Konsisten dengan DESIGN.md
+Spacing	8/10	Konsisten grid 4px
+Button states	6/10	Ada hover/disabled, tapi tidak ada active:scale & focus-visible ring
+Accessibility	5/10	Aria-label lumayan, tapi modal tanpa focus trap, tablist tidak pakai role
+

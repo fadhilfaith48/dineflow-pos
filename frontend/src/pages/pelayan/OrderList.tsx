@@ -8,9 +8,10 @@ interface OrderListProps {
   orders: Order[]
   onDeliver: (orderId: number) => void
   onBack: () => void
+  isDelivering?: boolean
 }
 
-export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
+export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: OrderListProps) {
   const active = orders.filter((o) => o.status !== 'dibatalkan')
 
   const [, setTick] = useState(0)
@@ -84,9 +85,10 @@ export function OrderList({ orders, onDeliver, onBack }: OrderListProps) {
                     {!allDelivered ? (
                       <button
                         onClick={() => onDeliver(order.id)}
-                        className="rounded-lg bg-accent-primary px-4 py-2 text-caption font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+                        disabled={isDelivering}
+                        className="rounded-lg bg-accent-primary px-4 py-2 text-caption font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40 disabled:pointer-events-none"
                       >
-                        Antarkan
+                        {isDelivering ? 'Mengirim...' : 'Antarkan'}
                       </button>
                     ) : (
                       <span className="text-caption font-semibold uppercase tracking-wide text-status-ready">Sudah diantar</span>
