@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
 import type { DiningTable } from '@/types'
-import { formatElapsed } from '@/lib/format'
+import { ElapsedText } from '@/components/ElapsedText'
 
 const statusStyle: Record<DiningTable['status'], { card: string; label: string; text: string; pill: string }> = {
   kosong: { card: 'border-status-ready bg-accent-tint', label: 'Kosong', text: 'text-status-ready', pill: 'bg-status-ready/15' },
@@ -17,17 +16,6 @@ interface TableSelectProps {
 }
 
 export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableSelectProps) {
-  const [, setTick] = useState(0)
-
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const nowRef = useRef(Date.now())
-  nowRef.current = Date.now()
-  const now = nowRef.current
-
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-4 bg-bg-secondary px-4 py-4">
       <div className="flex items-center justify-between">
@@ -44,7 +32,6 @@ export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableS
         {tables.map((table) => {
           const s = statusStyle[table.status]
           const start = table.status === 'terisi' ? seatedAt?.[table.id] : undefined
-          const duration = start ? formatElapsed(start, now) : undefined
           return (
             <button
               key={table.id}
@@ -60,8 +47,10 @@ export function TableSelect({ tables, onSelect, onViewOrders, seatedAt }: TableS
                 </svg>
                 <span className="font-caption text-caption">{table.seats} Pax</span>
               </span>
-              {duration && (
-                <span className="font-num text-caption font-semibold text-text-secondary">{duration}</span>
+              {start != null && (
+                <span className="font-num text-caption font-semibold text-text-secondary">
+                  <ElapsedText start={start} />
+                </span>
               )}
               <span className={`mt-auto max-w-full break-words rounded-full px-2 py-0.5 text-center text-caption font-bold uppercase leading-tight tracking-wide ${s.pill} ${s.text}`}>
                 {s.label}

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
 import type { Order } from '@/types'
-import { formatRupiah, formatElapsed } from '@/lib/format'
+import { formatRupiah } from '@/lib/format'
+import { ElapsedText } from '@/components/ElapsedText'
 import { StatusBadge } from '@/components/StatusBadge'
 import { itemStatusBadge, itemStatusLabel, orderStatusBadge, orderStatusBar, orderStatusLabel } from '@/lib/statusConfig'
 
@@ -13,13 +13,6 @@ interface OrderListProps {
 
 export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: OrderListProps) {
   const active = orders.filter((o) => o.status !== 'dibatalkan')
-
-  const [, setTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-  const now = Date.now()
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-bg-secondary">
@@ -43,7 +36,6 @@ export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: O
           <ul className="flex flex-col gap-3">
             {active.map((order) => {
               const allDelivered = order.items.every((i) => i.status === 'diantar')
-              const elapsed = formatElapsed(new Date(order.createdAt).getTime(), now)
               return (
                 <li key={order.id} className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border-subtle bg-bg-surface p-4 shadow-card">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${orderStatusBar[order.status] ?? ''}`} />
@@ -56,7 +48,7 @@ export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: O
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 6v6l4 2" />
                           </svg>
-                          <span>Meja {order.tableNumber ?? '-'} · {elapsed}</span>
+                          <span>Meja {order.tableNumber ?? '-'} · <ElapsedText start={new Date(order.createdAt).getTime()} /></span>
                         </span>
                       </div>
                     </div>
