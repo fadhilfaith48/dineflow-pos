@@ -283,3 +283,5 @@ export function KasirPage() {
     </div>
   )
 }
+
+export default KasirPage

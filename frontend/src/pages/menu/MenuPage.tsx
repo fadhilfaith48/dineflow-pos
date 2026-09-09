@@ -606,3 +606,5 @@ function FeaturedCard({ item, onAdd, selectedVariantName, onSelectVariant }: Fea
     </div>
   )
 }
+
+export default MenuPage

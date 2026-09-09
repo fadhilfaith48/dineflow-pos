@@ -230,3 +230,5 @@ export function PelayanPage() {
     </div>
   )
 }
+
+export default PelayanPage

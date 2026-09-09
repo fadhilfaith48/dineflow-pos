@@ -86,3 +86,5 @@ export function KitchenPage() {
     </div>
   )
 }
+
+export default KitchenPage

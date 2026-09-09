@@ -68,3 +68,5 @@ export function OrderTrackingPage() {
     />
   )
 }
+
+export default OrderTrackingPage

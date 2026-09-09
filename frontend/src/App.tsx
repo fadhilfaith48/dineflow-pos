@@ -1,21 +1,30 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { HomeRedirect } from '@/components/HomeRedirect'
-import { LoginPage } from '@/pages/auth/LoginPage'
-import { KasirPage } from '@/pages/kasir/KasirPage'
-import { KitchenPage } from '@/pages/kitchen/KitchenPage'
-import { PelayanPage } from '@/pages/pelayan/PelayanPage'
-import { MenuPage } from '@/pages/menu/MenuPage'
-import { OrderTrackingPage } from '@/pages/order/OrderTrackingPage'
-import { AdminPage } from '@/pages/admin/AdminPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
+
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const KasirPage = lazy(() => import('@/pages/kasir/KasirPage'))
+const KitchenPage = lazy(() => import('@/pages/kitchen/KitchenPage'))
+const PelayanPage = lazy(() => import('@/pages/pelayan/PelayanPage'))
+const MenuPage = lazy(() => import('@/pages/menu/MenuPage'))
+const OrderTrackingPage = lazy(() => import('@/pages/order/OrderTrackingPage'))
+const AdminPage = lazy(() => import('@/pages/admin/AdminPage'))
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <Suspense
+          fallback={
+            <div className="flex min-h-screen items-center justify-center bg-bg-primary">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-accent-primary border-t-transparent" />
+            </div>
+          }
+        >
+          <Routes>
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/login" element={<LoginPage />} />
 
@@ -59,6 +68,7 @@ export default function App() {
             element={<PlaceholderPage title="404" description="Halaman tidak ditemukan." />}
           />
         </Routes>
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   )
