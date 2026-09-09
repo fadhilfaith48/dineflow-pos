@@ -30,6 +30,7 @@ export function PelayanPage() {
   const [payOrderNumber, setPayOrderNumber] = useState('')
   const [isDelivering, setIsDelivering] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function loadOrders() {
     api.getOrders().then(setOrders).catch(() => {
@@ -96,7 +97,8 @@ export function PelayanPage() {
   }
 
   async function handleSubmitOrder() {
-    if (!selectedTable || cart.lines.length === 0) return
+    if (!selectedTable || cart.lines.length === 0 || isSubmitting) return
+    setIsSubmitting(true)
     try {
       const order = await api.createOrder({
         tableId: selectedTable.id,
@@ -119,6 +121,8 @@ export function PelayanPage() {
       setPayOpen(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -178,6 +182,7 @@ export function PelayanPage() {
           onSetNote={cart.setNote}
           onSetSpice={cart.setSpiceLevel}
           onSubmit={handleSubmitOrder}
+          isSubmitting={isSubmitting}
           onBack={() => setView('tables')}
         />
       ) : view === 'orders' ? (
