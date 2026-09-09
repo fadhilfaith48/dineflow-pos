@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import type { DiningTable, MenuCategory, MenuItem, Order } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
@@ -70,12 +70,14 @@ export function PelayanPage() {
     }
   }, [])
 
+  const deferredSearch = useDeferredValue(search)
+
   const visibleItems = useMemo(() => {
-    const q = search.trim().toLowerCase()
+    const q = deferredSearch.trim().toLowerCase()
     return items.filter(
       (item) => item.categoryId === activeCategory && (q === '' || item.name.toLowerCase().includes(q)),
     )
-  }, [items, activeCategory, search])
+  }, [items, activeCategory, deferredSearch])
 
   const seatedAt = useMemo(() => {
     const map: Record<number, number> = {}
