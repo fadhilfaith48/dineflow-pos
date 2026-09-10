@@ -26,4 +26,11 @@ interface PaymentGateway
      * @return 'pending'|'paid'|'failed'|'expired'|'cancelled'
      */
     public function markPaid(string $reference): string;
+
+    /**
+     * Simulasikan pembayaran lunas — hanya driver Xendit (endpoint test mode).
+     *
+     * @return 'pending'|'paid'|'failed'|'expired'|'cancelled'
+     */
+    public function simulatePayment(string $reference): string;
 }

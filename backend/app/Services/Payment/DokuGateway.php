@@ -75,6 +75,7 @@ class DokuGateway implements PaymentGateway
             'merchantId' => $this->config['merchant_id'],
             'terminalId' => $this->config['terminal_id'],
             'additionalInfo' => [
+                'feeType' => $this->config['fee_type'] ?? '1',
                 'postalCode' => $this->config['postal_code'] ?? '',
             ],
         ];
@@ -153,6 +154,11 @@ class DokuGateway implements PaymentGateway
     public function markPaid(string $reference): string
     {
         throw new RuntimeException('markPaid hanya tersedia untuk driver Mock.');
+    }
+
+    public function simulatePayment(string $reference): string
+    {
+        throw new RuntimeException('simulatePayment hanya tersedia untuk driver Xendit (test mode).');
     }
 
     /**

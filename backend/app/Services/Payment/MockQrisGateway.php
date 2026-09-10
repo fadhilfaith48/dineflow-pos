@@ -37,4 +37,9 @@ class MockQrisGateway implements PaymentGateway
     {
         return 'paid';
     }
+
+    public function simulatePayment(string $reference): string
+    {
+        return $this->markPaid($reference);
+    }
 }
