@@ -60,7 +60,13 @@ export function MenuPage() {
     setTableChecked(false)
     setTableNotFound(false)
     api.getTables().then((tables) => {
-      const found = tables.find((t) => t.number.toLowerCase() === table.toLowerCase())
+      const key = table.trim().toLowerCase()
+      const found = tables.find(
+        (t) =>
+          t.number.toLowerCase() === key ||
+          t.qrCode.toLowerCase() === key ||
+          String(t.id) === key,
+      )
       if (found) {
         setTableId(found.id)
       } else {
