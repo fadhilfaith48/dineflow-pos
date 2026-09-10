@@ -229,6 +229,10 @@ export class MockApi implements Api {
     return { status: 'paid', orderNumber: order?.orderNumber ?? '' }
   }
 
+  async simulatePayment(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    return this.markMockPaid(reference)
+  }
+
   async updateMenuItem(id: number, data: Partial<MenuItem>): Promise<MenuItem> {
     const item = menuItems.find((m) => m.id === id)
     if (!item) throw new Error('Menu tidak ditemukan')

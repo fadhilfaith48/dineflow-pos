@@ -53,6 +53,20 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
     }
   }
 
+  async function handleSimulatePaid() {
+    setError('')
+    try {
+      const res = await api.simulatePayment(reference)
+      if (res.status === 'paid') {
+        if (timer.current) clearInterval(timer.current)
+        setDone(true)
+        onPaidRef.current()
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal mensimulasikan pembayaran.')
+    }
+  }
+
   return (
     <div className="flex flex-col items-center text-center">
       <div className="w-fit rounded-xl border border-border-subtle p-4">
@@ -78,6 +92,14 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
               className="mt-4 h-14 w-full rounded-xl bg-accent-primary font-semibold text-text-on-accent transition-colors hover:bg-accent-primary-hover"
             >
               Saya Sudah Bayar (Demo)
+            </button>
+          )}
+          {gateway === 'xendit' && (
+            <button
+              onClick={handleSimulatePaid}
+              className="mt-4 h-14 w-full rounded-xl border border-accent-primary bg-accent-tint font-semibold text-accent-primary transition-colors hover:bg-accent-primary/10"
+            >
+              Simulasi Pembayaran (Test Mode)
             </button>
           )}
           {error && (

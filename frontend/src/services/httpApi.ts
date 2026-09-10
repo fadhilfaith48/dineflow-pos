@@ -283,6 +283,13 @@ export class HttpApi implements Api {
     })
   }
 
+  async simulatePayment(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }> {
+    return request<{ status: PaymentStatus; orderNumber: string }>(
+      `/payments/${reference}/simulate-payment`,
+      { method: 'POST' },
+    )
+  }
+
   async createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {
     const payload: Record<string, unknown> = {
       name: input.name,

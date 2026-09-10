@@ -26,6 +26,7 @@ export interface Api {
   checkoutOrder(orderId: number): Promise<CheckoutResult>
   getPaymentStatus(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }>
   markMockPaid(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }>
+  simulatePayment(reference: string): Promise<{ status: PaymentStatus; orderNumber: string }>
   createMenuItem(input: CreateMenuItemInput): Promise<MenuItem>
   updateMenuItem(id: number, data: Omit<Partial<MenuItem>, 'variants'> & { image?: File; variants?: MenuVariantInput[] }): Promise<MenuItem>
   deleteMenuItem(id: number): Promise<void>
