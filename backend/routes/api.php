@@ -27,6 +27,8 @@ Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->mi
 Route::post('/orders/{order}/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:20,1');
 Route::get('/payments/{reference}/status', [PaymentController::class, 'status'])->middleware('throttle:60,1');
 Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid']);
+// Simulasi pembayaran (hanya driver xendit, endpoint test mode Xendit).
+Route::post('/payments/{reference}/simulate-payment', [PaymentController::class, 'simulate']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);

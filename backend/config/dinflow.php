@@ -17,7 +17,9 @@ return [
     |------------------------------------------------------------------
     */
 
-    // Driver pembayaran: 'mock' (demo tanpa akun) atau 'doku' (sandbox).
+    // Driver pembayaran: 'mock' (demo tanpa akun), 'doku' (DOKU SNAP QRIS),
+    // atau 'xendit' (Xendit QRIS). Bila kredensial driver tidak lengkap,
+    // aplikasi otomatis jatuh ke mock agar demo tetap jalan.
     'payment_driver' => env('PAYMENT_DRIVER', 'mock'),
 
     'doku' => [
@@ -35,6 +37,12 @@ return [
                 ? 'https://api.doku.com'
                 : 'https://api-sandbox.doku.com'
         ),
+    ],
+
+    'xendit' => [
+        'secret_key' => env('XENDIT_SECRET_KEY', ''),
+        'host' => env('XENDIT_HOST', 'https://api.xendit.co'),
+        'callback_url' => env('XENDIT_CALLBACK_URL', ''),
     ],
 
 ];

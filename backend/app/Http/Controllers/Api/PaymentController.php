@@ -155,6 +155,34 @@ class PaymentController extends Controller
     }
 
     /**
+     * Simulasi pembayaran QRIS masuk — hanya driver Xendit (endpoint test mode).
+     * Dipakai demo: tombol "Simulasi Pembayaran" -> Xendit sandbox benar-benar
+     * mencatat payment SUCCEEDED -> polling selanjutnya mendeteksi 'paid'.
+     */
+    public function simulate(Request $request, string $reference): JsonResponse
+    {
+        if (config('dinflow.payment_driver') !== 'xendit') {
+            abort(403, 'Endpoint simulasi hanya tersedia pada driver xendit.');
+        }
+
+        $payment = Payment::where('reference', $reference)->with('order')->firstOrFail();
+
+        if ($payment->status !== 'paid') {
+            $gateway = app(PaymentGateway::class);
+            $gatewayStatus = $gateway->simulatePayment($reference);
+
+            if ($gatewayStatus === 'paid') {
+                $this->confirmPaid($payment);
+            }
+        }
+
+        return response()->json([
+            'status' => $payment->fresh()->status,
+            'orderNumber' => $payment->order->order_number,
+        ]);
+    }
+
+    /**
      * Konfirmasi pembayaran QRIS lunas: simpan status paid, order lanjut ke dapur.
      */
     private function confirmPaid(Payment $payment): void
