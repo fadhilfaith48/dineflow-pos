@@ -16,6 +16,13 @@ class PrepayTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('dinflow.payment_driver', 'mock');
+    }
+
     private function makeMenu(): MenuItem
     {
         $category = MenuCategory::create(['name' => 'Makanan', 'order' => 1]);
