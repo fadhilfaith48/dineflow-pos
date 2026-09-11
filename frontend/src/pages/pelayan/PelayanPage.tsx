@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { DiningTable, MenuCategory, MenuItem, Order } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
@@ -8,8 +9,10 @@ import { TableSelect } from './TableSelect'
 import { WaiterOrder } from './WaiterOrder'
 import { OrderList } from './OrderList'
 import { QrisPay } from '@/components/QrisPay'
+import { formatRupiah } from '@/lib/format'
 
 type View = 'tables' | 'order' | 'orders'
+type PayMethod = 'choose' | 'qris' | 'kasir'
 
 export function PelayanPage() {
   const cart = useCart()
@@ -23,6 +26,8 @@ export function PelayanPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
   const [payOpen, setPayOpen] = useState(false)
+  const [payMethod, setPayMethod] = useState<PayMethod>('choose')
+  const [payOrderId, setPayOrderId] = useState(0)
   const [payRef, setPayRef] = useState('')
   const [payQr, setPayQr] = useState<string | null>(null)
   const [payGateway, setPayGateway] = useState('mock')
@@ -110,16 +115,8 @@ export function PelayanPage() {
       cart.clear()
       setPayAmount(order.total)
       setPayOrderNumber(order.orderNumber)
-      try {
-        const checkout = await api.checkoutOrder(order.id)
-        setPayRef(checkout.reference)
-        setPayQr(checkout.qrContent)
-        setPayGateway(checkout.gateway)
-      } catch {
-        setPayRef(String(order.id))
-        setPayQr(null)
-        setPayGateway('mock')
-      }
+      setPayOrderId(order.id)
+      setPayMethod('choose')
       setPayOpen(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
@@ -128,8 +125,27 @@ export function PelayanPage() {
     }
   }
 
+  async function handlePayQris() {
+    setPayMethod('qris')
+    try {
+      const checkout = await api.checkoutOrder(payOrderId)
+      setPayRef(checkout.reference)
+      setPayQr(checkout.qrContent)
+      setPayGateway(checkout.gateway)
+    } catch {
+      setPayRef(String(payOrderId))
+      setPayQr(null)
+      setPayGateway('mock')
+    }
+  }
+
+  function handlePayKasir() {
+    setPayMethod('kasir')
+  }
+
   async function handlePaid() {
     setPayOpen(false)
+    setPayMethod('choose')
     setView('orders')
     loadOrders()
     loadTables()
@@ -202,25 +218,116 @@ export function PelayanPage() {
           <div className="w-full max-w-sm rounded-2xl bg-bg-surface p-5 shadow-modal">
             <div className="mb-4 text-center">
               <div className="text-caption font-semibold uppercase tracking-wider text-text-secondary">
-                Minta Pelanggan Memindai QRIS
+                {payMethod === 'qris' ? 'Minta Pelanggan Memindai QRIS' : payMethod === 'kasir' ? 'Bayar di Kasir' : 'Bayar di Muka'}
               </div>
               <div className="font-num text-heading font-bold text-accent-primary">{payOrderNumber}</div>
             </div>
-            <QrisPay
-              reference={payRef || String(payAmount)}
-              qrContent={payQr}
-              gateway={payGateway}
-              total={payAmount}
-              onPaid={handlePaid}
-            />
+
+            {payMethod === 'choose' && (
+              <>
+                <p className="text-center text-body text-text-secondary">
+                  Total tagihan{' '}
+                  <span className="font-num font-bold text-text-primary">{formatRupiah(payAmount)}</span>
+                </p>
+                <p className="mt-1 text-center text-caption text-text-secondary">
+                  Pilih cara bayar di muka sebelum dapur memasak pesanan.
+                </p>
+
+                <button
+                  onClick={handlePayQris}
+                  className="mt-5 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-tint text-accent-primary">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <path d="M14 14h3v3h-3zM21 14v3M14 21h3" />
+                      </svg>
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-subheading font-bold text-text-primary">QRIS Langsung</span>
+                      <span className="mt-0.5 block text-caption text-text-secondary">Pelanggan memindai QRIS di HP ini</span>
+                    </span>
+                    <span className="text-text-secondary">›</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={handlePayKasir}
+                  className="mt-3 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-tint text-accent-primary">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="14" height="14" rx="2" />
+                        <path d="M16 9h4a1 1 0 0 1 1 1v7a3 3 0 0 1-3 3h-1" />
+                        <circle cx="12" cy="13" r="1.5" />
+                      </svg>
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-subheading font-bold text-text-primary">Bayar di Kasir</span>
+                      <span className="mt-0.5 block text-caption text-text-secondary">Pelanggan bayar tunai / debit di kasir</span>
+                    </span>
+                    <span className="text-text-secondary">›</span>
+                  </div>
+                </button>
+              </>
+            )}
+
+            {payMethod === 'qris' && (
+              <>
+                <QrisPay
+                  reference={payRef || String(payAmount)}
+                  qrContent={payQr}
+                  gateway={payGateway}
+                  total={payAmount}
+                  onPaid={handlePaid}
+                />
+                <button
+                  onClick={() => setPayMethod('choose')}
+                  className="mt-3 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
+                >
+                  Pilih Metode Lain
+                </button>
+              </>
+            )}
+
+            {payMethod === 'kasir' && (
+              <>
+                <p className="text-center text-body text-text-secondary">
+                  Tunjukkan kode ini ke kasir. Pesanan baru dimasak setelah lunas.
+                </p>
+                <div className="mt-4 flex flex-col items-center rounded-xl border border-border-subtle bg-bg-surface p-5">
+                  <div className="rounded-lg bg-white p-3">
+                    <QRCodeSVG value={`${window.location.origin}/order/${payOrderNumber}`} size={160} />
+                  </div>
+                  <div className="mt-3 font-num text-subheading font-bold tracking-widest text-text-primary">
+                    {payOrderNumber}
+                  </div>
+                  <div className="mt-1 font-num text-body font-bold text-accent-primary">
+                    Total tagihan: {formatRupiah(payAmount)}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPayMethod('choose')}
+                  className="mt-3 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
+                >
+                  Pilih Metode Lain
+                </button>
+              </>
+            )}
+
             <button
               onClick={() => {
                 setPayOpen(false)
+                setPayMethod('choose')
                 setView('tables')
                 setSelectedTable(null)
                 cart.clear()
               }}
-              className="mt-4 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
+              className="mt-2 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
             >
               Batal
             </button>
