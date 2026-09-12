@@ -12,7 +12,7 @@ interface OrderListProps {
 }
 
 export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: OrderListProps) {
-  const active = orders.filter((o) => o.status !== 'dibatalkan')
+  const active = orders.filter((o) => o.status === 'menunggu' || o.status === 'diproses')
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-bg-secondary">
