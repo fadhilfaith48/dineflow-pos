@@ -328,10 +328,10 @@ export function MenuPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
       <header className="sticky top-0 z-20 border-b border-border-subtle bg-bg-surface px-5 py-4">
         <div className="flex items-center gap-2">
-          <img src="/favicon.png" alt="Logo DineFlow" className="h-8 w-auto object-contain" />
-          <h1 className="font-num text-heading font-bold tracking-tighter text-text-primary">
-            DineFlow<span className="text-accent-primary">Restaurant</span>
-          </h1>
+          <img src="/favicon.png" alt="Logo DineFlow" className="h-10 w-auto object-contain" />
+          <div className="font-num text-heading font-bold tracking-tighter text-text-primary">
+            DineFlow<span className="text-accent-primary">Restoran</span>
+          </div>
         </div>
         <p className="mt-1 text-caption text-text-secondary">Scan & pesan sendiri · Meja {table}</p>
       </header>
