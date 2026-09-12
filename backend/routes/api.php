@@ -29,6 +29,9 @@ Route::get('/payments/{reference}/status', [PaymentController::class, 'status'])
 Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid']);
 // Simulasi pembayaran (hanya driver xendit, endpoint test mode Xendit).
 Route::post('/payments/{reference}/simulate-payment', [PaymentController::class, 'simulate']);
+// Pembatalan self-order (publik): batalkan pesanan sendiri sebelum bayar di muka.
+// Dilindungi controller: hanya source self-order + status menunggu + dalam jendela waktu.
+Route::post('/orders/{order}/void', [OrderController::class, 'cancel'])->middleware('throttle:10,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
@@ -63,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->middleware('role:kasir,pelayan,dapur,admin');
     Route::patch('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware('role:kasir,admin');
     Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->middleware('role:kasir,admin');
-    Route::patch('/orders/{order}/void', [OrderController::class, 'void'])->middleware('role:kasir,admin,dapur');
+    Route::patch('/orders/{order}/void', [OrderController::class, 'void'])->middleware('role:kasir,admin,dapur,pelayan');
     Route::patch('/orders/{order}/items/{itemId}', [OrderController::class, 'updateItemStatus'])->middleware('role:dapur,pelayan,admin');
     Route::post('/orders/{order}/payments', [PaymentController::class, 'store'])->middleware('role:kasir,admin');
 });

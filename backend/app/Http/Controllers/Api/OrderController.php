@@ -204,6 +204,52 @@ class OrderController extends Controller
     }
 
     /**
+     * Batalkan pesanan dari sisi pelanggan (self-order publik, tanpa login).
+     * Aman karena dibatasi: hanya pesanan self-order, belum dibayar
+     * (status 'menunggu'), dan masih dalam jendela waktu pembatalan.
+     */
+    public function cancel(Request $request, Order $order): OrderResource
+    {
+        if ($order->source !== 'self-order') {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan ini tidak bisa dibatalkan lewat halaman pelanggan'],
+            ]);
+        }
+
+        if ($order->status !== 'menunggu') {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan tidak dalam status menunggu pembayaran'],
+            ]);
+        }
+
+        $minutes = (int) config('dinflow.self_order_cancel_minutes', 10);
+        if ($order->created_at->lt(now()->subMinutes($minutes))) {
+            throw ValidationException::withMessages([
+                'order' => ['Batas waktu pembatalan telah lewat. Silakan hubungi kasir.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->status = 'dibatalkan';
+            $order->void_reason = 'Dibatalkan pelanggan sebelum bayar';
+            $order->voided_by = null;
+            $order->save();
+
+            if ($order->table_id) {
+                $table = Table::lockForUpdate()->find($order->table_id);
+                if ($table && $table->status === 'terisi') {
+                    $table->status = 'kosong';
+                    $table->save();
+                }
+            }
+        });
+
+        OrderStatusChanged::dispatch($order, 'voided');
+
+        return new OrderResource($order->load(['table', 'items']));
+    }
+
+    /**
      * Tandai pesanan selesai & lepaskan meja (dipakai setelah layanan selesai,
      * karena pembayaran dilakukan di muka).
      */

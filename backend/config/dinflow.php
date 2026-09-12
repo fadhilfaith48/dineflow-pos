@@ -13,6 +13,17 @@ return [
 
     /*
     |------------------------------------------------------------------
+    | Pembatalan pesanan self-order (publik)
+    |------------------------------------------------------------------
+    */
+
+    // Jendela waktu (menit) sejak pesanan dibuat untuk pelanggan membatalkan
+    // sendiri sebelum bayar. Lewat batas ini, hanya kasir/dapur/pelayan yang
+    // bisa void (lewat role-gate) untuk membersihkan pesanan menunggu.
+    'self_order_cancel_minutes' => (int) env('SELF_ORDER_CANCEL_MINUTES', 10),
+
+    /*
+    |------------------------------------------------------------------
     | Pembayaran (bayar di muka) & gateway
     |------------------------------------------------------------------
     */
