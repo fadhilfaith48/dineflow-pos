@@ -36,6 +36,8 @@ export function PelayanPage() {
   const [isDelivering, setIsDelivering] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
 
   function loadOrders() {
     api.getOrders().then(setOrders).catch(() => {
@@ -141,6 +143,29 @@ export function PelayanPage() {
 
   function handlePayKasir() {
     setPayMethod('kasir')
+  }
+
+  async function handleCancelOrder() {
+    if (isCancelling || !payOrderId) return
+    const ok = window.confirm(
+      `Batalkan pesanan ${payOrderNumber}?\nPesanan belum dibayar dan akan dibatalkan.`,
+    )
+    if (!ok) return
+    setIsCancelling(true)
+    setCancelError('')
+    try {
+      await api.voidOrder(payOrderId, 'Dibatalkan pelayan sebelum bayar')
+      setPayOpen(false)
+      setPayMethod('choose')
+      setView('tables')
+      setSelectedTable(null)
+      cart.clear()
+      loadOrders()
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
   async function handlePaid() {
@@ -319,17 +344,15 @@ export function PelayanPage() {
               </>
             )}
 
+            {cancelError && (
+              <p className="mt-3 text-center text-caption font-semibold text-status-danger">{cancelError}</p>
+            )}
             <button
-              onClick={() => {
-                setPayOpen(false)
-                setPayMethod('choose')
-                setView('tables')
-                setSelectedTable(null)
-                cart.clear()
-              }}
-              className="mt-2 w-full rounded-xl border border-border-subtle py-3 text-body font-semibold text-text-secondary transition-colors hover:bg-bg-secondary"
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+              className="mt-3 w-full rounded-xl border border-status-danger/30 py-3 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/10 disabled:opacity-40 disabled:pointer-events-none"
             >
-              Batal
+              {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan'}
             </button>
           </div>
         </div>

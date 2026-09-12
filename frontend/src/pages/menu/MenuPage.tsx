@@ -37,6 +37,8 @@ export function MenuPage() {
   const [payAmount, setPayAmount] = useState(0)
   const [payMethod, setPayMethod] = useState<PayMethod>('choose')
   const [selectedVariant, setSelectedVariant] = useState<Record<number, string>>({})
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -139,6 +141,29 @@ export function MenuPage() {
     setPayMethod('kasir')
   }
 
+  async function handleCancelOrder() {
+    if (isCancelling || !trackedOrder) return
+    const ok = window.confirm(
+      `Batalkan pesanan ${orderNumber}?\nPesanan belum dibayar dan akan dibatalkan.`,
+    )
+    if (!ok) return
+    setIsCancelling(true)
+    setCancelError('')
+    try {
+      await api.cancelOrder(trackedOrder.id)
+      setOrderNumber('')
+      setTrackedOrder(null)
+      setPayMethod('choose')
+      setPayRef('')
+      setPayQr(null)
+      setView('menu')
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   async function handleQrisPaid() {
     try {
       const list = await api.getOrders()
@@ -222,11 +247,15 @@ export function MenuPage() {
               </button>
             </div>
             <div className="border-t border-border-subtle bg-bg-surface p-4">
+              {cancelError && (
+                <p className="mb-2 text-center text-caption font-semibold text-status-danger">{cancelError}</p>
+              )}
               <button
-                onClick={() => setView('menu')}
-                className="h-14 w-full rounded-xl border border-border-subtle text-body font-semibold text-text-primary"
+                onClick={handleCancelOrder}
+                disabled={isCancelling}
+                className="h-14 w-full rounded-xl border border-status-danger/30 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/10 disabled:opacity-40 disabled:pointer-events-none"
               >
-                Batal, Kembali ke Menu
+                {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan'}
               </button>
             </div>
           </>

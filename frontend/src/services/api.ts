@@ -21,6 +21,7 @@ export interface Api {
   confirmOrder(orderId: number): Promise<Order>
   completeOrder(orderId: number): Promise<Order>
   voidOrder(orderId: number, reason: string): Promise<Order>
+  cancelOrder(orderId: number): Promise<Order>
   updateItemStatus(orderId: number, itemId: number, status: Order['items'][number]['status']): Promise<Order>
   processPayment(payload: PaymentPayload): Promise<Payment>
   checkoutOrder(orderId: number): Promise<CheckoutResult>

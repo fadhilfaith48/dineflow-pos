@@ -251,6 +251,12 @@ export class HttpApi implements Api {
     }).then(unwrap)
   }
 
+  async cancelOrder(orderId: number): Promise<Order> {
+    return request<{ data: Order }>(`/orders/${orderId}/void`, {
+      method: 'POST',
+    }).then(unwrap)
+  }
+
   async updateItemStatus(
     orderId: number,
     itemId: number,

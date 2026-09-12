@@ -144,6 +144,25 @@ export class MockApi implements Api {
     return order
   }
 
+  async cancelOrder(orderId: number): Promise<Order> {
+    const order = orders.find((o) => o.id === orderId)
+    if (!order) throw new Error('Pesanan tidak ditemukan')
+    if (order.source !== 'self-order') {
+      throw new Error('Pesanan ini tidak bisa dibatalkan lewat halaman pelanggan')
+    }
+    if (order.status !== 'menunggu') {
+      throw new Error('Pesanan tidak dalam status menunggu pembayaran')
+    }
+    order.status = 'dibatalkan'
+    order.voidReason = 'Dibatalkan pelanggan sebelum bayar'
+    order.updatedAt = new Date().toISOString()
+    if (order.tableId) {
+      const table = tables.find((t) => t.id === order.tableId)
+      if (table && table.status === 'terisi') table.status = 'kosong'
+    }
+    return order
+  }
+
   async updateItemStatus(
     orderId: number,
     itemId: number,
