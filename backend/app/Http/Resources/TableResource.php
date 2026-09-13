@@ -14,7 +14,9 @@ class TableResource extends JsonResource
             'number' => $this->number,
             'status' => $this->status,
             'seats' => $this->seats,
-            'qrCode' => $this->qr_code,
+            // Token QR hanya untuk staf login (kasir/pelayan/admin) agar URL
+            // /menu/{token} tidak bisa dibaca orang dari daftar meja publik.
+            'qrCode' => $request->user('sanctum') ? $this->qr_code : null,
         ];
     }
 }

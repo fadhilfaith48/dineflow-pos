@@ -157,9 +157,21 @@ class DatabaseSeeder extends Seeder
         foreach ($tables as $table) {
             Table::updateOrCreate(
                 ['number' => $table[0]],
-                ['seats' => $table[1], 'status' => $table[2], 'qr_code' => $table[0]],
+                ['seats' => $table[1], 'status' => $table[2], 'qr_code' => $this->tableQrToken()],
             );
         }
+    }
+
+    private function tableQrToken(): string
+    {
+        $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+        $out = '';
+
+        for ($i = 0; $i < 8; $i++) {
+            $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        return $out;
     }
 
     private function seedOrders(): void

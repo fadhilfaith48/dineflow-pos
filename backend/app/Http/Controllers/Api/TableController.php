@@ -16,18 +16,30 @@ class TableController extends Controller
         return TableResource::collection(Table::orderBy('number')->get());
     }
 
+    /**
+     * Resolve token QR dari URL /menu/{slug}. Publik, sehingga token itu sendiri
+     * adalah "kunci" meja — 404 bila token tidak dikenal.
+     */
+    public function resolve(string $slug): TableResource
+    {
+        $table = Table::where('qr_code', $slug)->firstOrFail();
+
+        return new TableResource($table);
+    }
+
     public function store(Request $request): TableResource
     {
         $validated = $request->validate([
             'number' => ['required', 'string', 'max:20', 'unique:tables,number'],
             'seats' => ['required', 'integer', 'min:1'],
+            'qrCode' => ['sometimes', 'nullable', 'string', 'max:32'],
         ]);
 
         $table = Table::create([
             'number' => $validated['number'],
             'seats' => $validated['seats'],
             'status' => 'kosong',
-            'qr_code' => $validated['number'],
+            'qr_code' => $validated['qrCode'] ?? $this->newQrToken(),
         ]);
 
         return new TableResource($table);
@@ -65,5 +77,17 @@ class TableController extends Controller
         $table->delete();
 
         return response()->json(['message' => 'Meja dihapus']);
+    }
+
+    private function newQrToken(): string
+    {
+        $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+        $out = '';
+
+        for ($i = 0; $i < 8; $i++) {
+            $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        return $out;
     }
 }

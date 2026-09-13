@@ -63,7 +63,11 @@ class OrderController extends Controller
             $this->assertCanCreateOrder($request);
         }
 
-        $order = DB::transaction(function () use ($validated, $source) {
+        $deviceId = $source === 'self-order'
+            ? $this->validDeviceId((string) $request->header('X-Device-Id', ''))
+            : null;
+
+        $order = DB::transaction(function () use ($validated, $source, $deviceId) {
             $tableId = $validated['tableId'] ?? null;
             $table = $tableId ? Table::lockForUpdate()->find($tableId) : null;
 
@@ -110,6 +114,7 @@ class OrderController extends Controller
                 'order_number' => $orderNumber,
                 'table_id' => $table?->id,
                 'source' => $source,
+                'device_id' => $deviceId,
                 // Bayar di muka: order menunggu pembayaran, BELUM masuk dapur.
                 'status' => 'menunggu',
                 'total' => (int) round($subtotal * (1 + $taxRate)),
@@ -280,6 +285,13 @@ class OrderController extends Controller
             throw ValidationException::withMessages([
                 'order' => ['Batas waktu pembatalan telah lewat. Silakan hubungi kasir.'],
             ]);
+        }
+
+        // Pengaman: pesanan self-order hanya bisa dibatalkan dari perangkat
+        // (X-Device-Id) yang membuatnya. Mencegah penebakan id order.
+        $device = $this->validDeviceId((string) $request->header('X-Device-Id', ''));
+        if ($order->device_id && $device !== $order->device_id) {
+            abort(403, 'Pesanan hanya bisa dibatalkan dari perangkat yang membuatnya.');
         }
 
         DB::transaction(function () use ($order) {

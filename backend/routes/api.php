@@ -18,6 +18,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/menu-items', [MenuItemController::class, 'index']);
 Route::get('/tables', [TableController::class, 'index']);
+Route::get('/tables/{slug}', [TableController::class, 'resolve'])->middleware('throttle:60,1');
 Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
 // Tracking order publik: dipakai halaman /order/ORD-XXXX hasil scan QR pelanggan.
 Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->middleware('throttle:60,1');
