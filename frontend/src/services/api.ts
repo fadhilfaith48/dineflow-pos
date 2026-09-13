@@ -12,6 +12,7 @@ export interface Api {
   getCategories(): Promise<MenuCategory[]>
   getMenuItems(categoryId?: number): Promise<MenuItem[]>
   getTables(): Promise<DiningTable[]>
+  getTableBySlug(slug: string): Promise<DiningTable>
   createTable(input: { number: string; seats: number }): Promise<DiningTable>
   updateTable(id: number, data: Partial<DiningTable>): Promise<DiningTable>
   deleteTable(id: number): Promise<void>

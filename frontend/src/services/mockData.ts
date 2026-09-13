@@ -46,14 +46,14 @@ export const mockMenuItems: MenuItem[] = [
 ]
 
 export const mockTables: DiningTable[] = [
-  { id: 1, number: 'T1', status: 'kosong', seats: 2, qrCode: 'T1' },
-  { id: 2, number: 'T2', status: 'terisi', seats: 4, qrCode: 'T2' },
-  { id: 3, number: 'T3', status: 'kosong', seats: 2, qrCode: 'T3' },
-  { id: 4, number: 'T4', status: 'perlu-dibersihkan', seats: 4, qrCode: 'T4' },
-  { id: 5, number: 'T5', status: 'terisi', seats: 6, qrCode: 'T5' },
-  { id: 6, number: 'T6', status: 'kosong', seats: 4, qrCode: 'T6' },
-  { id: 7, number: 'T7', status: 'kosong', seats: 2, qrCode: 'T7' },
-  { id: 8, number: 'T8', status: 'terisi', seats: 4, qrCode: 'T8' },
+  { id: 1, number: 'T1', status: 'kosong', seats: 2, qrCode: 'td8jvgbr' },
+  { id: 2, number: 'T2', status: 'terisi', seats: 4, qrCode: 'tudtvhxk' },
+  { id: 3, number: 'T3', status: 'kosong', seats: 2, qrCode: 'mdp2s9bx' },
+  { id: 4, number: 'T4', status: 'perlu-dibersihkan', seats: 4, qrCode: 'a8jfwyek' },
+  { id: 5, number: 'T5', status: 'terisi', seats: 6, qrCode: 'dcty63er' },
+  { id: 6, number: 'T6', status: 'kosong', seats: 4, qrCode: 'nba656rx' },
+  { id: 7, number: 'T7', status: 'kosong', seats: 2, qrCode: 'f39duyd2' },
+  { id: 8, number: 'T8', status: 'terisi', seats: 4, qrCode: 'ydu3csx4' },
 ]
 
 export const mockOrders: Order[] = [

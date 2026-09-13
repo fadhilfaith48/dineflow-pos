@@ -24,6 +24,7 @@ export function MenuPage() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [tableId, setTableId] = useState<number | null>(null)
+  const [tableNumber, setTableNumber] = useState('')
   const [tableChecked, setTableChecked] = useState(false)
   const [tableNotFound, setTableNotFound] = useState(false)
   const [view, setView] = useState<View>('menu')
@@ -61,20 +62,14 @@ export function MenuPage() {
     if (!table) return
     setTableChecked(false)
     setTableNotFound(false)
-    api.getTables().then((tables) => {
-      const key = table.trim().toLowerCase()
-      const found = tables.find(
-        (t) =>
-          t.number.toLowerCase() === key ||
-          t.qrCode.toLowerCase() === key ||
-          String(t.id) === key,
-      )
-      if (found) {
+    api
+      .getTableBySlug(table.trim().toLowerCase())
+      .then((found) => {
         setTableId(found.id)
-      } else {
-        setTableNotFound(true)
-      }
-    }).finally(() => setTableChecked(true))
+        setTableNumber(found.number)
+      })
+      .catch(() => setTableNotFound(true))
+      .finally(() => setTableChecked(true))
   }, [table])
 
   useEffect(() => {
@@ -180,7 +175,7 @@ export function MenuPage() {
         <div className="font-num text-heading text-status-danger">!</div>
         <h1 className="text-heading font-semibold text-text-primary">Meja tidak ditemukan</h1>
         <p className="text-body text-text-secondary">
-          Pastikan QR code yang dipindai benar dan meja sudah terdaftar.
+          Pindai ulang QR code di meja untuk membuka menu pesanan.
         </p>
       </div>
     )
@@ -192,7 +187,7 @@ export function MenuPage() {
         <header className="bg-accent-primary px-5 py-6 text-center text-text-on-accent">
           <div className="text-caption font-semibold uppercase tracking-wider opacity-80">Bayar di Muka</div>
           <div className="font-num text-heading font-bold">{orderNumber}</div>
-          <div className="mt-1 text-caption opacity-90">Meja {table}</div>
+          <div className="mt-1 text-caption opacity-90">Meja {tableNumber || table}</div>
         </header>
 
         {payMethod === 'choose' && (
@@ -317,7 +312,7 @@ export function MenuPage() {
     return (
       <OrderTracking
         orderNumber={orderNumber}
-        table={table}
+        table={tableNumber || table}
         order={trackedOrder}
         footerAction={{ label: 'Tambah Pesanan', onClick: () => setView('menu') }}
       />
@@ -333,7 +328,7 @@ export function MenuPage() {
             DineFlow<span className="text-accent-primary">Restoran</span>
           </div>
         </div>
-        <p className="mt-1 text-caption text-text-secondary">Scan & pesan sendiri · Meja {table}</p>
+        <p className="mt-1 text-caption text-text-secondary">Scan & pesan sendiri · Meja {tableNumber || table}</p>
       </header>
 
       <div className="flex flex-col gap-3 px-4 pt-3">

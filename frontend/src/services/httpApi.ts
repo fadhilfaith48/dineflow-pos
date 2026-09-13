@@ -212,6 +212,10 @@ export class HttpApi implements Api {
     return request<{ data: DiningTable[] }>('/tables').then(unwrap)
   }
 
+  async getTableBySlug(slug: string): Promise<DiningTable> {
+    return request<{ data: DiningTable }>(`/tables/${encodeURIComponent(slug)}`).then(unwrap)
+  }
+
   async createTable(input: { number: string; seats: number }): Promise<DiningTable> {
     return request<{ data: DiningTable }>('/tables', {
       method: 'POST',

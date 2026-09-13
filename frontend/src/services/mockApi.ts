@@ -45,6 +45,12 @@ export class MockApi implements Api {
     return [...tables]
   }
 
+  async getTableBySlug(slug: string): Promise<DiningTable> {
+    const table = tables.find((t) => t.qrCode.toLowerCase() === slug.toLowerCase())
+    if (!table) throw new Error('Meja tidak ditemukan')
+    return { ...table }
+  }
+
   async createTable(input: { number: string; seats: number }): Promise<DiningTable> {
     if (tables.some((t) => t.number.toLowerCase() === input.number.toLowerCase())) {
       throw new Error('Nomor meja sudah dipakai')

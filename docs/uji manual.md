@@ -75,8 +75,8 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 
 | # | Langkah | Hasil yang diharapkan | ✅/❌ |
 |---|---|---|---|
-| 5.1 | Buka `http://localhost:5173/menu/T1` **tanpa login** | Katalog menu tampil dengan header meja T1 (halaman publik) | ✅ |
-| 5.2 | Buka `/menu/MEJA_SALAH` (tidak ada) | Muncul "Meja tidak ditemukan" | ✅ |
+| 5.1 | Buka menu lewat **QR meja** (URL `/menu/x7k2p9m4` — token 8 karakter per meja, lihat Admin → Lihat QR) **tanpa login** | Katalog menu tampil dengan header **Meja T1** (diambil dari DB, bukan dari URL) (halaman publik) | ✅ |
+| 5.2 | Buka `/menu/MEJA_SALAH` atau `/menu/T1` (tebak nama/id meja — tidak lagi diterima) | Muncul "Meja tidak ditemukan — Pindai ulang QR code di meja" | ✅ |
 | 5.3 | Tambah item ke keranjang, isi catatan, **Lanjut ke Pembayaran** | Layar **pilih metode** tampil dengan total tagihan: 2 kartu (**Bayar Langsung lewat HP (QRIS/E-Wallet)** & **Bayar di Kasir**); order jadi `menunggu` di panel Kasir | ✅ |
 | 5.4 | Pilih **Bayar Langsung lewat HP** → klik **"Saya Sudah Bayar"** | QRIS tampil → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
 | 5.5 | Pilih **Bayar di Kasir** | Barcode berisi URL `http://host/order/ORD-XXXX` + nomor besar tampil (**ditunjukkan ke kasir**, bukan di-scan pelanggan lain); order tetap `menunggu` (belum ke dapur) | ✅ |
@@ -85,6 +85,8 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 5.7b | Order tanpa bayar > 10 menit → coba Batalkan Pesanan (atau coba `POST /api/orders/ORD-ID/void`) | Muncul pesan "Batas waktu pembatalan telah lewat" atau "tidak dalam status menunggu"; kasir tetap bisa batalkan manual via tab Masuk | ⬜ |
 | 5.8 | Dari satu meja, batal pesanan **berkali-kali** (5×+) dalam jendela 10 menit | Tiap tekan **"Batalkan Pesanan" selalu berhasil** → order `dibatalkan` → **langsung hilang dari tab Masuk kasir real-time** (tidak ada batas 3×/10 mnt pada batal) | ⬜ |
 | 5.9 | Buat order lewat QR > 5× dalam 1 jam (perangkat sama) → buat lagi | Order ke-6 → pesan "Terlalu sering membuat pesanan. Coba lagi dalam satu jam."; pelanggan lain (perangkat berbeda) tetap bisa buat | ⬜ |
+| 5.10 | Cek `GET /api/tables` **tanpa login** | daftar meja TANPA field `qrCode` (token tidak bocor ke publik) | ⬜ |
+| 5.11 | Order self-order dibuat di HP-A → coba batalkan dari **HP lain** (perangkat berbeda) | Ditolak: "Pesanan hanya bisa dibatalkan dari perangkat yang membuatnya."; batal dari HP-A tetap berhasil; kasir (login) tetap bisa batalkan | ⬜ |
 | 5.7 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---
@@ -116,7 +118,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 7.1 | Login `pelayan` lalu akses `/kasir`, `/kitchen`, `/admin` | Ditolak, dialihkan ke `/pelayan` | ✅ |
 | 7.2 | Login `kasir` lalu akses `/admin` | Ditolak, dialihkan ke `/kasir` | ✅ |
 | 7.3 | Login `dapur` lalu akses `/kasir` | Ditolak, dialihkan ke `/kitchen` | ✅ |
-| 7.4 | Buka `/menu/T1` tanpa login | Tetap bisa (halaman publik) | ✅ |
+| 7.4 | Buka menu via URL token meja (`/menu/{token}`) tanpa login | Tetap bisa (halaman publik) | ✅ |
 | 7.5 | Kirim pesanan self-order tanpa login | Berhasil (POST `/orders` publik) | ✅ |
 | 7.6 | Login → logout → pakai token lama (cek via DevTools/network) | Request dengan token lama ditolak 401 (token di-revoke server) | ✅ (verifikasi curl: `/api/me` 200 → logout → token lama 401) |
 
