@@ -29,6 +29,7 @@ export function KasirPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [noteToPay, setNoteToPay] = useState<Order | null>(null)
   const [voidTarget, setVoidTarget] = useState<Order | null>(null)
+  const [voiding, setVoiding] = useState(false)
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -120,14 +121,22 @@ export function KasirPage() {
     if (!voidTarget) return
     const orderId = voidTarget.id
     setError('')
+    setVoiding(true)
     try {
       await api.voidOrder(orderId, reason)
-      setOrders(await api.getOrders())
-      setTables(await api.getTables())
+      setVoidTarget(null)
+      setOrders((prev) => prev.filter((o) => o.id !== orderId))
+      Promise.all([api.getOrders(), api.getTables()])
+        .then(([os, ts]) => {
+          setOrders(os)
+          setTables(ts)
+        })
+        .catch(() => {})
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membatalkan pesanan.')
-    } finally {
       setVoidTarget(null)
+    } finally {
+      setVoiding(false)
     }
   }
 
@@ -261,6 +270,7 @@ export function KasirPage() {
       <VoidOrderModal
         open={!!voidTarget}
         orderNumber={voidTarget?.orderNumber}
+        submitting={voiding}
         onClose={() => setVoidTarget(null)}
         onConfirm={handleVoidConfirm}
       />

@@ -4,19 +4,23 @@ import { Button } from '@/components/Button'
 interface VoidOrderModalProps {
   open: boolean
   orderNumber?: string
+  submitting?: boolean
   onClose: () => void
   onConfirm: (reason: string) => void
 }
 
 const PRESET_REASONS = ['Pelanggan batal', 'Salah input pesanan', 'Menu habis', 'Pesanan ganda']
 
-export function VoidOrderModal({ open, orderNumber, onClose, onConfirm }: VoidOrderModalProps) {
+export function VoidOrderModal({ open, orderNumber, submitting, onClose, onConfirm }: VoidOrderModalProps) {
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
 
   if (!open) return null
 
+  const isPreset = PRESET_REASONS.includes(reason)
+
   function submit() {
+    if (submitting) return
     if (!reason.trim()) {
       setError('Alasan pembatalan wajib diisi.')
       return
@@ -47,7 +51,7 @@ export function VoidOrderModal({ open, orderNumber, onClose, onConfirm }: VoidOr
           Alasan Pembatalan
         </label>
         <select
-          value={PRESET_REASONS.includes(reason) ? reason : ''}
+          value={isPreset ? reason : ''}
           onChange={(e) => {
             setReason(e.target.value)
             setError('')
@@ -63,7 +67,7 @@ export function VoidOrderModal({ open, orderNumber, onClose, onConfirm }: VoidOr
         </select>
 
         <input
-          value={reason}
+          value={isPreset ? '' : reason}
           onChange={(e) => {
             setReason(e.target.value)
             setError('')
@@ -75,11 +79,11 @@ export function VoidOrderModal({ open, orderNumber, onClose, onConfirm }: VoidOr
         {error && <p className="mt-2 text-caption font-semibold text-status-danger">{error}</p>}
 
         <div className="mt-6 flex gap-2">
-          <Button variant="outline" fullWidth onClick={onClose}>
+          <Button variant="outline" fullWidth onClick={onClose} disabled={submitting}>
             Batal
           </Button>
-          <Button variant="danger" fullWidth onClick={submit}>
-            Ya, Batalkan
+          <Button variant="danger" fullWidth onClick={submit} disabled={submitting}>
+            {submitting ? 'Membatalkan...' : 'Ya, Batalkan'}
           </Button>
         </div>
       </div>
