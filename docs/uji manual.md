@@ -55,7 +55,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 3.5 | Tombol **Daftar Pesanan** → tandai **diantar** | Status item jadi diantar (badge item + label "Sudah diantar") | ✅ |
 | 3.6 | Navbar ada tombol **Keluar** | Klik → kembali ke `/login` | ✅ |
 | 3.7 | Kirim & Bayar QRIS → klik **"Saya Sudah Bayar (Demo)"** | Pindah ke **Daftar Pesanan** tanpa error/halaman putih; order `menunggu`→`diproses`, meja jadi terisi (real-time) | ⬜ |
-| 3.7b | Kirim & Bayar QRIS → klik **"Batal"** (tutup overlay tanpa bayar) | Kembali ke **peta meja**, layar bersih (bukan tersangkut "Keranjang kosong"); order tetap `menunggu` dan muncul di tab **Masuk** kasir | ⬜ |
+| 3.7b | Kirim & Bayar QRIS → klik **"Batalkan Pesanan"** → konfirmasi dialog | Layar Batal → order jadi `dibatalkan` (alasan "Dibatalkan pelayan sebelum bayar"), **hilang dari tab Masuk kasir real-time**, kembali ke peta meja, layar bersih | ⬜ |
 
 ---
 
@@ -81,6 +81,10 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 5.4 | Pilih **Bayar Langsung lewat HP** → klik **"Saya Sudah Bayar"** | QRIS tampil → otomatis ke tracking (`paid`), order ke dapur ≤ 2 detik tanpa refresh | ✅ |
 | 5.5 | Pilih **Bayar di Kasir** | Barcode berisi URL `http://host/order/ORD-XXXX` + nomor besar tampil (**ditunjukkan ke kasir**, bukan di-scan pelanggan lain); order tetap `menunggu` (belum ke dapur) | ✅ |
 | 5.6 | Pelanggan tetap di layar **Bayar di Kasir** (barcode + nomor besar); kasir membayar lewat tab Masuk (lihat 8.2b/8.2c) | Begitu `paid`, layar pelanggan **otomatis pindah ke halaman tracking** `diproses` **secara real-time tanpa refresh** | ⬜ |
+| 5.7 | Selesai order (layar pilih metode) → klik **"Batalkan Pesanan"** → konfirmasi | Dialog konfirmasi → order jadi `dibatalkan`, **hilang dari tab Masuk kasir real-time**, kembali ke menu, meja jadi kosong | ⬜ |
+| 5.7b | Order tanpa bayar > 10 menit → coba Batalkan Pesanan (atau coba `POST /api/orders/ORD-ID/void`) | Muncul pesan "Batas waktu pembatalan telah lewat" atau "tidak dalam status menunggu"; kasir tetap bisa batalkan manual via tab Masuk | ⬜ |
+| 5.8 | Dari satu meja, batal pesanan **berkali-kali** (5×+) dalam jendela 10 menit | Tiap tekan **"Batalkan Pesanan" selalu berhasil** → order `dibatalkan` → **langsung hilang dari tab Masuk kasir real-time** (tidak ada batas 3×/10 mnt pada batal) | ⬜ |
+| 5.9 | Buat order lewat QR > 5× dalam 1 jam (perangkat sama) → buat lagi | Order ke-6 → pesan "Terlalu sering membuat pesanan. Coba lagi dalam satu jam."; pelanggan lain (perangkat berbeda) tetap bisa buat | ⬜ |
 | 5.7 | Menu yang ditandai **Habis** di Admin | Tidak muncul di katalog ini | ✅ |
 
 ---
