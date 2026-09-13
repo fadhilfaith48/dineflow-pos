@@ -102,8 +102,9 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 6.5 | Hapus menu (dengan konfirmasi) | Menu hilang | ✅ |
 | 6.6 | Tab **Manajemen Meja**: tambah meja | Meja muncul di peta | ✅ |
 | 6.7 | Ubah status meja via dropdown | Status berubah | ✅ |
-| 6.8 | Klik **Lihat QR** | Modal QR tampil, link ke `/menu/:qr` | ✅ |
+| 6.8 | Klik **Lihat QR** | Modal QR tampil, link ke `/menu/:token` | ✅ |
 | 6.9 | **Salin Link** | Link tersalin | ✅ |
+| 6.9b | **Cetak** → pilih printer (cetak browser) | Muncul **kartu QR meja** rapi: label "Meja X", QR 220px, link, caption "Scan untuk pesan mandiri" — tanpa tombol/header browser | ⬜ |
 | 6.10 | Tab **Manajemen Staf**: tambah staf (nama, username, role) | Staf muncul & bisa login | ✅ |
 | 6.11 | Ubah role staf | Role berubah | ✅ |
 | 6.12 | Tab **Laporan Penjualan**: pilih **Hari ini** | Total sesuai pesanan hari ini (bisa 0) | ✅ |

@@ -154,11 +154,11 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
           <div className="w-full max-w-sm rounded-xl bg-bg-surface p-6 text-center shadow-modal">
             <h3 className="text-heading font-semibold text-text-primary">QR Meja {qrTable.number}</h3>
             <p className="mt-1 text-caption text-text-secondary">Scan untuk pesan mandiri di meja ini</p>
-            <div className="mx-auto mt-4 w-fit rounded-xl border border-border-subtle p-4">
+            <div className="mx-auto mt-4 w-fit rounded-xl border border-border-subtle p-4 print:hidden">
               <QRCodeSVG value={qrUrl} size={180} />
             </div>
-            <p className="mt-3 font-num text-caption break-all text-text-secondary">{qrUrl}</p>
-            <div className="mt-4 flex gap-2">
+            <p className="mt-3 font-num text-caption break-all text-text-secondary print:hidden">{qrUrl}</p>
+            <div className="mt-4 flex gap-2 print:hidden">
               <Button
                 variant="outline"
                 fullWidth
@@ -169,9 +169,17 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
               >
                 Salin Link
               </Button>
-              <Button fullWidth onClick={() => setQrTable(null)}>
-                Tutup
+              <Button fullWidth onClick={() => window.print()}>
+                Cetak
               </Button>
+            </div>
+            <div id="print-area" className="qr-card hidden bg-white font-mono text-black print:block">
+              <div className="text-center text-[16px] font-bold tracking-wide">Meja {qrTable.number}</div>
+              <p className="mt-0.5 text-center text-[11px]">Scan untuk pesan mandiri</p>
+              <div className="mx-auto mt-3 w-fit">
+                <QRCodeSVG value={qrUrl} size={220} />
+              </div>
+              <p className="mt-3 text-center font-num text-[10px] break-all">{qrUrl}</p>
             </div>
           </div>
         </div>
