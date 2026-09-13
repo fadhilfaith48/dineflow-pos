@@ -174,7 +174,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
               </Button>
             </div>
             <div id="print-area" className="qr-card hidden bg-white print:block">
-              <QRCodeSVG value={qrUrl} size={240} />
+              <QRCodeSVG value={qrUrl} size={140} />
             </div>
           </div>
         </div>
