@@ -12,6 +12,7 @@ use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
@@ -55,6 +56,12 @@ class OrderController extends Controller
             'pelayan' => 'pelayan',
             default => 'self-order',
         };
+
+        // Anti-mainan: batas pembuatan hanya untuk alur publik (self-order),
+        // sehingga kasir/pelayan (login) tidak pernah kena pembatasan.
+        if ($source === 'self-order') {
+            $this->assertCanCreateOrder($request);
+        }
 
         $order = DB::transaction(function () use ($validated, $source) {
             $tableId = $validated['tableId'] ?? null;
@@ -137,7 +144,60 @@ class OrderController extends Controller
 
         OrderStatusChanged::dispatch($order, 'created');
 
+        if ($source === 'self-order') {
+            $this->bumpCreateCounters($request);
+        }
+
         return new OrderResource($order->load(['table', 'items']));
+    }
+
+    /**
+     * Anti-mainan pembuatan order (self-order publik). Bila header
+     * X-Device-Id ada & valid, kuota dihitung per perangkat; tanpa header
+     * (mis. wisata API / hapus localStorage) jatuh ke kuota per IP.
+     */
+    private function assertCanCreateOrder(Request $request): void
+    {
+        $device = $this->validDeviceId((string) $request->header('X-Device-Id', ''));
+
+        if ($device) {
+            $key = 'self-order-create:'.$device;
+            $max = (int) config('dinflow.self_order_create_per_device_per_hour', 5);
+        } else {
+            $key = 'self-order-create-ip:'.$request->ip();
+            $max = (int) config('dinflow.self_order_create_per_ip_per_hour', 20);
+        }
+
+        if (RateLimiter::tooManyAttempts($key, $max)) {
+            abort(429, 'Terlalu sering membuat pesanan. Coba lagi dalam satu jam.');
+        }
+    }
+
+    private function bumpCreateCounters(Request $request): void
+    {
+        $device = $this->validDeviceId((string) $request->header('X-Device-Id', ''));
+
+        if ($device) {
+            RateLimiter::hit('self-order-create:'.$device, 3600);
+        } else {
+            RateLimiter::hit('self-order-create-ip:'.$request->ip(), 3600);
+        }
+    }
+
+    private function cancelLimitKey(Request $request, Order $order): string
+    {
+        return $order->table_id
+            ? 'self-order-cancel:table:'.$order->table_id
+            : 'self-order-cancel:ip:'.$request->ip();
+    }
+
+    private function validDeviceId(string $value): ?string
+    {
+        $value = mb_strtolower(trim($value));
+
+        return $value !== '' && preg_match('/^[a-z0-9_-]{8,64}$/', $value)
+            ? $value
+            : null;
     }
 
     public function confirm(Request $request, Order $order): OrderResource
@@ -229,6 +289,15 @@ class OrderController extends Controller
             ]);
         }
 
+        // Anti-mainan: maks. pembatalan per 10 menit per meja (fallback IP).
+        // Hit RateLimiter hanya terjadi bila pembatalan benar-benar sukses.
+        $cancelKey = $this->cancelLimitKey($request, $order);
+        $cancelMax = (int) config('dinflow.self_order_cancel_per_table', 3);
+        $cancelWindow = (int) config('dinflow.self_order_cancel_per_table_minutes', 10);
+        if (RateLimiter::tooManyAttempts($cancelKey, $cancelMax)) {
+            abort(429, 'Terlalu banyak membatalkan pesanan. Coba lagi dalam '.$cancelWindow.' menit.');
+        }
+
         DB::transaction(function () use ($order) {
             $order->status = 'dibatalkan';
             $order->void_reason = 'Dibatalkan pelanggan sebelum bayar';
@@ -245,6 +314,8 @@ class OrderController extends Controller
         });
 
         OrderStatusChanged::dispatch($order, 'voided');
+
+        RateLimiter::hit($cancelKey, $cancelWindow * 60);
 
         return new OrderResource($order->load(['table', 'items']));
     }
