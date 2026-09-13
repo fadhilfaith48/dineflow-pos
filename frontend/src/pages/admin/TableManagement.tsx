@@ -173,13 +173,8 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
                 Cetak
               </Button>
             </div>
-            <div id="print-area" className="qr-card hidden bg-white font-mono text-black print:block">
-              <div className="text-center text-[16px] font-bold tracking-wide">Meja {qrTable.number}</div>
-              <p className="mt-0.5 text-center text-[11px]">Scan untuk pesan mandiri</p>
-              <div className="mx-auto mt-3 w-fit">
-                <QRCodeSVG value={qrUrl} size={220} />
-              </div>
-              <p className="mt-3 text-center font-num text-[10px] break-all">{qrUrl}</p>
+            <div id="print-area" className="qr-card hidden bg-white print:block">
+              <QRCodeSVG value={qrUrl} size={240} />
             </div>
           </div>
         </div>

@@ -111,8 +111,9 @@
     width: 302px;
     padding: 16px;
   }
-  /* Kartu QR meja: lebih lebar dari struk agar QR 220px + label muat */
+  /* Kartu QR meja: selebar QR 240px + padding kecil agar pas ukuran barcode */
   #print-area.qr-card {
-    width: 340px;
+    width: 264px;
+    padding: 12px;
   }
 }
