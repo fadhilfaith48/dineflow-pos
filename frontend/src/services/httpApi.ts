@@ -30,8 +30,22 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 const TOKEN_KEY = 'dineflow-token'
 const USER_KEY = 'dineflow-user'
+const DEVICE_ID_KEY = 'dineflow-device-id'
 
 export const AUTH_UNAUTHORIZED_EVENT = 'dineflow:unauthorized'
+
+/** ID perangkat unik (self-order). Tersimpan persistent agar kuota anti-mainan
+ *  backend (X-Device-Id) konsisten antar halaman. */
+function getDeviceId(): string {
+  let id = localStorage.getItem(DEVICE_ID_KEY)
+  if (!id) {
+    id =
+      (typeof crypto !== 'undefined' && crypto.randomUUID?.()) ||
+      `dev-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+    localStorage.setItem(DEVICE_ID_KEY, id)
+  }
+  return id
+}
 
 export function clearToken(): void {
   sessionStorage.removeItem(TOKEN_KEY)
@@ -71,6 +85,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
   const token = getToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
+  headers.set('X-Device-Id', getDeviceId())
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
 
@@ -83,6 +98,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const body = (await res.json().catch(() => ({}))) as {
       message?: string
       errors?: Record<string, string[]>
+    }
+    if (res.status === 429) {
+      throw new Error(body.message ?? 'Terlalu banyak permintaan. Coba lagi beberapa saat lagi.')
     }
     throw new Error(errorMessage(body))
   }
