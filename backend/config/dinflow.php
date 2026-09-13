@@ -26,18 +26,17 @@ return [
     |------------------------------------------------------------------
     | Pembatasan anti-mainan endpoint publik (self-order)
     |------------------------------------------------------------------
-    | Mencegah orang iseng membuka/membatalkan order berulang kali tanpa
-    | mengganggu pelanggan normal:
-    |   - batal: max X kali per window menit per MEJA (aksi batal melekat
-    |     ke meja, fallback IP bila pesanan tanpa meja);
-    |   - buat order: max X kali per jam per PERANGKAT (header X-Device-Id
-    |     dari localStorage) + cadangan X kali per jam per IP untuk klien
-    |     tanpa header (mis. baru hapus data browser / menyerang via API).
+    | Mencegah orang iseng membuat order berulang kali tanpa mengganggu
+    | pelanggan normal: buat order max X kali per jam per PERANGKAT (header
+    | X-Device-Id dari localStorage) + cadangan X kali per jam per IP untuk
+    | klien tanpa header (mis. baru hapus data browser / menyerang via API).
+    | Catatan: pembatalan (batal) TIDAK dibatasi — tiap tekan batal dalam
+    | jendela 10 menit selalu berhasil & order langsung hilang dari antrean
+    | kasir; iseng batal praktis mustahil karena harus ada order dulu
+    | (terbatas oleh kuota buat di atas).
     | Pelayan/Kasir (login) TIDAK terkena pembatasan ini.
     */
 
-    'self_order_cancel_per_table' => (int) env('SELF_ORDER_CANCEL_PER_TABLE', 3),
-    'self_order_cancel_per_table_minutes' => (int) env('SELF_ORDER_CANCEL_PER_TABLE_MINUTES', 10),
     'self_order_create_per_device_per_hour' => (int) env('SELF_ORDER_CREATE_PER_DEVICE_PER_HOUR', 5),
     'self_order_create_per_ip_per_hour' => (int) env('SELF_ORDER_CREATE_PER_IP_PER_HOUR', 20),
 

@@ -184,13 +184,6 @@ class OrderController extends Controller
         }
     }
 
-    private function cancelLimitKey(Request $request, Order $order): string
-    {
-        return $order->table_id
-            ? 'self-order-cancel:table:'.$order->table_id
-            : 'self-order-cancel:ip:'.$request->ip();
-    }
-
     private function validDeviceId(string $value): ?string
     {
         $value = mb_strtolower(trim($value));
@@ -289,15 +282,6 @@ class OrderController extends Controller
             ]);
         }
 
-        // Anti-mainan: maks. pembatalan per 10 menit per meja (fallback IP).
-        // Hit RateLimiter hanya terjadi bila pembatalan benar-benar sukses.
-        $cancelKey = $this->cancelLimitKey($request, $order);
-        $cancelMax = (int) config('dinflow.self_order_cancel_per_table', 3);
-        $cancelWindow = (int) config('dinflow.self_order_cancel_per_table_minutes', 10);
-        if (RateLimiter::tooManyAttempts($cancelKey, $cancelMax)) {
-            abort(429, 'Terlalu banyak membatalkan pesanan. Coba lagi dalam '.$cancelWindow.' menit.');
-        }
-
         DB::transaction(function () use ($order) {
             $order->status = 'dibatalkan';
             $order->void_reason = 'Dibatalkan pelanggan sebelum bayar';
@@ -314,8 +298,6 @@ class OrderController extends Controller
         });
 
         OrderStatusChanged::dispatch($order, 'voided');
-
-        RateLimiter::hit($cancelKey, $cancelWindow * 60);
 
         return new OrderResource($order->load(['table', 'items']));
     }
