@@ -17,38 +17,44 @@ const roleOptions: RoleOption[] = [
     username: 'admin',
     label: 'Admin',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-full w-full">
-        <path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
+      <img
+        src="/Admin.png"
+        alt="Ikon Admin"
+        className="h-3.5 w-3.5 object-contain"
+      />
     ),
   },
   {
     username: 'kasir',
     label: 'Kasir',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-full w-full">
-        <rect x="3" y="7" width="18" height="13" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.8" />
-      </svg>
+      <img
+        src="/kasir.png"
+        alt="Ikon Kasir"
+        className="h-3.5 w-3.5 object-contain"
+      />
     ),
   },
   {
     username: 'pelayan',
     label: 'Pelayan',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-full w-full">
-        <path d="M4 20l3-11h10l3 11M9 9V5.5a1.5 1.5 0 013 0V9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <img
+        src="/Pelayan.png"
+        alt="Ikon Pelayan"
+        className="h-3.5 w-3.5 object-contain"
+      />
     ),
   },
   {
     username: 'dapur',
     label: 'Dapur',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-full w-full">
-        <circle cx="12" cy="13" r="7" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M9 3.5h6M12 3.5V6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
+      <img
+        src="/Dapur.png"
+        alt="Ikon Dapur"
+        className="h-3.5 w-3.5 object-contain"
+      />
     ),
   },
 ]
