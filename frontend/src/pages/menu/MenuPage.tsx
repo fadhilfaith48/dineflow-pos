@@ -77,12 +77,31 @@ export function MenuPage() {
     echo.channel(`order.${orderNumber}`).listen('OrderStatusChanged', (event: { order?: Order }) => {
       if (event.order?.orderNumber !== orderNumber) return
       setTrackedOrder(event.order)
-      if (payMethod === 'kasir' && event.order.status === 'diproses') {
-        setView('tracking')
-      }
     })
     return () => {
       echo.leaveChannel(`order.${orderNumber}`)
+    }
+  }, [view, orderNumber])
+
+  useEffect(() => {
+    if (view !== 'payment' || !orderNumber || payMethod === 'qris') return
+    let active = true
+    const check = () => {
+      api.getOrderByNumber(orderNumber)
+        .then((found) => {
+          if (!active || !found) return
+          setTrackedOrder(found)
+          if (['diproses', 'selesai', 'dibatalkan'].includes(found.status)) {
+            setView('tracking')
+          }
+        })
+        .catch(() => {})
+    }
+    check()
+    const timer = window.setInterval(check, 4000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
     }
   }, [view, orderNumber, payMethod])
 
