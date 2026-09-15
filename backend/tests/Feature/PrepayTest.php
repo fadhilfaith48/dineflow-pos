@@ -163,6 +163,35 @@ class PrepayTest extends TestCase
             ->assertStatus(409);
     }
 
+    public function test_cashier_tunai_rejected_when_menu_now_unavailable(): void
+    {
+        $user = User::factory()->create(['role' => 'kasir']);
+        Sanctum::actingAs($user);
+
+        $order = $this->createOrder();
+        $order->items()->first()->menuItem()->update(['available' => false]);
+
+        $this->postJson("/api/orders/{$order->id}/payments", [
+            'method' => 'tunai',
+            'cashReceived' => 20000,
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors('items');
+
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertEquals('menunggu', $order->fresh()->status);
+    }
+
+    public function test_qris_checkout_rejected_when_menu_now_unavailable(): void
+    {
+        $order = $this->createOrder();
+        $order->items()->first()->menuItem()->update(['available' => false]);
+
+        $this->postJson("/api/orders/{$order->id}/checkout")->assertStatus(422);
+
+        $this->assertDatabaseCount('payments', 0);
+        $this->assertEquals('menunggu', $order->fresh()->status);
+    }
+
     public function test_public_tracking_endpoint_returns_order_without_auth(): void
     {
         $order = $this->createOrder('diproses');

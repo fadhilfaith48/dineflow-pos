@@ -39,6 +39,11 @@ class PaymentController extends Controller
                 abort(422, 'Pesanan tidak dalam status menunggu pembayaran');
             }
 
+            // P1#5: ketersediaan dicek ulang SAAT bayar, bukan hanya saat order
+            // dibuat. Menu yang tadinya tersedia bisa jadi habis/sold out di
+            // antara; kalau begitu, kasir dikonfirmasi dulu sebelum uang masuk.
+            $this->assertItemsAvailable($order);
+
             if ($validated['method'] === 'tunai' && ($validated['cashReceived'] ?? 0) < $order->total) {
                 throw ValidationException::withMessages([
                     'cashReceived' => ['Uang yang diterima kurang dari total pembayaran'],
@@ -91,6 +96,9 @@ class PaymentController extends Controller
                 if ($order->status !== 'menunggu') {
                     abort(422, 'Pesanan tidak dalam status menunggu pembayaran');
                 }
+
+                // P1#5: cek ulang ketersediaan sebelum meminta pembayaran QRIS.
+                $this->assertItemsAvailable($order);
 
                 $gateway = app(PaymentGateway::class);
                 $info = $gateway->createPayment($order->order_number, $order->total, 'qris');
@@ -247,5 +255,27 @@ class PaymentController extends Controller
         $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
 
         return (int) round($total / (1 + $taxRate));
+    }
+
+    /**
+     * Reject bila ada item pesanan yang menunya sudah tidak tersedia.
+     * Memakai error key 'items' agar frontend menampilkan pesan yang sama
+     * dengan kegagalan saat pembuatan order.
+     */
+    private function assertItemsAvailable(Order $order): void
+    {
+        $unavailable = $order->items()
+            ->with('menuItem')
+            ->get()
+            ->filter(fn ($item) => $item->menuItem && ! $item->menuItem->available)
+            ->pluck('name')
+            ->unique()
+            ->values();
+
+        if ($unavailable->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'items' => ['Menu "'.implode('", "', $unavailable->all()).'" sudah tidak tersedia. Tukar/menyesuaikan pesanan dulu sebelum bayar.'],
+            ]);
+        }
     }
 }
