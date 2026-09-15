@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\Table;
 use App\Services\Payment\PaymentGateway;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -76,40 +77,57 @@ class PaymentController extends Controller
      */
     public function checkout(Request $request, Order $order): JsonResponse
     {
-        if ($order->payment()->exists()) {
-            abort(409, 'Pesanan sudah dibayar');
+        try {
+            return DB::transaction(function () use ($order) {
+                // Kunci baris order agar dua checkout untuk order yang sama
+                // berjalan serial: yang kedua menunggu commit yang pertama lalu
+                // kedapatan 'sudah dibayar' (409) — bukan membuat payment ganda.
+                $order = Order::lockForUpdate()->findOrFail($order->id);
+
+                if ($order->payment()->exists()) {
+                    abort(409, 'Pesanan sudah dibayar');
+                }
+
+                if ($order->status !== 'menunggu') {
+                    abort(422, 'Pesanan tidak dalam status menunggu pembayaran');
+                }
+
+                $gateway = app(PaymentGateway::class);
+                $info = $gateway->createPayment($order->order_number, $order->total, 'qris');
+                $subtotal = $this->subtotalOf($order->total);
+
+                $payment = Payment::create([
+                    'order_id' => $order->id,
+                    'reference' => $info['reference'],
+                    'method' => 'qris',
+                    'status' => 'pending',
+                    'gateway' => $info['gateway'],
+                    'paid_via' => 'qris',
+                    'amount' => $order->total,
+                    'subtotal' => $subtotal,
+                    'ppn_amount' => $order->total - $subtotal,
+                    'total' => $order->total,
+                ]);
+
+                return response()->json([
+                    'reference' => $info['reference'],
+                    'gateway' => $info['gateway'],
+                    'qrContent' => $info['qrContent'],
+                    'status' => 'pending',
+                    'orderId' => $order->id,
+                    'orderNumber' => $order->order_number,
+                    'payment' => new PaymentResource($payment),
+                ]);
+            });
+        } catch (QueryException $e) {
+            // Backstop: unik order_id di tabel payments menolak inseran kedua
+            // (seharusnya tak terjadi karena lock di atas, tapi tetap aman).
+            if ($this->isUniqueViolation($e)) {
+                abort(409, 'Pesanan sudah dibayar');
+            }
+
+            throw $e;
         }
-
-        if ($order->status !== 'menunggu') {
-            abort(422, 'Pesanan tidak dalam status menunggu pembayaran');
-        }
-
-        $gateway = app(PaymentGateway::class);
-        $info = $gateway->createPayment($order->order_number, $order->total, 'qris');
-        $subtotal = $this->subtotalOf($order->total);
-
-        $payment = Payment::create([
-            'order_id' => $order->id,
-            'reference' => $info['reference'],
-            'method' => 'qris',
-            'status' => 'pending',
-            'gateway' => $info['gateway'],
-            'paid_via' => 'qris',
-            'amount' => $order->total,
-            'subtotal' => $subtotal,
-            'ppn_amount' => $order->total - $subtotal,
-            'total' => $order->total,
-        ]);
-
-        return response()->json([
-            'reference' => $info['reference'],
-            'gateway' => $info['gateway'],
-            'qrContent' => $info['qrContent'],
-            'status' => 'pending',
-            'orderId' => $order->id,
-            'orderNumber' => $order->order_number,
-            'payment' => new PaymentResource($payment),
-        ]);
     }
 
     /**

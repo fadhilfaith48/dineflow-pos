@@ -235,14 +235,6 @@ class OrderController extends Controller
             : null;
     }
 
-    /** True bila QueryException berasal dari pelanggaran constraint (unique, dst). */
-    private function isUniqueViolation(QueryException $e): bool
-    {
-        $sqlState = (string) ($e->errorInfo[0] ?? '');
-
-        return str_starts_with($sqlState, '23');
-    }
-
     public function confirm(Request $request, Order $order): OrderResource
     {
         if ($order->status !== 'menunggu-konfirmasi') {
