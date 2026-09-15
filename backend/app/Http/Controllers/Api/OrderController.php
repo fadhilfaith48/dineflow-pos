@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Table;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -66,85 +67,113 @@ class OrderController extends Controller
             ? $this->validDeviceId((string) $request->header('X-Device-Id', ''))
             : null;
 
-        $order = DB::transaction(function () use ($validated, $source, $deviceId) {
-            $tableId = $validated['tableId'] ?? null;
-            $table = $tableId ? Table::lockForUpdate()->find($tableId) : null;
+        // Idempotensi: header X-Idempotency-Key opsional. Bila key sama sudah
+        // dipakai, kembalikan order yang sudah ada alih-alih membuat baru —
+        // mencegah order ganda dari double-click / retry yang mengirim ulang
+        // permintaan identik (key hanya dikirim untuk satu aksi kirim).
+        $idempotencyKey = $this->validIdempotencyKey((string) $request->header('X-Idempotency-Key', ''));
 
-            $menuItems = MenuItem::whereIn('id', collect($validated['items'])->pluck('menuItemId'))->lockForUpdate()->get()->keyBy('id');
+        if ($idempotencyKey) {
+            $existing = Order::where('idempotency_key', $idempotencyKey)->first();
+            if ($existing) {
+                return new OrderResource($existing->load(['table', 'items']));
+            }
+        }
 
-            $subtotal = 0;
-            foreach ($validated['items'] as $item) {
-                $menuItem = $menuItems->get($item['menuItemId']);
-                if (! $menuItem || ! $menuItem->available) {
-                    throw ValidationException::withMessages([
-                        'items' => ['Menu "'.($menuItem->name ?? '?').'" sedang tidak tersedia'],
-                    ]);
-                }
+        try {
+            $order = DB::transaction(function () use ($validated, $source, $deviceId, $idempotencyKey) {
+                $tableId = $validated['tableId'] ?? null;
+                $table = $tableId ? Table::lockForUpdate()->find($tableId) : null;
 
-                if ($menuItem->is_spicy && ! isset($item['spiceLevel'])) {
-                    throw ValidationException::withMessages([
-                        'items' => ['Pilih level kepedasan (0-5) untuk "'.$menuItem->name.'"'],
-                    ]);
-                }
+                $menuItems = MenuItem::whereIn('id', collect($validated['items'])->pluck('menuItemId'))->lockForUpdate()->get()->keyBy('id');
 
-                $variantName = $item['variantName'] ?? null;
-                $unitPrice = $menuItem->price;
-
-                if ($variantName && $menuItem->variants()->count() > 0) {
-                    $variant = $menuItem->variants()->where('name', $variantName)->first();
-                    if ($variant && $variant->available) {
-                        $unitPrice = $variant->price;
-                    } elseif ($variant && ! $variant->available) {
+                $subtotal = 0;
+                foreach ($validated['items'] as $item) {
+                    $menuItem = $menuItems->get($item['menuItemId']);
+                    if (! $menuItem || ! $menuItem->available) {
                         throw ValidationException::withMessages([
-                            'items' => ['Varian "'.$variantName.'" untuk "'.($menuItem->name).'" sedang tidak tersedia'],
+                            'items' => ['Menu "'.($menuItem->name ?? '?').'" sedang tidak tersedia'],
                         ]);
                     }
-                }
 
-                $subtotal += $unitPrice * $item['quantity'];
-            }
-
-            $lastId = Order::lockForUpdate()->orderByDesc('id')->value('id') ?? 0;
-            $orderNumber = 'ORD-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
-
-            $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
-
-            $order = Order::create([
-                'order_number' => $orderNumber,
-                'table_id' => $table?->id,
-                'source' => $source,
-                'device_id' => $deviceId,
-                // Bayar di muka: order menunggu pembayaran, BELUM masuk dapur.
-                'status' => 'menunggu',
-                'total' => (int) round($subtotal * (1 + $taxRate)),
-            ]);
-
-            foreach ($validated['items'] as $item) {
-                $menuItem = $menuItems->get($item['menuItemId']);
-                $variantName = $item['variantName'] ?? null;
-                $unitPrice = $menuItem->price;
-
-                if ($variantName && $menuItem->variants()->count() > 0) {
-                    $variant = $menuItem->variants()->where('name', $variantName)->first();
-                    if ($variant) {
-                        $unitPrice = $variant->price;
+                    if ($menuItem->is_spicy && ! isset($item['spiceLevel'])) {
+                        throw ValidationException::withMessages([
+                            'items' => ['Pilih level kepedasan (0-5) untuk "'.$menuItem->name.'"'],
+                        ]);
                     }
+
+                    $variantName = $item['variantName'] ?? null;
+                    $unitPrice = $menuItem->price;
+
+                    if ($variantName && $menuItem->variants()->count() > 0) {
+                        $variant = $menuItem->variants()->where('name', $variantName)->first();
+                        if ($variant && $variant->available) {
+                            $unitPrice = $variant->price;
+                        } elseif ($variant && ! $variant->available) {
+                            throw ValidationException::withMessages([
+                                'items' => ['Varian "'.$variantName.'" untuk "'.($menuItem->name).'" sedang tidak tersedia'],
+                            ]);
+                        }
+                    }
+
+                    $subtotal += $unitPrice * $item['quantity'];
                 }
 
-                $order->items()->create([
-                    'menu_item_id' => $menuItem->id,
-                    'name' => $menuItem->name,
-                    'variant_name' => $variantName,
-                    'price' => $unitPrice,
-                    'quantity' => $item['quantity'],
-                    'note' => $item['note'] ?? null,
-                    'spice_level' => $item['spiceLevel'] ?? null,
-                    'status' => 'baru',
+                $lastId = Order::lockForUpdate()->orderByDesc('id')->value('id') ?? 0;
+                $orderNumber = 'ORD-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
+
+                $taxRate = ((int) Setting::getValue('tax_rate', '10')) / 100;
+
+                $order = Order::create([
+                    'order_number' => $orderNumber,
+                    'table_id' => $table?->id,
+                    'source' => $source,
+                    'device_id' => $deviceId,
+                    'idempotency_key' => $idempotencyKey,
+                    // Bayar di muka: order menunggu pembayaran, BELUM masuk dapur.
+                    'status' => 'menunggu',
+                    'total' => (int) round($subtotal * (1 + $taxRate)),
                 ]);
+
+                foreach ($validated['items'] as $item) {
+                    $menuItem = $menuItems->get($item['menuItemId']);
+                    $variantName = $item['variantName'] ?? null;
+                    $unitPrice = $menuItem->price;
+
+                    if ($variantName && $menuItem->variants()->count() > 0) {
+                        $variant = $menuItem->variants()->where('name', $variantName)->first();
+                        if ($variant) {
+                            $unitPrice = $variant->price;
+                        }
+                    }
+
+                    $order->items()->create([
+                        'menu_item_id' => $menuItem->id,
+                        'name' => $menuItem->name,
+                        'variant_name' => $variantName,
+                        'price' => $unitPrice,
+                        'quantity' => $item['quantity'],
+                        'note' => $item['note'] ?? null,
+                        'spice_level' => $item['spiceLevel'] ?? null,
+                        'status' => 'baru',
+                    ]);
+                }
+
+                return $order;
+            });
+        } catch (QueryException $e) {
+            // Balapan: dua permintaan dengan key sama masuk bersamaan dan sama-sama
+            // lolos pengecekan di atas; yang kalah kena unique constraint. Kembalikan
+            // order yang sudah dibuat lawannya alih-alih ikut gagal 500.
+            if ($idempotencyKey && $this->isUniqueViolation($e)) {
+                $existing = Order::where('idempotency_key', $idempotencyKey)->first();
+                if ($existing) {
+                    return new OrderResource($existing->load(['table', 'items']));
+                }
             }
 
-            return $order;
-        });
+            throw $e;
+        }
 
         $this->safeBroadcastOrderChange($order, 'created');
 
@@ -195,6 +224,23 @@ class OrderController extends Controller
         return $value !== '' && preg_match('/^[a-z0-9_-]{8,64}$/', $value)
             ? $value
             : null;
+    }
+
+    private function validIdempotencyKey(string $value): ?string
+    {
+        $value = trim($value);
+
+        return $value !== '' && preg_match('/^[a-zA-Z0-9_-]{8,64}$/', $value)
+            ? $value
+            : null;
+    }
+
+    /** True bila QueryException berasal dari pelanggaran constraint (unique, dst). */
+    private function isUniqueViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+
+        return str_starts_with($sqlState, '23');
     }
 
     public function confirm(Request $request, Order $order): OrderResource
