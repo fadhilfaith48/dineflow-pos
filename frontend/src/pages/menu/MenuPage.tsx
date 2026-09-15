@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import type { MenuCategory, MenuItem, Order } from '@/types'
@@ -8,6 +8,7 @@ import { QrisPay } from '@/components/QrisPay'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { formatRupiah } from '@/lib/format'
+import { newIdempotencyKey } from '@/lib/idempotency'
 import { CategoryTabs } from '@/components/CategoryTabs'
 import { SpicePills } from '@/components/SpicePills'
 import { OrderTracking } from '@/components/OrderTracking'
@@ -40,6 +41,8 @@ export function MenuPage() {
   const [selectedVariant, setSelectedVariant] = useState<Record<number, string>>({})
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const sendingRef = useRef(false)
+  const orderKeyRef = useRef(newIdempotencyKey())
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -113,7 +116,8 @@ export function MenuPage() {
   }, [items, activeCategory, search])
 
   async function handleSubmitOrder() {
-    if (tableId === null || cart.lines.length === 0 || submitting) return
+    if (tableId === null || cart.lines.length === 0 || submitting || sendingRef.current) return
+    sendingRef.current = true
     setSubmitting(true)
     setSubmitError('')
     try {
@@ -121,7 +125,9 @@ export function MenuPage() {
         tableId,
         source: 'self-order',
         items: cart.lines,
+        idempotencyKey: orderKeyRef.current,
       })
+      orderKeyRef.current = newIdempotencyKey()
       setOrderNumber(order.orderNumber)
       setTrackedOrder(order)
       setPayAmount(order.total)
@@ -131,6 +137,7 @@ export function MenuPage() {
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
     } finally {
+      sendingRef.current = false
       setSubmitting(false)
     }
   }

@@ -248,9 +248,13 @@ export class HttpApi implements Api {
   }
 
   async createOrder(payload: CreateOrderPayload): Promise<Order> {
+    const { idempotencyKey, ...body } = payload
+    const headers: Record<string, string> = {}
+    if (idempotencyKey) headers['X-Idempotency-Key'] = idempotencyKey
     return request<{ data: Order }>('/orders', {
       method: 'POST',
-      ...jsonBody(payload),
+      ...jsonBody(body),
+      headers,
     }).then(unwrap)
   }
 

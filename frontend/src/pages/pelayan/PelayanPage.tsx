@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { DiningTable, MenuCategory, MenuItem, Order } from '@/types'
 import { api } from '@/services/httpApi'
@@ -10,6 +10,7 @@ import { WaiterOrder } from './WaiterOrder'
 import { OrderList } from './OrderList'
 import { QrisPay } from '@/components/QrisPay'
 import { formatRupiah } from '@/lib/format'
+import { newIdempotencyKey } from '@/lib/idempotency'
 
 type View = 'tables' | 'order' | 'orders'
 type PayMethod = 'choose' | 'qris' | 'kasir'
@@ -38,6 +39,10 @@ export function PelayanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  // Lock + kunci idempotensi disatukan: double-click yang lolos guard state
+  // tetap memakai key SAMA sehingga backend tidak membuat order kedua.
+  const sendingRef = useRef(false)
+  const orderKeyRef = useRef(newIdempotencyKey())
 
   function loadOrders() {
     api.getOrders().then(setOrders).catch(() => {
@@ -106,14 +111,17 @@ export function PelayanPage() {
   }
 
   async function handleSubmitOrder() {
-    if (!selectedTable || cart.lines.length === 0 || isSubmitting) return
+    if (!selectedTable || cart.lines.length === 0 || isSubmitting || sendingRef.current) return
+    sendingRef.current = true
     setIsSubmitting(true)
     try {
       const order = await api.createOrder({
         tableId: selectedTable.id,
         source: 'pelayan',
         items: cart.lines,
+        idempotencyKey: orderKeyRef.current,
       })
+      orderKeyRef.current = newIdempotencyKey()
       cart.clear()
       setPayAmount(order.total)
       setPayOrderNumber(order.orderNumber)
@@ -123,6 +131,7 @@ export function PelayanPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal mengirim pesanan. Coba lagi.')
     } finally {
+      sendingRef.current = false
       setIsSubmitting(false)
     }
   }

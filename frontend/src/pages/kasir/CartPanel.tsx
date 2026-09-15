@@ -18,6 +18,7 @@ interface CartPanelProps {
   onSetSpice: (menuItemId: number, variantName: string | undefined, oldSpice: number, newSpice: number) => void
   onHold: () => void
   onPayAndSend: () => void
+  sending?: boolean
 }
 
 export function CartPanel({
@@ -36,6 +37,7 @@ export function CartPanel({
   onSetSpice,
   onHold,
   onPayAndSend,
+  sending = false,
 }: CartPanelProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card md:w-96">
@@ -182,8 +184,8 @@ export function CartPanel({
           <Button variant="outline" onClick={onHold} disabled={lines.length === 0}>
             Tahan
           </Button>
-          <Button onClick={onPayAndSend} disabled={lines.length === 0}>
-            Bayar di Muka
+          <Button onClick={onPayAndSend} disabled={lines.length === 0 || sending}>
+            {sending ? 'Mengirim...' : 'Bayar di Muka'}
           </Button>
         </div>
       </div>

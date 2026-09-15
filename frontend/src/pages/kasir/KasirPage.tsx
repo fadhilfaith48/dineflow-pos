@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DiningTable, MenuCategory, MenuItem, MenuItemVariant, Order, Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { orderToReceipt } from '@/lib/receipt'
+import { newIdempotencyKey } from '@/lib/idempotency'
 import { TopNavBar } from '@/components/TopNavBar'
 import { ReceiptModal, type ReceiptData } from '@/components/ReceiptModal'
 import { VoidOrderModal } from '@/components/VoidOrderModal'
@@ -30,6 +31,9 @@ export function KasirPage() {
   const [noteToPay, setNoteToPay] = useState<Order | null>(null)
   const [voidTarget, setVoidTarget] = useState<Order | null>(null)
   const [voiding, setVoiding] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const sendingRef = useRef(false)
+  const orderKeyRef = useRef(newIdempotencyKey())
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -189,20 +193,29 @@ export function KasirPage() {
   }
 
   async function handlePayAndSend() {
-    if (cart.lines.length === 0) return
+    // Kunci referensi (bukan state) agar dua klik sangat cepat pada tombol
+    // "Bayar di Muka" tidak menerbitkan dua order (state belum sempat berubah).
+    if (cart.lines.length === 0 || sendingRef.current) return
+    sendingRef.current = true
+    setIsSending(true)
     setError('')
     try {
       const order = await api.createOrder({
         tableId: selectedTable?.id ?? null,
         source: 'kasir',
         items: cart.lines,
+        idempotencyKey: orderKeyRef.current,
       })
+      orderKeyRef.current = newIdempotencyKey()
       cart.clear()
       setNoteToPay(order)
       setShowPayment(true)
       setOrders(await api.getOrders())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membuat pesanan.')
+    } finally {
+      sendingRef.current = false
+      setIsSending(false)
     }
   }
 
@@ -244,6 +257,7 @@ export function KasirPage() {
           onSetSpice={cart.setSpiceLevel}
           onHold={handleHold}
           onPayAndSend={handlePayAndSend}
+          sending={isSending}
         />
       </main>
 

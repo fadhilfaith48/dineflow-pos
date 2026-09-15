@@ -79,6 +79,12 @@ export interface CreateOrderPayload {
   tableId: number | null
   source: 'kasir' | 'pelayan' | 'self-order'
   items: CartItemInput[]
+  /**
+   * Kunci idempotensi (opsional): dikirim satu kali per aksi "kirim pesanan".
+   * Backend mengembalikan order yang sama bila key yang sama diterima ulang
+   * (mis. double-click / retry) sehingga tidak tercipta order ganda.
+   */
+  idempotencyKey?: string
 }
 
 export interface PaymentPayload {
