@@ -178,6 +178,7 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 9.18 | Order `dibatalkan` tidak dihitung di **Laporan Penjualan** | Total laporan tidak memasukkan order yang dibatalkan | ⬜ |
 | 9.19 | Order dibatalkan tidak bisa dibayar | Klik bayar → ditolak / tidak tersedia (guard `dibatalkan`) | ⬜ |
 | 9.20 | Void order via backend langsung (curl `PATCH /api/orders/{id}/void` sebagai kasir/admin) | Response sukses, status jadi `dibatalkan`; event `OrderStatusChanged` action=voided terkirim (bisa dicek listener WS) | ⬜ |
+| 9.20b | **Void order yang sudah `selesai` (lunas)** — via UI (tombol Batalkan tidak tampil) atau curl void | Backend menolak **422** (guard void hanya `menunggu`/`diproses`); data penjualan tidak bisa dihapus diam-diam (P1#1) | ⬜ |
 
 ### 9c. Foto per Varian Ukuran (Original/Jumbo)
 
@@ -234,6 +235,20 @@ Skenario uji manual untuk memastikan semua alur sesuai PRD. **Jalankan berurutan
 | 10.17 | Bayar nota → struktur struk: Subtotal / Pajak X% / Total | Subtotal & Pajak tercetak sesuai tarif & dijumlahkan benar (subtotal = total ÷ (1+rate)) | ⬜ |
 | 10.18 | Ubah tarif PPN admin → **cetak ulang struk** transaksi lama (riwayat) | Struk lama tetap pakai nilai PPN **saat transaksi** (persisten, tidak ikut tarif baru) | ⬜ |
 | 10.19 | Backend `GET /api/orders` untuk transaksi ber-PPN | Payment menampilkan `subtotal`, `ppnAmount`, `total` | ⬜ |
+
+### 10e. Integritas & Kesiapan Online (audit P1 — 15 Sep 2026)
+
+> Prasyarat: backend sudah menjalankan `php artisan migrate` (cakupan migrasi baru P1#3: kolom `idempotency_key`; P1#4: unique `payments.order_id`). Tujuan: bukti anti-order-ganda, anti-bayar-ganda, dan integritas void/lunas di depan sidang.
+
+| # | Kasus | Hasil Diharapkan | Status |
+|---|---|---|---|
+| 10.20 | **Double-click / kirim ganda** — Kasir atau Pelayan: klik tombol bayar/kirim sangat cepat 2× (atau tekan Enter berulang) | Hanya **1 order** terbuat (tombol disabled "Mengirim..." + backend idempotensi `X-Idempotency-Key`); cek daftar pesanan → tidak ada duplikat | ⬜ |
+| 10.21 | Replay idempotensi — kirim ulang order yang sama dengan `X-Idempotency-Key` yang sama (curl/DevTools) | Dedupe — respons **200** dengan order yang sudah ada (bukan order baru); jumlah order di DB tidak bertambah | ⬜ |
+| 10.22 | **Checkout QRIS ganda** — dua checkout bersamaan untuk order yang sama (mis. 2 tab kasir) | Satu berhasil, satunya **409 conflict** (unique `payments.order_id` + `lockForUpdate`); tidak ada pembayaran ganda | ⬜ |
+| 10.23 | **Menu "Habis" saat bayar** — tandai sebuah menu di order jadi Tidak Tersedia (Admin), lalu bayar order tsb | Ditolak **422** "Item ... sudah tidak tersedia" (ketersediaan dicek ulang pada saat bayar) | ⬜ |
+| 10.24 | **Void order lunas** — void order `selesai` via curl/UI | Ditolak **422** / tombol tidak tersedia (lihat juga 9.20b) | ⬜ |
+| 10.25 | **Reverb/Redis mati lalu bayar** — matikan `reverb:start`, lalu kasir bayar order | Order tetap sukses (200) — broadcast dilempar aman (`safeBroadcastOrderChange`); setelah layanan menyala, event tetap terkirim | ⬜ |
+| 10.26 | Regresi — jalankan kembali kasus §2–§5 & §9–§10 utama | Semua alur (prepay, tracking, void, varian, pedas) tetap berfungsi normal | ⬜ |
 
 ---
 

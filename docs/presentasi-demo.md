@@ -21,12 +21,13 @@ Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate
 | 3 | **Admin — Meja** | Tambah meja, ubah status, **Lihat QR** → modal QR ke `/menu/:qr` | QR per meja; link ke halaman publik |
 | 4 | **Admin — Staf** | Tambah staf + role | Bisa langsung login |
 | 5 | **Admin — Laporan** | Filter Hari ini / 7 Hari / Bulan ini / Semua | Total, transaksi, menu terlaris sesuai periode |
-| 6 | **Menu QR (publik)** | Tab baru `http://localhost:5173/menu/T1` **tanpa login** → pilih item + catatan → **Bayar di Muka** → QRIS tampil → demo: klik **"Saya Sudah Bayar"** | Halaman publik; bayar di muka wajib; otomatis ke tracking saat paid |
+| 6 | **Menu QR (publik)** | Tab baru (incognito) **tanpa login**: buka link QR meja dari **Admin → Lihat QR** → URL `/menu/{token 8 karakter}` (skema huruf/angka, bukan `/menu/T1`) → pilih item + catatan → **Bayar di Muka** → QRIS tampil → demo: klik **"Saya Sudah Bayar"** | Halaman publik; bayar di muka wajib; otomatis ke tracking saat paid |
 | 7 | **Kasir — bayar di muka** | Login `kasir` (tab lain) → buat order → **Bayar di Muka** → pilih **Tunai** (input uang, lihat kembalian) | Tunai di muka; order langsung ke dapur (tanpa Konfirmasi); struk + **Cetak/Salin** |
 | 8 | **KDS (Dapur)** | Login `dapur` → /kitchen → **Mulai Masak** → **Siap Saji** | Ticket besar teks kontras; status item naik; pembaruan real-time |
 | 9 | **Pelayan** | Login `pelayan` → pilih meja kosong → isi pesanan + catatan → **Kirim & Bayar QRIS** → QR tampil di layar → demo: **"Saya Sudah Bayar"** → **Daftar Pesanan** → tandai **diantar** | Mobile-first; peta meja status; QRIS di muka tanpa konfirmasi kasir |
 | 10 | **Kasir — Tandai Selesai** | Kembali ke Kasir → tab "Nota" (badge **Lunas**) → **Tandai Selesai** | Nota lunas nonaktif Bayar; meja jadi perlu dibersihkan |
 | 11 | **Uji negatif (singkat)** | Login `pelayan` lalu buka `/admin` | Ditolak, diarahkan ke `/pelayan` |
+| 12 | **Uji negatif integritas (P1)** | (a) Kasir buka tab **Nota** → kartu lunas **tidak ada tombol Batalkan**; (b) Admin tandai menu **Habis** → di Kasir buat order berisi menu itu lalu **Bayar di Muka** | Ditolak "sudah tidak tersedia" — bukti: order lunas tak bisa dibatalkan & ketersediaan dicek ulang saat bayar |
 
 ## 3. Poin Pembeda (highlight saat sidang)
 
@@ -37,7 +38,11 @@ Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate
 3. **Keamanan**: auth Sanctum, role dari server, token di-revoke saat logout,
    halaman Menu QR publik tanpa login, endpoint lain dilindungi.
 4. **Integritas data**: pembayaran ganda ditolak (409) & stok/order dilindungi
-   transaction + `lockForUpdate()` (bukan proses berlebihan).
+   transaction + `lockForUpdate()` (bukan proses berlebihan); order yang sudah
+   lunas **tidak bisa dibatalkan**; ketersediaan menu **dicek ulang saat bayar**
+   (menu Habis → ditolak); anti order ganda dari double-click — tombol terkunci
+   saat mengirim + idempotensi (`X-Idempotency-Key`). Stock/order tetap aman
+   meski server real-time mati (broadcast ditangkap try-catch).
 5. **Upload foto menu** disimpan di server (bukan URL eksternal).
 6. **Bayar di muka semua kanal** (DOKU QRIS + Tunai): order masuk dapur hanya setelah
    lunas; abstraksi `PaymentGateway` (`mock` default utk demo, swap ke DOKU cukup 1 env).
