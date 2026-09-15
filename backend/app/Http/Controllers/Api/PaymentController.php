@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Order;
@@ -222,7 +221,7 @@ class PaymentController extends Controller
             }
         }
 
-        OrderStatusChanged::dispatch($order, 'created');
+        $this->safeBroadcastOrderChange($order, 'created');
     }
 
     private function subtotalOf(int $total): int

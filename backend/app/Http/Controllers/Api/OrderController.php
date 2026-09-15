@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\OrderStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\MenuItem;
@@ -147,7 +146,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        OrderStatusChanged::dispatch($order, 'created');
+        $this->safeBroadcastOrderChange($order, 'created');
 
         if ($source === 'self-order') {
             $this->bumpCreateCounters($request);
@@ -209,7 +208,7 @@ class OrderController extends Controller
         $order->status = 'diproses';
         $order->save();
 
-        OrderStatusChanged::dispatch($order, 'confirmed');
+        $this->safeBroadcastOrderChange($order, 'confirmed');
 
         return new OrderResource($order->load(['table', 'items']));
     }
@@ -224,7 +223,7 @@ class OrderController extends Controller
         $item->status = $validated['status'];
         $item->save();
 
-        OrderStatusChanged::dispatch($order, 'item-status');
+        $this->safeBroadcastOrderChange($order, 'item-status');
 
         return new OrderResource($order->load(['table', 'items']));
     }
@@ -262,7 +261,7 @@ class OrderController extends Controller
             }
         });
 
-        OrderStatusChanged::dispatch($order, 'voided');
+        $this->safeBroadcastOrderChange($order, 'voided');
 
         return new OrderResource($order->load(['table', 'items']));
     }
@@ -315,7 +314,7 @@ class OrderController extends Controller
             }
         });
 
-        OrderStatusChanged::dispatch($order, 'voided');
+        $this->safeBroadcastOrderChange($order, 'voided');
 
         return new OrderResource($order->load(['table', 'items']));
     }
@@ -345,7 +344,7 @@ class OrderController extends Controller
             }
         });
 
-        OrderStatusChanged::dispatch($order, 'paid');
+        $this->safeBroadcastOrderChange($order, 'paid');
 
         return new OrderResource($order->load(['table', 'items']));
     }
