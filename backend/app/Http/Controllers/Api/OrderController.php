@@ -241,6 +241,12 @@ class OrderController extends Controller
             ]);
         }
 
+        if ($order->payment()->exists()) {
+            throw ValidationException::withMessages([
+                'order' => ['Pesanan sudah dibayar dan tidak dapat dibatalkan dari sini.'],
+            ]);
+        }
+
         DB::transaction(function () use ($order, $validated, $request) {
             $order->status = 'dibatalkan';
             $order->void_reason = $validated['reason'];

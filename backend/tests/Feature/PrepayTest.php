@@ -194,4 +194,37 @@ class PrepayTest extends TestCase
         $this->assertEquals('selesai', $order->status);
         $this->assertEquals('perlu-dibersihkan', $table->status);
     }
+
+    public function test_void_paid_order_is_rejected(): void
+    {
+        $user = User::factory()->create(['role' => 'kasir']);
+        Sanctum::actingAs($user);
+
+        $order = $this->createOrder('diproses');
+        Payment::create([
+            'order_id' => $order->id,
+            'method' => 'tunai',
+            'status' => 'paid',
+            'amount' => 19800,
+            'paid_at' => now(),
+        ]);
+
+        $this->patchJson("/api/orders/{$order->id}/void", ['reason' => 'test void paid'])
+            ->assertStatus(422);
+
+        $this->assertEquals('diproses', $order->fresh()->status);
+    }
+
+    public function test_void_unpaid_order_still_works(): void
+    {
+        $user = User::factory()->create(['role' => 'kasir']);
+        Sanctum::actingAs($user);
+
+        $order = $this->createOrder('menunggu');
+
+        $this->patchJson("/api/orders/{$order->id}/void", ['reason' => 'salah pilih menu'])
+            ->assertOk();
+
+        $this->assertEquals('dibatalkan', $order->fresh()->status);
+    }
 }
