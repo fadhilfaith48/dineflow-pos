@@ -259,7 +259,6 @@ export function KasirQueuePanel({
                     order={order}
                     paid
                     action={{ label: 'Tandai Selesai', primary: true, onClick: () => onComplete(order.id) }}
-                    onVoid={() => onVoid(order)}
                   />
                 ))}
               </ul>
