@@ -81,7 +81,7 @@ Font: **Inter** (UI utama), fallback ke system sans-serif.
 ## Layout principles
 - Base unit: 4px
 - Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64px
-- Admin: max content width 1280px, centered (space kiri-kanan di layar lebar). Kasir: konten full-width mengikuti layar, padding p-4 menjaga jarak ke tepi
+- Kasir/Admin: konten mengikuti lebar layar penuh (full-width), padding p-4/p-6 menjaga jarak ke tepi
 - Kitchen Display: full-width grid, tidak dibatasi max-width (memaksimalkan layar besar di dapur)
 - Border-radius scale: 6px (elemen kecil, badge), 8px (tombol, ticket), 12px (card, modal)
 - Grid pesanan Kitchen Display: kolom otomatis menyesuaikan lebar layar, minimal 3 kolom pada layar besar
