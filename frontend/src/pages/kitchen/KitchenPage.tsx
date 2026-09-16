@@ -53,7 +53,7 @@ export function KitchenPage() {
             </div>
           </div>
         ) : (
-          <div className="grid auto-rows-min grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid auto-rows-min grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
             {activeOrders.map((order) => (
               <OrderTicket key={order.id} order={order} onAdvanceItem={handleAdvanceItem} />
             ))}
