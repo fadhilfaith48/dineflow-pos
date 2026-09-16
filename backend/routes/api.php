@@ -27,7 +27,7 @@ Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->mi
 // diletakkan di grup publik; status/mock-paid diproteksi relatif (reference).
 Route::post('/orders/{order}/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:20,1');
 Route::get('/payments/{reference}/status', [PaymentController::class, 'status'])->middleware('throttle:60,1');
-Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid']);
+Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid'])->middleware('throttle:10,1');
 // Simulasi pembayaran (hanya driver xendit, endpoint test mode Xendit).
 Route::post('/payments/{reference}/simulate-payment', [PaymentController::class, 'simulate']);
 // Pembatalan self-order (publik): batalkan pesanan sendiri sebelum bayar di muka.
