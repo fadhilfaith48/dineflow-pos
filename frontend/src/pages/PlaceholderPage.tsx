@@ -7,7 +7,7 @@ interface PlaceholderPageProps {
 
 export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col">
       <TopNavBar />
       <main className="flex flex-1 flex-col items-center justify-center gap-3 bg-bg-secondary p-6">
         <h1 className="text-heading font-semibold text-text-primary">{title}</h1>

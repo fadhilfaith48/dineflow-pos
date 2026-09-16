@@ -197,7 +197,7 @@ export function MenuPage() {
 
   if (tableNotFound || (tableChecked && tableId === null)) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
         <div className="font-num text-heading text-status-danger">!</div>
         <h1 className="text-heading font-semibold text-text-primary">Meja tidak ditemukan</h1>
         <p className="text-body text-text-secondary">
@@ -209,7 +209,7 @@ export function MenuPage() {
 
   if (view === 'payment') {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-bg-secondary">
         <header className="bg-accent-primary px-5 py-6 text-center text-text-on-accent">
           <div className="text-caption font-semibold uppercase tracking-wider opacity-80">Bayar di Muka</div>
           <div className="font-num text-heading font-bold">{orderNumber}</div>
@@ -346,7 +346,7 @@ export function MenuPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-bg-secondary">
       <header className="sticky top-0 z-20 border-b border-border-subtle bg-bg-surface px-5 py-4">
         <div className="flex items-center gap-2">
           <img src="/favicon.png" alt="Logo DineFlow" className="h-10 w-auto object-contain" />
@@ -471,7 +471,7 @@ export function MenuPage() {
         </ul>
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-border-subtle bg-bg-surface p-4">
+      <div className="sticky bottom-0 z-20 border-t border-border-subtle bg-bg-surface px-4 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <button
           onClick={() => setView('cart')}
           disabled={cart.lines.length === 0}

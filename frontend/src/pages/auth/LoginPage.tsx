@@ -111,7 +111,7 @@ export function LoginPage() {
     'flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-caption font-semibold transition-colors'
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-secondary p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-bg-secondary p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <img src="/favicon.png" alt="Logo DineFlow" className="mx-auto mb-4 h-24 w-auto object-contain" />

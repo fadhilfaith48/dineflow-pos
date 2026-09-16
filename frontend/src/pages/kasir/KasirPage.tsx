@@ -220,7 +220,7 @@ export function KasirPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col">
       <TopNavBar />
       <main className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-4 overflow-auto bg-bg-secondary p-4 lg:flex-row lg:overflow-hidden">
         <KasirQueuePanel

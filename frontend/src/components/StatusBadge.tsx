@@ -2,8 +2,8 @@ export type BadgeVariant = 'new' | 'cooking' | 'ready' | 'done' | 'danger' | 'ne
 
 const colorMap: Record<BadgeVariant, { bg: string; text: string; label: string }> = {
   new: { bg: 'bg-status-new/15', text: 'text-status-new', label: 'Baru' },
-  cooking: { bg: 'bg-status-cooking/15', text: 'text-status-cooking', label: 'Dimasak' },
-  ready: { bg: 'bg-status-ready/15', text: 'text-status-ready', label: 'Siap' },
+  cooking: { bg: 'bg-status-cooking/15', text: 'text-status-cooking-text', label: 'Dimasak' },
+  ready: { bg: 'bg-status-ready/15', text: 'text-status-ready-text', label: 'Siap' },
   done: { bg: 'bg-status-done/15', text: 'text-status-done', label: 'Selesai' },
   danger: { bg: 'bg-status-danger/15', text: 'text-status-danger', label: 'Habis' },
   neutral: { bg: 'bg-bg-secondary', text: 'text-text-secondary', label: 'Diproses' },

@@ -19,7 +19,7 @@ export default function App() {
       <AuthProvider>
         <Suspense
           fallback={
-            <div className="flex min-h-screen items-center justify-center bg-bg-primary">
+            <div className="flex min-h-dvh items-center justify-center bg-bg-primary">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-accent-primary border-t-transparent" />
             </div>
           }

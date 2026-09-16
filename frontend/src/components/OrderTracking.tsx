@@ -20,7 +20,7 @@ export function OrderTracking({
   showOverall = false,
 }: OrderTrackingProps) {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-bg-secondary">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-bg-secondary">
       <header className="bg-accent-primary px-5 py-6 text-center text-text-on-accent">
         <div className="text-caption font-semibold uppercase tracking-wider opacity-80">Pesanan Terkirim</div>
         <div className="font-num text-heading font-bold">{orderNumber}</div>

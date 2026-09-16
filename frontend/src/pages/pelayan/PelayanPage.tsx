@@ -201,7 +201,7 @@ export function PelayanPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-bg-secondary">
+    <div className="flex h-dvh flex-col bg-bg-secondary">
       <TopNavBar />
       {error && (
         <div className="bg-status-danger/15 px-4 py-2 text-center text-body font-semibold text-status-danger">{error}</div>

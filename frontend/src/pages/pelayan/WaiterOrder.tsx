@@ -179,7 +179,7 @@ export function WaiterOrder({
         </ul>
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-border-subtle bg-bg-surface p-4">
+      <div className="sticky bottom-0 z-20 border-t border-border-subtle bg-bg-surface px-4 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <button
           onClick={() => setShowCart(true)}
           disabled={lines.length === 0}

@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
           <div className="font-num text-heading text-status-danger">!</div>
           <h1 className="text-heading font-semibold text-text-primary">Terjadi kesalahan</h1>
           <p className="text-body text-text-secondary">

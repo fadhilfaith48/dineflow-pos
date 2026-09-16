@@ -37,7 +37,7 @@ export function KitchenPage() {
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-secondary">
+    <div className="flex min-h-dvh flex-col bg-bg-secondary">
       <TopNavBar />
 
       <main className="flex-1 p-6">

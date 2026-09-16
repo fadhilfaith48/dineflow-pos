@@ -41,7 +41,7 @@ export function OrderTrackingPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-bg-secondary">
+      <main className="flex min-h-dvh items-center justify-center bg-bg-secondary">
         <p className="text-body text-text-secondary">Memuat pesanan…</p>
       </main>
     )
@@ -49,7 +49,7 @@ export function OrderTrackingPage() {
 
   if (missing || !order) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg-secondary px-6 text-center">
         <div className="font-num text-heading text-status-danger">!</div>
         <h1 className="text-heading font-semibold text-text-primary">Pesanan tidak ditemukan</h1>
         <p className="text-body text-text-secondary">

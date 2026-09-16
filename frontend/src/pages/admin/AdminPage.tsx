@@ -93,7 +93,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-dvh flex-col">
       <TopNavBar />
       <main className="mx-auto w-full max-w-[1280px] flex-1 overflow-y-auto bg-bg-secondary p-6">
         {error && (
