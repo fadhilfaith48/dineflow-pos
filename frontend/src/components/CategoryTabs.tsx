@@ -13,7 +13,7 @@ export function CategoryTabs({ categories, activeId, onChange }: CategoryTabsPro
         <button
           key={cat.id}
           onClick={() => onChange(cat.id)}
-          className={`shrink-0 rounded-lg px-4 py-2 text-caption font-semibold uppercase tracking-wide transition-colors ${
+          className={`inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg px-4 text-caption font-semibold uppercase tracking-wide transition-colors ${
             activeId === cat.id
               ? 'bg-accent-primary text-text-on-accent'
               : 'bg-bg-secondary text-text-secondary hover:bg-accent-tint hover:text-accent-primary'
