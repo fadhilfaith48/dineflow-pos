@@ -42,7 +42,7 @@ function MethodBadge({ method }: { method?: PaymentMethod }) {
       ? 'bg-status-ready/15 text-status-ready'
       : 'bg-status-done/15 text-status-done'
   return (
-    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${cls}`}>
+    <span className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-bold uppercase tracking-wide ${cls}`}>
       {method === 'tunai' ? 'Tunai' : 'QRIS'}
     </span>
   )
