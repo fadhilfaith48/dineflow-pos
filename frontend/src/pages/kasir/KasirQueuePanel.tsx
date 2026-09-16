@@ -166,7 +166,7 @@ function OrderCard({
 }
 
 const panelPill = (active: boolean) =>
-  `flex-1 rounded-lg px-3 py-2 text-body font-semibold transition-colors ${
+  `inline-flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-body font-semibold transition-colors ${
     active ? 'bg-accent-primary text-text-on-accent' : 'bg-bg-secondary text-text-secondary hover:text-text-primary'
   }`
 
