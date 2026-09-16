@@ -142,7 +142,7 @@ export function WaiterOrder({
                             onAdd(item, v)
                           }}
                           disabled={!v.available}
-                          className={`rounded-lg border px-2.5 py-1 text-caption font-semibold transition-colors ${
+                          className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border px-3 text-caption font-semibold transition-colors ${
                             v.available
                               ? 'border-accent-primary/30 bg-accent-tint text-accent-primary hover:bg-accent-primary hover:text-text-on-accent'
                               : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
@@ -245,7 +245,7 @@ export function WaiterOrder({
                             onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
                             disabled={line.spiceLevel === 0}
                             aria-label="Turunkan level"
-                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
+                            className="flex h-11 w-11 items-center justify-center rounded-md border border-border-subtle text-text-primary disabled:opacity-40"
                           >
                             −
                           </button>
@@ -254,7 +254,7 @@ export function WaiterOrder({
                             onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
                             disabled={line.spiceLevel === 5}
                             aria-label="Naikkan level"
-                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
+                            className="flex h-11 w-11 items-center justify-center rounded-md border border-border-subtle text-accent-primary disabled:opacity-40"
                           >
                             +
                           </button>

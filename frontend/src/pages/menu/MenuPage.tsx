@@ -434,7 +434,7 @@ export function MenuPage() {
                             cart.addItem(item, v)
                           }}
                           disabled={!v.available}
-                          className={`rounded-md border px-2 py-0.5 text-caption font-semibold transition-colors ${
+                          className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-3 text-caption font-semibold transition-colors ${
                             v.available
                               ? 'border-accent-primary/30 bg-accent-tint text-accent-primary'
                               : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
@@ -643,7 +643,7 @@ function FeaturedCard({ item, onAdd, selectedVariantName, onSelectVariant }: Fea
                   onAdd(item, v)
                 }}
                 disabled={!v.available}
-                className={`rounded-lg border px-3 py-1.5 text-caption font-semibold transition-colors ${
+                className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border px-3 text-caption font-semibold transition-colors ${
                   v.available
                     ? 'border-accent-primary/30 bg-accent-tint text-accent-primary'
                     : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'

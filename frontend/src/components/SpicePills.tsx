@@ -18,7 +18,7 @@ export function SpicePills({ selected, onSelect, className = '' }: SpicePillsPro
           type="button"
           onClick={() => onSelect(level)}
           aria-label={`Level kepedasan ${level}`}
-          className={`h-8 min-w-8 rounded-md border px-2 font-num text-caption font-bold transition-colors ${
+          className={`h-11 min-w-11 rounded-md border px-2 font-num text-caption font-bold transition-colors ${
             selected === level
               ? 'border-accent-primary bg-accent-primary text-text-on-accent'
               : 'border-border-subtle bg-bg-surface text-text-primary hover:bg-accent-tint hover:text-accent-primary'

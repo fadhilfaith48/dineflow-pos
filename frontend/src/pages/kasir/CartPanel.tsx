@@ -110,7 +110,7 @@ export function CartPanel({
                         onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.max(0, (line.spiceLevel as number) - 1))}
                         disabled={line.spiceLevel === 0}
                         aria-label="Turunkan level"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle text-text-primary disabled:opacity-40"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-primary disabled:opacity-40"
                       >
                         −
                       </button>
@@ -119,7 +119,7 @@ export function CartPanel({
                         onClick={() => onSetSpice(line.menuItemId, line.variantName, line.spiceLevel as number, Math.min(5, (line.spiceLevel as number) + 1))}
                         disabled={line.spiceLevel === 5}
                         aria-label="Naikkan level"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle text-accent-primary disabled:opacity-40"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-accent-primary disabled:opacity-40"
                       >
                         +
                       </button>

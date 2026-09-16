@@ -103,7 +103,7 @@ export function MenuPanel({
                               onAdd(item, v)
                             }}
                             disabled={!v.available}
-                            className={`rounded-md border px-2.5 py-1 text-caption font-semibold transition-colors ${
+                            className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-3 text-caption font-semibold transition-colors ${
                               v.available
                                 ? 'border-accent-primary/30 bg-accent-tint text-accent-primary hover:bg-accent-primary hover:text-text-on-accent'
                                 : 'border-border-subtle bg-bg-secondary text-text-secondary opacity-50'
