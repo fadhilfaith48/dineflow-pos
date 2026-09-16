@@ -182,7 +182,7 @@ export function CartPanel({
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Button variant="outline" onClick={onHold} disabled={lines.length === 0}>
-            Tahan
+            Bersihkan Keranjang
           </Button>
           <Button onClick={onPayAndSend} disabled={lines.length === 0 || sending}>
             {sending ? 'Mengirim...' : 'Bayar di Muka'}

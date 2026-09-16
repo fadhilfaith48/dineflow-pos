@@ -105,7 +105,7 @@ export function KasirPage() {
   }
 
   function handleHold() {
-    if (cart.lines.length > 0 && window.confirm('Tahan pesanan? Keranjang akan dikosongkan.')) {
+    if (cart.lines.length > 0 && window.confirm('Bersihkan keranjang? Semua item yang belum dibayar akan hilang.')) {
       cart.clear()
     }
   }
