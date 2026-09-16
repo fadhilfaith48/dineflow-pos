@@ -17,7 +17,7 @@ import { getToken } from './httpApi'
  * (mis. https://dineflow.duckdns.org/api) supaya koneksi tetap menuju backend,
  * bukan domain frontend. Env VITE_REVERB_HOST/PORT/SCHEME tetap override opsional.
  */
-const isPreview = import.meta.env.PROD
+const isProduction = import.meta.env.PROD
 const API_BASE = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/+$/, '')
 
 // dev: '/api' (relatif, same-origin via proxy Vite) → '/api/broadcasting/auth'
@@ -43,8 +43,8 @@ const echo = new Echo({
   wsPort:
     Number(import.meta.env.VITE_REVERB_PORT) ||
     Number(window.location.port) ||
-    (isPreview ? 443 : 80),
-  forceTLS: isPreview ? true : import.meta.env.VITE_REVERB_SCHEME === 'https',
+    (isProduction ? 443 : 80),
+  forceTLS: isProduction ? true : import.meta.env.VITE_REVERB_SCHEME === 'https',
   enabledTransports: ['ws', 'wss'],
   authEndpoint: AUTH_ENDPOINT,
   // Authorizer kustom agar token dibaca saat subscribe (bukan saat modul dimuat),
