@@ -24,7 +24,7 @@ export function TablePickerModal({ open, tables, selectedTableId, onSelect, onCl
       <div className="w-full max-w-md rounded-xl bg-bg-surface p-6 shadow-modal">
         <div className="flex items-center justify-between">
           <h3 className="text-heading font-semibold text-text-primary">Pilih Meja</h3>
-          <button onClick={onClose} aria-label="Tutup" className="text-text-secondary hover:text-text-primary">
+          <button onClick={onClose} aria-label="Tutup" className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary">
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>

@@ -86,7 +86,7 @@ export function PaymentModal({ open, total, orderId, onClose, onTunai, onQrisPai
           <button
             onClick={onClose}
             aria-label="Tutup"
-            className="text-text-secondary transition-colors hover:text-text-primary"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />

@@ -87,7 +87,7 @@ export function CartPanel({
                   <button
                     onClick={() => onRemove(line.menuItemId, line.variantName, line.spiceLevel)}
                     aria-label={`Hapus ${line.name}`}
-                    className="text-text-secondary transition-colors hover:text-status-danger"
+                    className="flex h-11 w-11 items-center justify-center text-text-secondary transition-colors hover:text-status-danger"
                   >
                     <svg
                       className="h-4 w-4"
