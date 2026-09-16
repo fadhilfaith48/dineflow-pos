@@ -41,7 +41,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="text-body font-semibold text-text-primary">Daftar Staf ({users.length})</div>
+        <div className="text-subheading font-semibold text-text-primary">Daftar Staf ({users.length})</div>
         <Button size="sm" onClick={() => setShowAdd(true)}>
           + Tambah Staf
         </Button>
@@ -51,7 +51,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-4">
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Nama</label>
+              <label className="text-body font-semibold uppercase tracking-wide text-text-secondary">Nama</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -59,7 +59,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
               />
             </div>
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Username</label>
+              <label className="text-body font-semibold uppercase tracking-wide text-text-secondary">Username</label>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -67,7 +67,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
               />
             </div>
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Role</label>
+              <label className="text-body font-semibold uppercase tracking-wide text-text-secondary">Role</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as Role)}
@@ -96,23 +96,23 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-border-subtle bg-bg-secondary text-caption font-semibold uppercase tracking-wide text-text-secondary">
-              <th className="px-4 py-3">Nama</th>
-              <th className="px-4 py-3">Username</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
+            <tr className="border-b border-border-subtle bg-bg-secondary text-body font-semibold uppercase tracking-wide text-text-secondary">
+              <th className="px-5 py-4">Nama</th>
+              <th className="px-5 py-4">Username</th>
+              <th className="px-5 py-4">Role</th>
+              <th className="px-5 py-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
             {users.map((user) => (
               <tr key={user.id}>
-                <td className="px-4 py-3 text-body font-semibold text-text-primary">{user.name}</td>
-                <td className="px-4 py-3 font-num text-body text-text-secondary">{user.username}</td>
+                <td className="px-5 py-4 text-subheading font-semibold text-text-primary">{user.name}</td>
+                <td className="px-5 py-4 font-num text-body text-text-secondary">{user.username}</td>
                 <td className="px-4 py-3">
                   <select
                     value={user.role}
                     onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
-                    className="rounded-lg border border-border-subtle bg-bg-surface px-2 py-1.5 text-caption font-semibold"
+                    className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold"
                   >
                     {roles.map((r) => (
                       <option key={r} value={r}>
@@ -121,13 +121,13 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-5 py-4 text-right">
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
                         if (window.confirm(`Atur ulang password ${user.name} ke ${DEFAULT_PASSWORD}?`)) onResetPassword(user.id)
                       }}
-                      className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-accent-primary hover:bg-accent-tint"
+                      className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
                     >
                       Atur Ulang
                     </button>
@@ -135,7 +135,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
                       onClick={() => {
                         if (window.confirm(`Hapus staf ${user.name}?`)) onDelete(user.id)
                       }}
-                      className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-status-danger hover:bg-status-danger/10"
+                      className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
                     >
                       Hapus
                     </button>

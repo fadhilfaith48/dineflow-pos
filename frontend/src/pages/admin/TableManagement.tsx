@@ -52,7 +52,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="text-body font-semibold text-text-primary">Daftar Meja ({tables.length})</div>
+        <div className="text-subheading font-semibold text-text-primary">Daftar Meja ({tables.length})</div>
         <Button size="sm" onClick={() => setShowAdd(true)}>
           + Tambah Meja
         </Button>
@@ -62,7 +62,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-4">
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+              <label className="text-body font-semibold uppercase tracking-wide text-text-secondary">
                 Nomor Meja
               </label>
               <input
@@ -73,7 +73,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
               />
             </div>
             <div>
-              <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+              <label className="text-body font-semibold uppercase tracking-wide text-text-secondary">
                 Jumlah Kursi
               </label>
               <input
@@ -99,24 +99,24 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-border-subtle bg-bg-secondary text-caption font-semibold uppercase tracking-wide text-text-secondary">
-              <th className="px-4 py-3">Meja</th>
-              <th className="px-4 py-3">Kursi</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">QR</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
+            <tr className="border-b border-border-subtle bg-bg-secondary text-body font-semibold uppercase tracking-wide text-text-secondary">
+              <th className="px-5 py-4">Meja</th>
+              <th className="px-5 py-4">Kursi</th>
+              <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4">QR</th>
+              <th className="px-5 py-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
             {tables.map((table) => (
               <tr key={table.id}>
-                <td className="px-4 py-3 font-num text-body font-bold text-text-primary">{table.number}</td>
-                <td className="px-4 py-3 font-num text-body text-text-secondary">{table.seats}</td>
+                <td className="px-5 py-4 font-num text-subheading font-bold text-text-primary">{table.number}</td>
+                <td className="px-5 py-4 font-num text-body text-text-secondary">{table.seats}</td>
                 <td className="px-4 py-3">
                   <select
                     value={table.status}
                     onChange={(e) => onUpdateStatus(table.id, e.target.value as TableStatus)}
-                    className={`rounded-lg border border-border-subtle bg-bg-surface px-2 py-1.5 text-caption font-semibold ${statusOption[table.status]}`}
+                    className={`rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold ${statusOption[table.status]}`}
                   >
                     {(Object.keys(statusLabel) as TableStatus[]).map((s) => (
                       <option key={s} value={s}>
@@ -128,17 +128,17 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
                 <td className="px-4 py-3">
                   <button
                     onClick={() => setQrTable(table)}
-                    className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-accent-primary hover:bg-accent-tint"
+                    className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
                   >
                     Lihat QR
                   </button>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-5 py-4 text-right">
                   <button
                     onClick={() => {
                       if (window.confirm(`Hapus meja ${table.number}?`)) onDelete(table.id)
                     }}
-                    className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-status-danger hover:bg-status-danger/10"
+                    className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
                   >
                     Hapus
                   </button>

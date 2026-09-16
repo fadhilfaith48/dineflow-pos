@@ -130,7 +130,7 @@ export function SalesReport() {
           aria-label="Pilih bulan"
           value={selectedMonth}
           onChange={(e) => pickMonth(e.target.value)}
-          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
+          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body font-semibold text-text-primary"
         >
           <option value="">Pilih bulan…</option>
           {monthOptions.map((m) => (
@@ -147,9 +147,9 @@ export function SalesReport() {
             setSelectedMonth('')
             setRange((r) => ({ ...r, start: e.target.value }))
           }}
-          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body text-text-primary"
         />
-        <span className="text-caption text-text-secondary">s/d</span>
+        <span className="text-body text-text-secondary">s/d</span>
         <input
           type="date"
           aria-label="Tanggal akhir"
@@ -158,12 +158,12 @@ export function SalesReport() {
             setSelectedMonth('')
             setRange((r) => ({ ...r, end: e.target.value }))
           }}
-          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body text-text-primary"
         />
         {(range.start || range.end) && (
           <button
             onClick={clearRange}
-            className="rounded-lg bg-bg-surface px-3 py-2 text-caption font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
+            className="rounded-lg bg-bg-surface px-3 py-2.5 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
           >
             Reset tanggal
           </button>
@@ -179,7 +179,7 @@ export function SalesReport() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
-          <div className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+          <div className="text-body font-semibold uppercase tracking-wide text-text-secondary">
             Total Penjualan
           </div>
           <div className="mt-2 font-num text-display font-bold text-accent-primary">
@@ -187,7 +187,7 @@ export function SalesReport() {
           </div>
         </div>
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
-          <div className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+          <div className="text-body font-semibold uppercase tracking-wide text-text-secondary">
             Jumlah Transaksi
           </div>
           <div className="mt-2 font-num text-display font-bold text-text-primary">
@@ -195,7 +195,7 @@ export function SalesReport() {
           </div>
         </div>
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
-          <div className="text-caption font-semibold uppercase tracking-wide text-text-secondary">
+          <div className="text-body font-semibold uppercase tracking-wide text-text-secondary">
             Rata-rata per Transaksi
           </div>
           <div className="mt-2 font-num text-display font-bold text-text-primary">
@@ -205,19 +205,19 @@ export function SalesReport() {
       </div>
 
       <div className="rounded-xl border border-border-subtle bg-bg-surface shadow-card">
-        <div className="border-b border-border-subtle px-4 py-3 text-body font-semibold text-text-primary">
+        <div className="border-b border-border-subtle px-5 py-4 text-body font-semibold text-text-primary">
           Per Metode Bayar
         </div>
         <ul className="divide-y divide-border-subtle">
           {(['tunai', 'qris'] as const).map((method) => {
             const stat = summary.paymentBreakdown[method]
             return (
-              <li key={method} className="flex items-center gap-4 px-4 py-3">
+              <li key={method} className="flex items-center gap-4 px-5 py-4">
                 <div className="min-w-0 flex-1">
-                  <div className="text-body font-semibold capitalize text-text-primary">{method}</div>
-                  <div className="font-num text-caption text-text-secondary">{stat.count} transaksi</div>
+                  <div className="text-subheading font-semibold capitalize text-text-primary">{method}</div>
+                  <div className="font-num text-body text-text-secondary">{stat.count} transaksi</div>
                 </div>
-                <span className="font-num text-body font-semibold text-text-primary">
+                <span className="font-num text-subheading font-semibold text-text-primary">
                   {formatRupiah(stat.revenue)}
                 </span>
               </li>
@@ -227,7 +227,7 @@ export function SalesReport() {
       </div>
 
       <div className="rounded-xl border border-border-subtle bg-bg-surface shadow-card">
-        <div className="border-b border-border-subtle px-4 py-3 text-body font-semibold text-text-primary">
+        <div className="border-b border-border-subtle px-5 py-4 text-body font-semibold text-text-primary">
           Menu Terlaris
         </div>
         {summary.topItems.length === 0 ? (
@@ -235,13 +235,13 @@ export function SalesReport() {
         ) : (
           <ul className="divide-y divide-border-subtle">
             {summary.topItems.map((item, index) => (
-              <li key={item.name} className="flex items-center gap-4 px-4 py-3">
+              <li key={item.name} className="flex items-center gap-4 px-5 py-4">
                 <span className="font-num w-8 text-heading font-bold text-border-subtle">{index + 1}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-body font-semibold text-text-primary">{item.name}</div>
-                  <div className="font-num text-caption text-text-secondary">{item.quantity} porsi terjual</div>
+                  <div className="truncate text-subheading font-semibold text-text-primary">{item.name}</div>
+                  <div className="font-num text-body text-text-secondary">{item.quantity} porsi terjual</div>
                 </div>
-                <span className="font-num text-body font-semibold text-text-primary">
+                <span className="font-num text-subheading font-semibold text-text-primary">
                   {formatRupiah(item.revenue)}
                 </span>
               </li>

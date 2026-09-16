@@ -355,7 +355,7 @@ export function MenuManagement({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="text-body font-semibold text-text-primary">Daftar Menu ({items.length})</div>
+        <div className="text-subheading font-semibold text-text-primary">Daftar Menu ({items.length})</div>
         <Button size="sm" onClick={() => setShowAdd(true)}>
           + Tambah Menu
         </Button>
@@ -365,23 +365,23 @@ export function MenuManagement({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left">
             <thead>
-              <tr className="border-b border-border-subtle bg-bg-secondary text-caption font-semibold uppercase tracking-wide text-text-secondary">
-                <th className="px-4 py-3">Menu</th>
-                <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3">Harga</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
+              <tr className="border-b border-border-subtle bg-bg-secondary text-body font-semibold uppercase tracking-wide text-text-secondary">
+                <th className="px-5 py-4">Menu</th>
+                <th className="px-5 py-4">Kategori</th>
+                <th className="px-5 py-4">Harga</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
               {items.map((item) => (
                 <tr key={item.id} className={item.available ? '' : 'bg-bg-secondary/50'}>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       {item.imageUrl ? (
-                        <img src={photoUrl(item.imageUrl)} alt={item.name} className="h-10 w-10 rounded-lg object-cover" />
+                        <img src={photoUrl(item.imageUrl)} alt={item.name} className="h-12 w-12 rounded-lg object-cover" />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-bg-secondary">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-bg-secondary">
                           <svg className="h-6 w-6 text-border-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 11h18" />
                             <path d="M12 11v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V11" />
@@ -392,18 +392,18 @@ export function MenuManagement({
                       )}
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-body font-semibold text-text-primary">{item.name}</span>
+                            <span className="text-subheading font-semibold text-text-primary">{item.name}</span>
                             {item.isSpicy && (
-                              <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-caption font-bold uppercase tracking-wide text-status-danger">
+                              <span className="rounded-full bg-status-danger/15 px-2.5 py-0.5 text-body font-bold uppercase tracking-wide text-status-danger">
                                 Pedas
                               </span>
                             )}
                           </div>
-                          <div className="font-num text-caption text-text-secondary">{item.code}</div>
+                          <div className="font-num text-body text-text-secondary">{item.code}</div>
                         {item.variants && item.variants.length > 0 && (
                           <div className="mt-0.5 flex flex-wrap gap-1">
                             {item.variants.map((v) => (
-                              <span key={v.id} className="rounded-lg border border-accent-primary/30 bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent-primary">
+                              <span key={v.id} className="rounded-lg border border-accent-primary/30 bg-accent-tint px-2 py-0.5 text-body font-semibold text-accent-primary">
                                 {v.name} <span className="font-num">{formatRupiah(v.price)}</span>
                               </span>
                             ))}
@@ -412,8 +412,8 @@ export function MenuManagement({
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-body text-text-secondary">{catName(item.categoryId)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4 text-body text-text-secondary">{catName(item.categoryId)}</td>
+                  <td className="px-5 py-4">
                     {editingId === item.id ? (
                       <input
                         value={priceDraft}
@@ -423,14 +423,14 @@ export function MenuManagement({
                         className="w-28 rounded-md border border-accent-primary px-2 py-1 font-num text-body focus:outline-none"
                       />
                     ) : (
-                      <span className="font-num text-body font-semibold text-text-primary">
+                      <span className="font-num text-subheading font-semibold text-text-primary">
                         {formatRupiah(item.price)}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-caption font-bold uppercase tracking-wider ${
+                      className={`inline-flex rounded-full px-3 py-1.5 text-body font-bold uppercase tracking-wider ${
                         item.available
                           ? 'bg-status-ready/15 text-status-ready'
                           : 'bg-status-danger/15 text-status-danger'
@@ -439,19 +439,19 @@ export function MenuManagement({
                       {item.available ? 'Tersedia' : 'Habis'}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4">
                     <div className="flex justify-end gap-2">
                       {editingId === item.id ? (
                         <>
                           <button
                             onClick={() => commitEdit(item)}
-                            className="rounded-lg bg-accent-primary px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-on-accent"
+                            className="rounded-lg bg-accent-primary px-4 py-2 text-body font-bold uppercase tracking-wide text-text-on-accent"
                           >
                             Simpan
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-secondary"
+                            className="rounded-lg border border-border-subtle px-4 py-2 text-body font-bold uppercase tracking-wide text-text-secondary"
                           >
                             Batal
                           </button>
@@ -460,13 +460,13 @@ export function MenuManagement({
                         <>
                           <button
                             onClick={() => setEditingItem(item)}
-                            className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-primary hover:bg-bg-secondary"
+                            className="rounded-lg border border-border-subtle px-4 py-2 text-body font-bold uppercase tracking-wide text-text-primary hover:bg-bg-secondary"
                           >
                             Ubah
                           </button>
                           <button
                             onClick={() => startEdit(item)}
-                            className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-primary hover:bg-bg-secondary"
+                            className="rounded-lg border border-border-subtle px-4 py-2 text-body font-bold uppercase tracking-wide text-text-primary hover:bg-bg-secondary"
                           >
                             Harga
                           </button>
@@ -474,7 +474,7 @@ export function MenuManagement({
                       )}
                       <button
                         onClick={() => onToggleAvailable(item)}
-                        className={`rounded-lg px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-text-on-accent ${
+                        className={`rounded-lg px-4 py-2 text-body font-bold uppercase tracking-wide text-text-on-accent ${
                           item.available
                             ? 'bg-status-danger hover:bg-status-danger-hover'
                             : 'bg-status-ready hover:bg-status-ready-hover'
@@ -486,7 +486,7 @@ export function MenuManagement({
                         onClick={() => {
                           if (window.confirm(`Hapus menu ${item.name}?`)) onDelete(item)
                         }}
-                        className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-bold uppercase tracking-wide text-status-danger hover:bg-status-danger/10"
+                        className="rounded-lg border border-border-subtle px-4 py-2 text-body font-bold uppercase tracking-wide text-status-danger hover:bg-status-danger/10"
                       >
                         Hapus
                       </button>

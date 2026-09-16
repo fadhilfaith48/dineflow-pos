@@ -93,7 +93,7 @@ export function SettingsPage() {
               Pilih Logo
               <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
             </label>
-            <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB</p>
+            <p className="mt-1 text-body text-text-secondary">PNG/JPG/WebP, maks 2 MB</p>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export function SettingsPage() {
               Pilih QRIS
               <input type="file" accept="image/*" className="hidden" onChange={handleQrisChange} />
             </label>
-            <p className="mt-1 text-caption text-text-secondary">PNG/JPG/WebP, maks 2 MB. Ditampilkan di layar pembayaran kasir.</p>
+            <p className="mt-1 text-body text-text-secondary">PNG/JPG/WebP, maks 2 MB. Ditampilkan di layar pembayaran kasir.</p>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function SettingsPage() {
         <div className="text-heading font-semibold text-text-primary">Informasi Restoran</div>
         <div className="mt-4 flex flex-col gap-4">
           <div>
-            <label className="mb-1 block text-caption font-semibold text-text-secondary">Nama Restoran</label>
+            <label className="mb-1 block text-body font-semibold text-text-secondary">Nama Restoran</label>
             <input
               type="text"
               value={restaurantName}
@@ -127,7 +127,7 @@ export function SettingsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-caption font-semibold text-text-secondary">Alamat</label>
+            <label className="mb-1 block text-body font-semibold text-text-secondary">Alamat</label>
             <input
               type="text"
               value={restaurantAddress}
@@ -141,7 +141,7 @@ export function SettingsPage() {
       <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
         <div className="text-heading font-semibold text-text-primary">Pajak (PPN)</div>
         <div className="mt-4">
-          <label className="mb-1 block text-caption font-semibold text-text-secondary">Tarif PPN (%)</label>
+          <label className="mb-1 block text-body font-semibold text-text-secondary">Tarif PPN (%)</label>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -153,7 +153,7 @@ export function SettingsPage() {
             />
             <span className="text-body text-text-secondary">%</span>
           </div>
-          <p className="mt-1 text-caption text-text-secondary">Default: 10%. Berlaku untuk semua transaksi baru.</p>
+          <p className="mt-1 text-body text-text-secondary">Default: 10%. Berlaku untuk semua transaksi baru.</p>
         </div>
       </div>
 

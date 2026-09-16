@@ -21,7 +21,7 @@ function toYmd(d: Date): string {
 }
 
 const gridCols =
-  'grid grid-cols-[150px_1fr_130px_70px_120px_90px] items-center gap-3 px-4'
+  'grid grid-cols-[180px_1fr_160px_80px_150px_110px] items-center gap-3 px-5'
 
 export function TransactionHistory() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -98,15 +98,15 @@ export function TransactionHistory() {
           aria-label="Tanggal mulai"
           value={range.start}
           onChange={(e) => setRange((r) => ({ ...r, start: e.target.value }))}
-          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body text-text-primary"
         />
-        <span className="text-caption text-text-secondary">s/d</span>
+        <span className="text-body text-text-secondary">s/d</span>
         <input
           type="date"
           aria-label="Tanggal akhir"
           value={range.end}
           onChange={(e) => setRange((r) => ({ ...r, end: e.target.value }))}
-          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary"
+          className="font-num rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body text-text-primary"
         />
         <input
           type="search"
@@ -114,13 +114,13 @@ export function TransactionHistory() {
           aria-label="Cari nomor order"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-44 rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption text-text-primary placeholder:text-text-secondary"
+          className="w-44 rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body text-text-primary placeholder:text-text-secondary"
         />
         <select
           aria-label="Filter metode bayar"
           value={method}
           onChange={(e) => setMethod(e.target.value as MethodFilter)}
-          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
+          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body font-semibold text-text-primary"
         >
           <option value="semua">Semua Metode</option>
           <option value="tunai">Tunai</option>
@@ -130,7 +130,7 @@ export function TransactionHistory() {
           aria-label="Filter status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-caption font-semibold text-text-primary"
+          className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2.5 text-body font-semibold text-text-primary"
         >
           <option value="semua">Semua Status</option>
           <option value="diproses">Diproses</option>
@@ -140,7 +140,7 @@ export function TransactionHistory() {
         {hasFilter && (
           <button
             onClick={resetFilters}
-            className="rounded-lg bg-bg-surface px-3 py-2 text-caption font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
+            className="rounded-lg bg-bg-surface px-3 py-2.5 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/15"
           >
             Atur Ulang Filter
           </button>
@@ -148,7 +148,7 @@ export function TransactionHistory() {
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
-        <div className={`${gridCols} border-b border-border-subtle py-3 text-caption font-bold uppercase tracking-wide text-text-secondary`}>
+        <div className={`${gridCols} border-b border-border-subtle py-4 text-body font-bold uppercase tracking-wide text-text-secondary`}>
           <span>Waktu</span>
           <span>No. Pesanan</span>
           <span>Meja/Sumber</span>
@@ -169,9 +169,9 @@ export function TransactionHistory() {
                 <button
                   onClick={() => setReceiptOrder(order)}
                   title="Cetak ulang struk"
-                  className={`${gridCols} w-full py-3 text-left transition-colors hover:bg-accent-tint/40`}
+                  className={`${gridCols} w-full py-4 text-left transition-colors hover:bg-accent-tint/40`}
                 >
-                  <span className="min-w-0 font-num text-caption text-text-secondary">
+                  <span className="min-w-0 font-num text-body text-text-secondary">
                     {new Date(order.createdAt).toLocaleDateString('id-ID', {
                       day: '2-digit',
                       month: 'short',
@@ -183,20 +183,20 @@ export function TransactionHistory() {
                       minute: '2-digit',
                     })}
                   </span>
-                  <span className="min-w-0 truncate font-num text-body font-bold text-text-primary">
+                  <span className="min-w-0 truncate font-num text-subheading font-bold text-text-primary">
                     {order.orderNumber}
                   </span>
-                  <span className="min-w-0 truncate text-caption text-text-secondary">
+                  <span className="min-w-0 truncate text-body text-text-secondary">
                     {order.tableNumber ? `Meja ${order.tableNumber}` : sourceLabel[order.source]}
                   </span>
-                  <span className="font-num text-caption text-text-secondary">
+                  <span className="font-num text-body text-text-secondary">
                     {order.items.reduce((sum, item) => sum + item.quantity, 0)}
                   </span>
-                  <span className="font-num text-right text-body font-semibold text-text-primary">
+                  <span className="font-num text-right text-subheading font-semibold text-text-primary">
                     {formatRupiah(order.total)}
                   </span>
                   <span
-                    className={`justify-self-start rounded-full px-2.5 py-0.5 text-caption font-bold uppercase tracking-wide ${
+                    className={`justify-self-start rounded-full px-3 py-1 text-body font-bold uppercase tracking-wide ${
                       order.status === 'dibatalkan'
                         ? 'bg-status-danger/15 text-status-danger'
                         : order.payment?.method === 'tunai'

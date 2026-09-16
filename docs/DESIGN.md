@@ -85,6 +85,7 @@ Font: **Inter** (UI utama), fallback ke system sans-serif.
 - Kitchen Display: full-width grid, tidak dibatasi max-width (memaksimalkan layar besar di dapur)
 - Border-radius scale: 6px (elemen kecil, badge), 8px (tombol, ticket), 12px (card, modal)
 - Grid pesanan Kitchen Display: kolom otomatis menyesuaikan lebar layar, minimal 3 kolom pada layar besar
+- Admin (layar lebar): tabel & kartu data memakai ukuran teks satu tingkat di atas skala dasar (caption → Body 15px, Body → Subheading 17px) + padding row lebih lega (`px-5 py-4`) agar konten terisi merata tanpa mengubah jenis/serif font
 
 ## Depth and elevation
 | Level | Usage | Shadow Value |
