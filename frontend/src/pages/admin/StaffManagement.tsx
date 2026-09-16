@@ -14,6 +14,9 @@ interface StaffManagementProps {
 
 const roles: Role[] = ['admin', 'kasir', 'pelayan', 'dapur']
 
+const gridCols =
+  'grid grid-cols-[2fr_1.6fr_1.2fr_1.2fr] items-center gap-3 px-5'
+
 export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onResetPassword }: StaffManagementProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [name, setName] = useState('')
@@ -94,57 +97,49 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
       )}
 
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-border-subtle bg-bg-secondary text-body font-semibold uppercase tracking-wide text-text-secondary">
-              <th className="px-5 py-4">Nama</th>
-              <th className="px-5 py-4">Username</th>
-              <th className="px-5 py-4">Role</th>
-              <th className="px-5 py-4 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-subtle">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-5 py-4 text-subheading font-semibold text-text-primary">{user.name}</td>
-                <td className="px-5 py-4 font-num text-body text-text-secondary">{user.username}</td>
-                <td className="px-4 py-3">
-                  <select
-                    value={user.role}
-                    onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
-                    className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold"
-                  >
-                    {roles.map((r) => (
-                      <option key={r} value={r}>
-                        {roleLabel[r]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Atur ulang password ${user.name} ke ${DEFAULT_PASSWORD}?`)) onResetPassword(user.id)
-                      }}
-                      className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
-                    >
-                      Atur Ulang
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Hapus staf ${user.name}?`)) onDelete(user.id)
-                      }}
-                      className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={`${gridCols} border-b border-border-subtle py-4 text-body font-bold uppercase tracking-wide text-text-secondary`}>
+          <span>Nama</span>
+          <span>Username</span>
+          <span>Role</span>
+          <span className="justify-self-end">Aksi</span>
+        </div>
+        <ul className="divide-y divide-border-subtle">
+          {users.map((user) => (
+            <li key={user.id} className={gridCols}>
+              <span className="min-w-0 truncate text-subheading font-semibold text-text-primary">{user.name}</span>
+              <span className="font-num text-body text-text-secondary">{user.username}</span>
+              <select
+                value={user.role}
+                onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
+                className="rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold"
+              >
+                {roles.map((r) => (
+                  <option key={r} value={r}>
+                    {roleLabel[r]}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Atur ulang password ${user.name} ke ${DEFAULT_PASSWORD}?`)) onResetPassword(user.id)
+                  }}
+                  className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
+                >
+                  Atur Ulang
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Hapus staf ${user.name}?`)) onDelete(user.id)
+                  }}
+                  className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
+                >
+                  Hapus
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )
