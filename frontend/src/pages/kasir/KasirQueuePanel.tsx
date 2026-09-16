@@ -189,7 +189,7 @@ export function KasirQueuePanel({
   )
 
   return (
-    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card md:w-72">
+    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card lg:w-72">
       <header className="flex gap-2 border-b border-border-subtle p-2">
         <button onClick={() => setPanel('aktif')} className={panelPill(panel === 'aktif')}>
           Pesanan Aktif

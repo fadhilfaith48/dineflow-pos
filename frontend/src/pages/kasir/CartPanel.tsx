@@ -40,7 +40,7 @@ export function CartPanel({
   sending = false,
 }: CartPanelProps) {
   return (
-    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card md:w-96">
+    <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card lg:w-96">
       <div className="border-b border-dashed border-border-subtle p-4 text-center">
         <button
           onClick={onSelectTable}
