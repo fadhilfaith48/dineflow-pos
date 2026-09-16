@@ -17,13 +17,10 @@ const statusLabel: Record<TableStatus, string> = {
 }
 
 const statusOption: Record<TableStatus, string> = {
-  kosong: 'text-status-success',
+  kosong: 'text-status-ready',
   terisi: 'text-accent-primary',
   'perlu-dibersihkan': 'text-status-danger',
 }
-
-const gridCols =
-  'grid grid-cols-[1fr_0.7fr_1.2fr_1fr_1.4fr] items-center gap-3 px-5'
 
 export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: TableManagementProps) {
   const [showAdd, setShowAdd] = useState(false)
@@ -100,48 +97,56 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
       )}
 
       <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
-        <div className={`${gridCols} border-b border-border-subtle py-4 text-body font-bold uppercase tracking-wide text-text-secondary`}>
-          <span>Meja</span>
-          <span>Kursi</span>
-          <span>Status</span>
-          <span>QR</span>
-          <span>Aksi</span>
-        </div>
-        <ul className="divide-y divide-border-subtle">
-          {tables.map((table) => (
-            <li key={table.id} className={gridCols}>
-              <span className="font-num text-subheading font-bold text-text-primary">{table.number}</span>
-              <span className="font-num text-body text-text-secondary">{table.seats}</span>
-              <select
-                value={table.status}
-                onChange={(e) => onUpdateStatus(table.id, e.target.value as TableStatus)}
-                className={`rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold ${statusOption[table.status]}`}
-              >
-                {(Object.keys(statusLabel) as TableStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabel[s]}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => setQrTable(table)}
-                className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
-              >
-                Lihat QR
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Hapus meja ${table.number}?`)) onDelete(table.id)
-                  }}
-                  className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
-                >
-                  Hapus
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <table className="w-full text-left">
+          <thead>
+            <tr className="border-b border-border-subtle bg-bg-secondary text-body font-semibold uppercase tracking-wide text-text-secondary">
+              <th className="px-5 py-4">Meja</th>
+              <th className="px-5 py-4">Kursi</th>
+              <th className="px-5 py-4">Status</th>
+              <th className="px-5 py-4">QR</th>
+              <th className="px-5 py-4 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-subtle">
+            {tables.map((table) => (
+              <tr key={table.id}>
+                <td className="px-5 py-4 font-num text-subheading font-bold text-text-primary">{table.number}</td>
+                <td className="px-5 py-4 font-num text-body text-text-secondary">{table.seats}</td>
+                <td className="px-4 py-3">
+                  <select
+                    value={table.status}
+                    onChange={(e) => onUpdateStatus(table.id, e.target.value as TableStatus)}
+                    className={`rounded-lg border border-border-subtle bg-bg-surface px-3 py-2 text-body font-semibold ${statusOption[table.status]}`}
+                  >
+                    {(Object.keys(statusLabel) as TableStatus[]).map((s) => (
+                      <option key={s} value={s}>
+                        {statusLabel[s]}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => setQrTable(table)}
+                    className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-accent-primary hover:bg-accent-tint"
+                  >
+                    Lihat QR
+                  </button>
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Hapus meja ${table.number}?`)) onDelete(table.id)
+                    }}
+                    className="rounded-lg border border-border-subtle px-4 py-2 text-body font-semibold text-status-danger hover:bg-status-danger/10"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {qrTable && (
