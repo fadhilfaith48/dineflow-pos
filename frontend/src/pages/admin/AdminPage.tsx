@@ -95,7 +95,7 @@ export function AdminPage() {
   return (
     <div className="flex h-screen flex-col">
       <TopNavBar />
-      <main className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto bg-bg-secondary p-6">
+      <main className="mx-auto w-full max-w-[1280px] flex-1 overflow-y-auto bg-bg-secondary p-6">
         {error && (
           <div className="mb-4 rounded-lg bg-status-danger/15 px-4 py-2 text-body font-semibold text-status-danger">{error}</div>
         )}
