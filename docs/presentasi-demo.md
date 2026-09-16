@@ -18,7 +18,7 @@ Naskah demo singkat untuk sidang/presentasi. Data demo sudah di-*seed* (`migrate
 |---|---|---|---|
 | 1 | **Login** | Buka `http://localhost:5173/login` → login `admin`/`1234` | Role dari server; arah halaman sesuai role |
 | 2 | **Admin — Menu** | Tab Manajemen Menu: tambah/edit menu, upload **foto** file, tandai **Habis** | Foto disimpan di server (`/storage/...`); tanda Habis **real-time** hilang di Menu QR & panel Kasir tanpa refresh |
-| 3 | **Admin — Meja** | Tambah meja, ubah status, **Lihat QR** → modal QR ke `/menu/:qr` | QR per meja; link ke halaman publik |
+| 3 | **Admin — Meja** | Tambah meja, ubah status, **Lihat QR** → modal QR ke `/menu/{token}` | QR per meja; link ke halaman publik |
 | 4 | **Admin — Staf** | Tambah staf + role | Bisa langsung login |
 | 5 | **Admin — Laporan** | Filter Hari ini / 7 Hari / Bulan ini / Semua | Total, transaksi, menu terlaris sesuai periode |
 | 6 | **Menu QR (publik)** | Tab baru (incognito) **tanpa login**: buka link QR meja dari **Admin → Lihat QR** → URL `/menu/{token 8 karakter}` (skema huruf/angka, bukan `/menu/T1`) → pilih item + catatan → **Bayar di Muka** → QRIS tampil → demo: klik **"Saya Sudah Bayar"** | Halaman publik; bayar di muka wajib; otomatis ke tracking saat paid |

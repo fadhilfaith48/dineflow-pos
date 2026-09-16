@@ -41,7 +41,8 @@ update status pesanan disebarkan real-time ke semua channel via broadcasting.
 | Kasir | `/kasir` | kasir | Input pesanan manual, pesanan masuk & konfirmasi, bayar nota, struk |
 | Pelayan | `/pelayan` | pelayan | Peta meja → input pesanan → kirim → tandai diantar |
 | Kitchen Display | `/kitchen` | dapur | Grid ticket, urut antrian, update status per item |
-| Pesan Mandiri | `/menu/:table` | publik | Katalog → keranjang → kirim → tracking status |
+| Pesan Mandiri | `/menu/:table` | publik | Katalog → keranjang → kirim → tracking status. `:table` = **token QR** 8 karakter (`tables.qr_code`), bukan nomor meja; diresolusi via `GET /tables/{token}` (404 bila token salah = anti brute-force) |
+| Tracking Pesanan | `/order/:orderNumber` | publik | Status pesanan self-order real-time (channel `order.{orderNumber}`); juga menjadi isi barcode "Bayar di Kasir" (`/order/ORD-XXXX`) |
 | Admin | `/admin` | admin | Menu, meja (+QR), staf, laporan penjualan |
 | Login | `/login` | — | Auth mock (Fase A) / Sanctum (Fase B) |
 
