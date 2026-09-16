@@ -78,7 +78,7 @@ export function OrderList({ orders, onDeliver, onBack, isDelivering = false }: O
                       <button
                         onClick={() => onDeliver(order.id)}
                         disabled={isDelivering}
-                        className="rounded-lg bg-accent-primary px-4 py-2 text-caption font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40 disabled:pointer-events-none"
+                        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-accent-primary px-4 text-caption font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40 disabled:pointer-events-none"
                       >
                         {isDelivering ? 'Mengirim...' : 'Antarkan'}
                       </button>
