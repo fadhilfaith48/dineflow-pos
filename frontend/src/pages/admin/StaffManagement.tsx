@@ -93,7 +93,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
+      <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-surface shadow-card">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-border-subtle bg-bg-secondary text-caption font-semibold uppercase tracking-wide text-text-secondary">
