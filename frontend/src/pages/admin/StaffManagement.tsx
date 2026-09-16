@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Role, User } from '@/types'
 import { roleLabel } from '@/lib/roles'
+import { DEFAULT_PASSWORD } from '@/lib/constants'
 import { Button } from '@/components/Button'
 
 interface StaffManagementProps {
@@ -124,7 +125,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        if (window.confirm(`Atur ulang password ${user.name} ke 1234?`)) onResetPassword(user.id)
+                        if (window.confirm(`Atur ulang password ${user.name} ke ${DEFAULT_PASSWORD}?`)) onResetPassword(user.id)
                       }}
                       className="rounded-lg border border-border-subtle px-3 py-1.5 text-caption font-semibold text-accent-primary hover:bg-accent-tint"
                     >
