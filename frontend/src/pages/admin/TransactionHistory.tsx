@@ -21,7 +21,7 @@ function toYmd(d: Date): string {
 }
 
 const gridCols =
-  'grid grid-cols-[180px_1fr_160px_80px_150px_110px] items-center gap-3 px-5'
+  'grid grid-cols-[1.5fr_2fr_1.6fr_0.7fr_1.3fr_1fr] items-center gap-3 px-5'
 
 export function TransactionHistory() {
   const [orders, setOrders] = useState<Order[]>([])
