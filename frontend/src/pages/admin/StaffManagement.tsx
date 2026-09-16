@@ -101,7 +101,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
           <span>Nama</span>
           <span>Username</span>
           <span>Role</span>
-          <span className="justify-self-end">Aksi</span>
+          <span>Aksi</span>
         </div>
         <ul className="divide-y divide-border-subtle">
           {users.map((user) => (
@@ -119,7 +119,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
                   </option>
                 ))}
               </select>
-              <div className="flex justify-end gap-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => {
                     if (window.confirm(`Atur ulang password ${user.name} ke ${DEFAULT_PASSWORD}?`)) onResetPassword(user.id)

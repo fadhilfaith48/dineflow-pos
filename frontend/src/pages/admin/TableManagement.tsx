@@ -105,7 +105,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
           <span>Kursi</span>
           <span>Status</span>
           <span>QR</span>
-          <span className="justify-self-end">Aksi</span>
+          <span>Aksi</span>
         </div>
         <ul className="divide-y divide-border-subtle">
           {tables.map((table) => (
@@ -129,7 +129,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
               >
                 Lihat QR
               </button>
-              <div className="flex justify-end gap-2">
+              <div className="flex gap-2">
                 <button
                   onClick={() => {
                     if (window.confirm(`Hapus meja ${table.number}?`)) onDelete(table.id)
