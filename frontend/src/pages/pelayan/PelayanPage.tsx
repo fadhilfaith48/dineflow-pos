@@ -249,7 +249,7 @@ export function PelayanPage() {
       )}
       {payOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-text-primary/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-bg-surface p-5 shadow-modal">
+          <div className="w-full max-w-sm rounded-xl bg-bg-surface p-5 shadow-modal">
             <div className="mb-4 text-center">
               <div className="text-caption font-semibold uppercase tracking-wider text-text-secondary">
                 {payMethod === 'qris' ? 'Minta Pelanggan Memindai QRIS' : payMethod === 'kasir' ? 'Bayar di Kasir' : 'Bayar di Muka'}
