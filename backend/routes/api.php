@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:30,1');
 
 // Akses publik (Menu Pesan Mandiri / katalog pelanggan tanpa login):
 // kategori, menu, daftar meja, dan pembuatan order self-order.
@@ -19,7 +19,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/menu-items', [MenuItemController::class, 'index']);
 Route::get('/tables', [TableController::class, 'index']);
 Route::get('/tables/{slug}', [TableController::class, 'resolve'])->middleware('throttle:60,1');
-Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
+Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:60,1');
 // Tracking order publik: dipakai halaman /order/ORD-XXXX hasil scan QR pelanggan.
 Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->middleware('throttle:60,1');
 
@@ -32,7 +32,7 @@ Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockP
 Route::post('/payments/{reference}/simulate-payment', [PaymentController::class, 'simulate']);
 // Pembatalan self-order (publik): batalkan pesanan sendiri sebelum bayar di muka.
 // Dilindungi controller: hanya source self-order + status menunggu + dalam jendela waktu.
-Route::post('/orders/{order}/void', [OrderController::class, 'cancel'])->middleware('throttle:10,1');
+Route::post('/orders/{order}/void', [OrderController::class, 'cancel'])->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
