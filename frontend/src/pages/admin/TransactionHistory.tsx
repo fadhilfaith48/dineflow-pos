@@ -196,7 +196,7 @@ export function TransactionHistory() {
                     {formatRupiah(order.total)}
                   </span>
                   <span
-                    className={`justify-self-start rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    className={`justify-self-start rounded-full px-2.5 py-0.5 text-caption font-bold uppercase tracking-wide ${
                       order.status === 'dibatalkan'
                         ? 'bg-status-danger/15 text-status-danger'
                         : order.payment?.method === 'tunai'

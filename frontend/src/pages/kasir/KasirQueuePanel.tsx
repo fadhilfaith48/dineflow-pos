@@ -67,7 +67,7 @@ function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
           </span>
           <div className="flex items-center gap-1.5">
             {isCancelled && (
-              <span className="shrink-0 rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-status-danger">
+              <span className="shrink-0 rounded-full bg-status-danger/15 px-2 py-0.5 text-caption font-bold uppercase tracking-wide text-status-danger">
                 Batal
               </span>
             )}

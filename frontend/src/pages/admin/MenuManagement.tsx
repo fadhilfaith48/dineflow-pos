@@ -394,7 +394,7 @@ export function MenuManagement({
                           <div className="flex items-center gap-1.5">
                             <span className="text-body font-semibold text-text-primary">{item.name}</span>
                             {item.isSpicy && (
-                              <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-status-danger">
+                              <span className="rounded-full bg-status-danger/15 px-2 py-0.5 text-caption font-bold uppercase tracking-wide text-status-danger">
                                 Pedas
                               </span>
                             )}
