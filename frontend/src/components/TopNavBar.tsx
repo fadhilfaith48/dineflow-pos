@@ -27,9 +27,9 @@ export function TopNavBar() {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b border-border-subtle bg-bg-surface px-4 md:px-6">
-      <div className="flex items-center gap-2">
-        <img src="/favicon.png" alt="Logo DineFlow" className="h-10 w-auto object-contain" />
-        <div className="font-num text-heading font-bold tracking-tighter text-text-primary md:text-display">
+      <div className="flex min-w-0 items-center gap-2">
+        <img src="/favicon.png" alt="Logo DineFlow" className="h-10 w-auto shrink-0 object-contain" />
+        <div className="min-w-0 truncate font-num text-heading font-bold tracking-tighter text-text-primary md:text-display">
           DineFlow<span className="text-accent-primary">POS</span>
         </div>
       </div>
@@ -61,7 +61,7 @@ export function TopNavBar() {
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Menu navigasi"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border-subtle text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
+                className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M4 6h16M4 12h16M4 18h16" />
@@ -108,7 +108,7 @@ export function TopNavBar() {
             onClick={() => setShowChangePassword(true)}
             aria-label="Ganti Password"
             title="Ganti Password"
-            className="flex items-center rounded-lg border border-border-subtle px-2 py-2 text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary md:px-3 md:py-1.5"
+            className="flex min-h-11 min-w-11 items-center rounded-lg border border-border-subtle px-2 py-2 text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary md:min-h-0 md:min-w-0 md:px-3 md:py-1.5"
           >
             <svg className="h-4 w-4 md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -120,7 +120,7 @@ export function TopNavBar() {
             onClick={handleLogout}
             aria-label="Keluar"
             title="Keluar"
-            className="flex items-center rounded-lg border border-border-subtle px-2 py-2 text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary md:px-3 md:py-1.5"
+            className="flex min-h-11 min-w-11 items-center rounded-lg border border-border-subtle px-2 py-2 text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary md:min-h-0 md:min-w-0 md:px-3 md:py-1.5"
           >
             <svg className="h-4 w-4 md:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
