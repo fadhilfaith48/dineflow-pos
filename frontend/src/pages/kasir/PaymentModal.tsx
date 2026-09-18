@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PaymentMethod } from '@/types'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatRupiahInput } from '@/lib/format'
 import { Button } from '@/components/Button'
 import { QrisPay } from '@/components/QrisPay'
 import { api } from '@/services/httpApi'
@@ -127,13 +127,18 @@ export function PaymentModal({ open, total, orderId, onClose, onTunai, onQrisPai
             <label className="text-caption font-semibold uppercase tracking-wider text-text-secondary">
               Uang diterima
             </label>
-            <input
-              value={cash}
-              onChange={(e) => setCash(e.target.value.replace(/\D/g, ''))}
-              inputMode="numeric"
-              placeholder="0"
-              className="mt-1 w-full rounded-lg border border-border-subtle px-4 py-3 font-num text-body focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
-            />
+            <div className="relative mt-1">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-num text-body text-text-secondary">
+                Rp
+              </span>
+              <input
+                value={formatRupiahInput(cash)}
+                onChange={(e) => setCash(e.target.value.replace(/\D/g, ''))}
+                inputMode="numeric"
+                placeholder="0"
+                className="w-full rounded-lg border border-border-subtle py-3 pl-11 pr-4 font-num text-body focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-tint"
+              />
+            </div>
             <div className="mt-2 flex justify-between text-body">
               <span className="text-text-secondary">Kembalian</span>
               <span className={`font-num font-semibold ${cashInvalid ? 'text-status-danger' : 'text-status-ready'}`}>
