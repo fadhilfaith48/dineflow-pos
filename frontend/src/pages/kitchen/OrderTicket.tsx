@@ -24,8 +24,8 @@ const statusBorder: Record<OrderItem['status'], string> = {
 
 const statusText: Record<OrderItem['status'], string> = {
   baru: 'text-status-new',
-  dimasak: 'text-status-cooking',
-  siap: 'text-status-ready',
+  dimasak: 'text-status-cooking-text',
+  siap: 'text-status-ready-text',
   diantar: 'text-status-done',
 }
 

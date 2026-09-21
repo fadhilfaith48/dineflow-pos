@@ -214,7 +214,9 @@ export function SalesReport() {
             return (
               <li key={method} className="flex items-center gap-4 px-5 py-4">
                 <div className="min-w-0 flex-1">
-                  <div className="text-subheading font-semibold capitalize text-text-primary">{method}</div>
+                  <div className="text-subheading font-semibold text-text-primary">
+                    {method === 'tunai' ? 'Tunai' : 'QRIS'}
+                  </div>
                   <div className="font-num text-body text-text-secondary">{stat.count} transaksi</div>
                 </div>
                 <span className="font-num text-subheading font-semibold text-text-primary">
