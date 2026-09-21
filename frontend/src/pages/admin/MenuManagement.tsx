@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { MenuCategory, MenuItem } from '@/types'
 import type { MenuVariantInput } from '@/services/api'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatRupiahInput } from '@/lib/format'
 import { photoUrl } from '@/lib/menuPhoto'
 import { Button } from '@/components/Button'
 
@@ -145,7 +145,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
             <div>
               <label className="text-caption font-semibold uppercase tracking-wide text-text-secondary">Harga Dasar</label>
               <input
-                value={form.price === 0 ? '' : String(form.price)}
+                value={form.price === 0 ? '' : formatRupiahInput(String(form.price))}
                 onChange={(e) => setForm({ ...form, price: Number(e.target.value.replace(/\D/g, '')) || 0 })}
                 inputMode="numeric"
                 placeholder="0"
@@ -261,7 +261,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
                       className="min-w-0 flex-1 rounded-md border border-border-subtle px-2 py-1 text-caption focus:border-accent-primary focus:outline-none"
                     />
                     <input
-                      value={v.price === 0 ? '' : String(v.price)}
+                      value={v.price === 0 ? '' : formatRupiahInput(String(v.price))}
                       onChange={(e) => updateVariant(i, 'price', Number(e.target.value.replace(/\D/g, '')) || 0)}
                       inputMode="numeric"
                       placeholder="Harga"
@@ -416,7 +416,7 @@ export function MenuManagement({
                   <td className="px-5 py-4">
                     {editingId === item.id ? (
                       <input
-                        value={priceDraft}
+                        value={formatRupiahInput(priceDraft)}
                         onChange={(e) => setPriceDraft(e.target.value.replace(/\D/g, ''))}
                         inputMode="numeric"
                         autoFocus
