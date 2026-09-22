@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import { Button } from '@/components/Button'
+import { ErrorBanner } from '@/components/ErrorBanner'
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -76,7 +77,7 @@ export function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       {error && (
-        <div className="rounded-lg bg-status-danger/15 px-4 py-2 text-body font-semibold text-status-danger">{error}</div>
+        <ErrorBanner message={error} />
       )}
       {success && (
         <div className="rounded-lg bg-status-ready/15 px-4 py-2 text-body font-semibold text-status-ready">{success}</div>

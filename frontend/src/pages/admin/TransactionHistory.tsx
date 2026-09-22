@@ -5,6 +5,7 @@ import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
 import { orderToReceipt } from '@/lib/receipt'
 import { ReceiptModal } from '@/components/ReceiptModal'
+import { ErrorBanner } from '@/components/ErrorBanner'
 
 const sourceLabel: Record<Order['source'], string> = {
   kasir: 'Kasir',
@@ -87,7 +88,7 @@ export function TransactionHistory() {
   }
 
   if (error) {
-    return <p className="py-12 text-center text-body text-status-danger">{error}</p>
+    return <ErrorBanner message={error} />
   }
 
   return (

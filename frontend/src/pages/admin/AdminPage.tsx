@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { MenuCategory, MenuItem, TableStatus, DiningTable, Role, User } from '@/types'
 import { api } from '@/services/httpApi'
 import { TopNavBar } from '@/components/TopNavBar'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { MenuManagement, type MenuFormData } from './MenuManagement'
 import { SalesReport } from './SalesReport'
 import { TableManagement } from './TableManagement'
@@ -96,9 +97,7 @@ export function AdminPage() {
     <div className="flex h-dvh flex-col">
       <TopNavBar />
       <main className="w-full flex-1 overflow-y-auto bg-bg-secondary p-6">
-        {error && (
-          <div className="mb-4 rounded-lg bg-status-danger/15 px-4 py-2 text-body font-semibold text-status-danger">{error}</div>
-        )}
+        {error && <ErrorBanner message={error} className="mb-4" />}
         <div className="mb-6 flex gap-2 overflow-x-auto">
           <button
             onClick={() => setTab('menu')}

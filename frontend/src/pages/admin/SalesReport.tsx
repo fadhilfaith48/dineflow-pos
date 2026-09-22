@@ -3,6 +3,7 @@ import type { SalesPeriod, SalesSummary } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
+import { ErrorBanner } from '@/components/ErrorBanner'
 
 const periods: { value: SalesPeriod; label: string }[] = [
   { value: 'harian', label: 'Hari ini' },
@@ -103,7 +104,7 @@ export function SalesReport() {
   }
 
   if (error) {
-    return <p className="py-12 text-center text-body text-status-danger">{error}</p>
+    return <ErrorBanner message={error} />
   }
 
   if (!summary) {

@@ -8,6 +8,7 @@ import { newIdempotencyKey } from '@/lib/idempotency'
 import { TopNavBar } from '@/components/TopNavBar'
 import { ReceiptModal, type ReceiptData } from '@/components/ReceiptModal'
 import { VoidOrderModal } from '@/components/VoidOrderModal'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { MenuPanel } from './MenuPanel'
 import { CartPanel } from './CartPanel'
 import { PaymentModal } from './PaymentModal'
@@ -289,11 +290,7 @@ export function KasirPage() {
         onConfirm={handleVoidConfirm}
       />
 
-      {error && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-status-danger px-4 py-2 text-body text-text-on-accent shadow-dropdown">
-          {error}
-        </div>
-      )}
+      {error && <ErrorBanner variant="toast" message={error} />}
 
       {receipt && (
         <ReceiptModal

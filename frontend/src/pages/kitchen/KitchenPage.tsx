@@ -3,6 +3,7 @@ import type { Order, OrderItem } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { TopNavBar } from '@/components/TopNavBar'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { OrderTicket } from './OrderTicket'
 
 export function KitchenPage() {
@@ -41,9 +42,7 @@ export function KitchenPage() {
       <TopNavBar />
 
       <main className="flex-1 p-6">
-        {error && (
-          <div className="mb-4 rounded-lg bg-status-danger/15 px-4 py-2 text-body text-status-danger">{error}</div>
-        )}
+        {error && <ErrorBanner message={error} className="mb-4" />}
         {activeOrders.length === 0 ? (
           <div className="flex h-full min-h-[60vh] items-center justify-center">
             <div className="text-center">

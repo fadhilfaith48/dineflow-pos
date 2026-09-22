@@ -5,6 +5,7 @@ import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { TopNavBar } from '@/components/TopNavBar'
+import { ErrorBanner } from '@/components/ErrorBanner'
 import { TableSelect } from './TableSelect'
 import { WaiterOrder } from './WaiterOrder'
 import { OrderList } from './OrderList'
@@ -203,9 +204,7 @@ export function PelayanPage() {
   return (
     <div className="flex h-dvh flex-col bg-bg-secondary">
       <TopNavBar />
-      {error && (
-        <div className="bg-status-danger/15 px-4 py-2 text-center text-body font-semibold text-status-danger">{error}</div>
-      )}
+      {error && <ErrorBanner message={error} />}
       {isLoading ? (
         <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-4 bg-bg-secondary px-4 py-4">
           <div className="h-7 w-32 animate-pulse rounded bg-border-subtle" />
