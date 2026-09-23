@@ -6,6 +6,7 @@ import { formatRupiah } from '@/lib/format'
 import { orderToReceipt } from '@/lib/receipt'
 import { ReceiptModal } from '@/components/ReceiptModal'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { LoadingState } from '@/components/LoadingState'
 
 const sourceLabel: Record<Order['source'], string> = {
   kasir: 'Kasir',
@@ -158,7 +159,7 @@ export function TransactionHistory() {
           <span>Metode</span>
         </div>
         {loading ? (
-          <p className="py-12 text-center text-body text-text-secondary">Memuat riwayat...</p>
+          <LoadingState text="Memuat riwayat..." />
         ) : filtered.length === 0 ? (
           <p className="py-12 text-center text-body text-text-secondary">
             {paidOrders.length === 0 ? 'Belum ada transaksi.' : 'Tidak ada transaksi yang cocok dengan filter.'}

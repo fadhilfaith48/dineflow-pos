@@ -3,6 +3,7 @@ import type { Settings } from '@/types'
 import { api } from '@/services/httpApi'
 import { Button } from '@/components/Button'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { LoadingState } from '@/components/LoadingState'
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -71,7 +72,7 @@ export function SettingsPage() {
   }
 
   if (!settings) {
-    return <p className="py-12 text-center text-body text-text-secondary">Memuat pengaturan...</p>
+    return <LoadingState text="Memuat pengaturan..." />
   }
 
   return (

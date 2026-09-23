@@ -4,6 +4,7 @@ import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { formatRupiah } from '@/lib/format'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { LoadingState } from '@/components/LoadingState'
 
 const periods: { value: SalesPeriod; label: string }[] = [
   { value: 'harian', label: 'Hari ini' },
@@ -108,7 +109,7 @@ export function SalesReport() {
   }
 
   if (!summary) {
-    return <p className="py-12 text-center text-body text-text-secondary">Memuat laporan...</p>
+    return <LoadingState text="Memuat laporan..." />
   }
 
   return (

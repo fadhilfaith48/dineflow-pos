@@ -4,6 +4,7 @@ import type { Order } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
 import { OrderTracking } from '@/components/OrderTracking'
+import { LoadingState } from '@/components/LoadingState'
 
 export function OrderTrackingPage() {
   const { orderNumber = '' } = useParams<{ orderNumber: string }>()
@@ -42,7 +43,7 @@ export function OrderTrackingPage() {
   if (loading) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-bg-secondary">
-        <p className="text-body text-text-secondary">Memuat pesanan…</p>
+        <LoadingState text="Memuat pesanan…" />
       </main>
     )
   }

@@ -6,6 +6,7 @@ import echo from '@/services/echo'
 import { useCart } from '@/hooks/useCart'
 import { TopNavBar } from '@/components/TopNavBar'
 import { ErrorBanner } from '@/components/ErrorBanner'
+import { LoadingState } from '@/components/LoadingState'
 import { TableSelect } from './TableSelect'
 import { WaiterOrder } from './WaiterOrder'
 import { OrderList } from './OrderList'
@@ -208,11 +209,7 @@ export function PelayanPage() {
       {isLoading ? (
         <main className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-4 bg-bg-secondary px-4 py-4">
           <div className="h-7 w-32 animate-pulse rounded bg-border-subtle" />
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex aspect-square animate-pulse flex-col items-center justify-center gap-2 rounded-xl border-2 border-border-subtle bg-bg-surface" />
-            ))}
-          </div>
+          <LoadingState variant="skeleton" count={6} />
         </main>
       ) : view === 'order' && selectedTable ? (
         <WaiterOrder
