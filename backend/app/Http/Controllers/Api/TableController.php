@@ -13,7 +13,9 @@ class TableController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return TableResource::collection(Table::orderBy('number')->get());
+        return TableResource::collection(
+            Table::orderByRaw('LENGTH(number), number')->get()
+        );
     }
 
     /**
