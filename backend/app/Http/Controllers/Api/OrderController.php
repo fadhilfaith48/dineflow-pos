@@ -272,19 +272,25 @@ class OrderController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
-        if (in_array($order->status, ['selesai', 'dibatalkan'])) {
-            throw ValidationException::withMessages([
-                'order' => ['Pesanan sudah '.($order->status === 'selesai' ? 'selesai' : 'dibatalkan')],
-            ]);
-        }
+        DB::transaction(function () use ($validated, $order, $request) {
+            // Kunci baris order: dua permintaan batal untuk order yang sama
+            // berjalan serial, dan cek status/pembayaran diulang DI DALAM
+            // transaksi agar tidak ada yang lolos double-cancel / cancel
+            // setelah dibayar (race antara klik bersamaan kasir vs QRIS).
+            $order = Order::lockForUpdate()->findOrFail($order->id);
 
-        if ($order->payment()->exists()) {
-            throw ValidationException::withMessages([
-                'order' => ['Pesanan sudah dibayar dan tidak dapat dibatalkan dari sini.'],
-            ]);
-        }
+            if (in_array($order->status, ['selesai', 'dibatalkan'])) {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan sudah '.($order->status === 'selesai' ? 'selesai' : 'dibatalkan')],
+                ]);
+            }
 
-        DB::transaction(function () use ($order, $validated, $request) {
+            if ($order->payment()->exists()) {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan sudah dibayar dan tidak dapat dibatalkan dari sini.'],
+                ]);
+            }
+
             $order->status = 'dibatalkan';
             $order->void_reason = $validated['reason'];
             $order->voided_by = $request->user()?->id;
@@ -299,6 +305,8 @@ class OrderController extends Controller
             }
         });
 
+        $order->refresh();
+
         $this->safeBroadcastOrderChange($order, 'voided');
 
         return new OrderResource($order->load(['table', 'items']));
@@ -311,15 +319,12 @@ class OrderController extends Controller
      */
     public function cancel(Request $request, Order $order): OrderResource
     {
+        // Cek cepat di luar transaksi untuk gagal segera pada kasus umum
+        // (bukan pesanan self-order / di luar jendela). Cek final tetap
+        // diulang di dalam transaksi dengan lock baris.
         if ($order->source !== 'self-order') {
             throw ValidationException::withMessages([
                 'order' => ['Pesanan ini tidak bisa dibatalkan lewat halaman pelanggan'],
-            ]);
-        }
-
-        if ($order->status !== 'menunggu') {
-            throw ValidationException::withMessages([
-                'order' => ['Pesanan tidak dalam status menunggu pembayaran'],
             ]);
         }
 
@@ -337,7 +342,34 @@ class OrderController extends Controller
             abort(403, 'Pesanan hanya bisa dibatalkan dari perangkat yang membuatnya.');
         }
 
-        DB::transaction(function () use ($order) {
+        DB::transaction(function () use ($order, $request, $minutes) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($order->source !== 'self-order') {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan ini tidak bisa dibatalkan lewat halaman pelanggan'],
+                ]);
+            }
+
+            if ($order->status !== 'menunggu') {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan tidak dalam status menunggu pembayaran'],
+                ]);
+            }
+
+            if ($order->created_at->lt(now()->subMinutes($minutes))) {
+                throw ValidationException::withMessages([
+                    'order' => ['Batas waktu pembatalan telah lewat. Silakan hubungi kasir.'],
+                ]);
+            }
+
+            $device = $this->validDeviceId((string) $request->header('X-Device-Id', ''));
+            if ($order->device_id && $device !== $order->device_id) {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan hanya bisa dibatalkan dari perangkat yang membuatnya'],
+                ]);
+            }
+
             $order->status = 'dibatalkan';
             $order->void_reason = 'Dibatalkan pelanggan sebelum bayar';
             $order->voided_by = null;
@@ -352,6 +384,8 @@ class OrderController extends Controller
             }
         });
 
+        $order->refresh();
+
         $this->safeBroadcastOrderChange($order, 'voided');
 
         return new OrderResource($order->load(['table', 'items']));
@@ -363,13 +397,17 @@ class OrderController extends Controller
      */
     public function complete(Request $request, Order $order): OrderResource
     {
-        if ($order->status !== 'diproses') {
-            throw ValidationException::withMessages([
-                'order' => ['Pesanan tidak dalam status diproses'],
-            ]);
-        }
-
         DB::transaction(function () use ($order) {
+            // Kunci baris order + cek ulang status di dalam transaksi agar
+            // dua klik "Tandai Selesai" yang bersamaan tidak saling menimpa.
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($order->status !== 'diproses') {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan tidak dalam status diproses'],
+                ]);
+            }
+
             $order->status = 'selesai';
             $order->save();
 
@@ -381,6 +419,8 @@ class OrderController extends Controller
                 }
             }
         });
+
+        $order->refresh();
 
         $this->safeBroadcastOrderChange($order, 'paid');
 
