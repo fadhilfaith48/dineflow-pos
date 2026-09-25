@@ -18,9 +18,14 @@ interface QrisPayProps {
 export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPayProps) {
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const busyRef = useRef(false)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const onPaidRef = useRef(onPaid)
-  onPaidRef.current = onPaid
+
+  useEffect(() => {
+    onPaidRef.current = onPaid
+  }, [onPaid])
 
   useEffect(() => {
     timer.current = setInterval(async () => {
@@ -42,6 +47,9 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
   }, [reference])
 
   async function handleMockPaid() {
+    if (done || busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
     setError('')
     try {
       await api.markMockPaid(reference)
@@ -50,10 +58,16 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
       onPaidRef.current()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menandai pembayaran.')
+    } finally {
+      busyRef.current = false
+      setBusy(false)
     }
   }
 
   async function handleSimulatePaid() {
+    if (done || busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
     setError('')
     try {
       const res = await api.simulatePayment(reference)
@@ -64,6 +78,9 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal mensimulasikan pembayaran.')
+    } finally {
+      busyRef.current = false
+      setBusy(false)
     }
   }
 
@@ -89,7 +106,8 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
           {gateway === 'mock' && (
             <button
               onClick={handleMockPaid}
-              className="mt-4 h-14 w-full rounded-xl bg-accent-primary font-semibold text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+              disabled={busy}
+              className="mt-4 h-14 w-full rounded-xl bg-accent-primary font-semibold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               Saya Sudah Bayar (Demo)
             </button>
@@ -97,7 +115,8 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
           {gateway === 'xendit' && (
             <button
               onClick={handleSimulatePaid}
-              className="mt-4 h-14 w-full rounded-xl border border-accent-primary bg-accent-tint font-semibold text-accent-primary transition-colors hover:bg-accent-primary/10"
+              disabled={busy}
+              className="mt-4 h-14 w-full rounded-xl border border-accent-primary bg-accent-tint font-semibold text-accent-primary transition-colors hover:bg-accent-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Simulasi Pembayaran (Test Mode)
             </button>

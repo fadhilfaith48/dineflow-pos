@@ -90,6 +90,7 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
   }
 
   async function handleSave() {
+    if (saving) return
     if (!form.name.trim() || form.price <= 0 || !form.categoryId) {
       setError('Nama, harga, dan kategori wajib diisi.')
       return

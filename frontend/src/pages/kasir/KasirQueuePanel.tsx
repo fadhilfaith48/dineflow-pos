@@ -18,6 +18,7 @@ interface KasirQueuePanelProps {
   onPayNote: (order: Order) => void
   onComplete: (orderId: number) => void
   onReprint: (order: Order) => void
+  completingIds?: ReadonlySet<number>
 }
 
 type Panel = 'aktif' | 'riwayat'
@@ -102,11 +103,13 @@ function OrderCard({
   action,
   onVoid,
   paid,
+  disabledAction,
 }: {
   order: Order
   action: { label: string; onClick: () => void; primary?: boolean }
   onVoid?: () => void
   paid?: boolean
+  disabledAction?: boolean
 }) {
   return (
     <li className="rounded-xl border border-border-subtle bg-bg-surface p-3 shadow-card">
@@ -156,7 +159,7 @@ function OrderCard({
               Batalkan
             </Button>
           )}
-          <Button size="sm" variant={action.primary ? 'primary' : 'outline'} onClick={action.onClick}>
+          <Button size="sm" variant={action.primary ? 'primary' : 'outline'} onClick={action.onClick} disabled={disabledAction}>
             {action.label}
           </Button>
         </div>
@@ -178,6 +181,7 @@ export function KasirQueuePanel({
   onPayNote,
   onComplete,
   onReprint,
+  completingIds,
 }: KasirQueuePanelProps) {
   const [panel, setPanel] = useState<Panel>('aktif')
   const [tab, setTab] = useState<Tab>('masuk')
@@ -259,6 +263,7 @@ export function KasirQueuePanel({
                     order={order}
                     paid
                     action={{ label: 'Tandai Selesai', primary: true, onClick: () => onComplete(order.id) }}
+                    disabledAction={completingIds?.has(order.id)}
                   />
                 ))}
               </ul>

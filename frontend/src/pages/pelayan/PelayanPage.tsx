@@ -41,8 +41,10 @@ export function PelayanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [paying, setPaying] = useState(false)
   // Lock + kunci idempotensi disatukan: double-click yang lolos guard state
   // tetap memakai key SAMA sehingga backend tidak membuat order kedua.
+  const payingRef = useRef(false)
   const sendingRef = useRef(false)
   const orderKeyRef = useRef(newIdempotencyKey())
 
@@ -139,6 +141,9 @@ export function PelayanPage() {
   }
 
   async function handlePayQris() {
+    if (payingRef.current) return
+    payingRef.current = true
+    setPaying(true)
     setPayMethod('qris')
     try {
       const checkout = await api.checkoutOrder(payOrderId)
@@ -149,6 +154,9 @@ export function PelayanPage() {
       setPayRef(String(payOrderId))
       setPayQr(null)
       setPayGateway('mock')
+    } finally {
+      payingRef.current = false
+      setPaying(false)
     }
   }
 
@@ -265,7 +273,8 @@ export function PelayanPage() {
 
                 <button
                   onClick={handlePayQris}
-                  className="mt-5 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card"
+                  disabled={paying}
+                  className="mt-5 w-full rounded-xl border border-border-subtle bg-bg-surface p-5 text-left shadow-card disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent-tint text-accent-primary">

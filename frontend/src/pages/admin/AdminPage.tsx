@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { MenuCategory, MenuItem, TableStatus, DiningTable, Role, User } from '@/types'
 import { api } from '@/services/httpApi'
 import { TopNavBar } from '@/components/TopNavBar'
@@ -19,6 +19,17 @@ export function AdminPage() {
   const [tables, setTables] = useState<DiningTable[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [error, setError] = useState('')
+  const busyRef = useRef(new Set<number>())
+
+  function isBusy(id: number): boolean {
+    return busyRef.current.has(id)
+  }
+
+  function withBusy(id: number, fn: () => Promise<void>) {
+    if (busyRef.current.has(id)) return
+    busyRef.current.add(id)
+    fn().finally(() => busyRef.current.delete(id))
+  }
 
   function loadItems() {
     api.getMenuItems().then(setItems).catch(() => setError('Gagal memuat menu.'))
@@ -39,22 +50,28 @@ export function AdminPage() {
     loadUsers()
   }, [])
 
-  async function handleToggleAvailable(item: MenuItem) {
-    try {
-      await api.updateMenuItem(item.id, { available: !item.available })
-      loadItems()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal mengubah ketersediaan.')
-    }
+  function handleToggleAvailable(item: MenuItem) {
+    if (isBusy(item.id)) return
+    withBusy(item.id, async () => {
+      try {
+        await api.updateMenuItem(item.id, { available: !item.available })
+        loadItems()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Gagal mengubah ketersediaan.')
+      }
+    })
   }
 
-  async function handleEditPrice(item: MenuItem, price: number) {
-    try {
-      await api.updateMenuItem(item.id, { price })
-      loadItems()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal mengubah harga.')
-    }
+  function handleEditPrice(item: MenuItem, price: number) {
+    if (isBusy(item.id)) return
+    withBusy(item.id, async () => {
+      try {
+        await api.updateMenuItem(item.id, { price })
+        loadItems()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Gagal mengubah harga.')
+      }
+    })
   }
 
   async function handleSaveMenuItem(item: MenuItem, data: MenuFormData) {

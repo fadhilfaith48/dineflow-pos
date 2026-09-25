@@ -35,6 +35,8 @@ export function KasirPage() {
   const [isSending, setIsSending] = useState(false)
   const sendingRef = useRef(false)
   const orderKeyRef = useRef(newIdempotencyKey())
+  const [completingIds, setCompletingIds] = useState<Set<number>>(new Set())
+  const completingRef = useRef(new Set<number>())
 
   useEffect(() => {
     api.getCategories().then((cats) => {
@@ -112,6 +114,9 @@ export function KasirPage() {
   }
 
   async function handleComplete(orderId: number) {
+    if (completingRef.current.has(orderId)) return
+    completingRef.current.add(orderId)
+    setCompletingIds(new Set(completingRef.current))
     setError('')
     try {
       await api.completeOrder(orderId)
@@ -119,6 +124,9 @@ export function KasirPage() {
       setTables(await api.getTables())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menandai selesai.')
+    } finally {
+      completingRef.current.delete(orderId)
+      setCompletingIds(new Set(completingRef.current))
     }
   }
 
@@ -232,6 +240,7 @@ export function KasirPage() {
           onPayNote={handlePayNote}
           onComplete={handleComplete}
           onReprint={handleReprint}
+          completingIds={completingIds}
         />
         <MenuPanel
           categories={categories}

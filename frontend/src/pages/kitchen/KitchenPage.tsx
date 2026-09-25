@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Order, OrderItem } from '@/types'
 import { api } from '@/services/httpApi'
 import echo from '@/services/echo'
@@ -9,6 +9,8 @@ import { OrderTicket } from './OrderTicket'
 export function KitchenPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [error, setError] = useState('')
+  const [pendingKeys, setPendingKeys] = useState<Set<string>>(new Set())
+  const pendingRef = useRef(new Set<string>())
 
   const loadOrders = useCallback(() => {
     api.getOrders().then(setOrders).catch(() => {
@@ -25,11 +27,18 @@ export function KitchenPage() {
   }, [loadOrders])
 
   async function handleAdvanceItem(orderId: number, itemId: number, status: OrderItem['status']) {
+    const key = `${orderId}:${itemId}`
+    if (pendingRef.current.has(key)) return
+    pendingRef.current.add(key)
+    setPendingKeys(new Set(pendingRef.current))
     try {
       await api.updateItemStatus(orderId, itemId, status)
       loadOrders()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal memperbarui status item.')
+    } finally {
+      pendingRef.current.delete(key)
+      setPendingKeys(new Set(pendingRef.current))
     }
   }
 
@@ -54,7 +63,7 @@ export function KitchenPage() {
         ) : (
           <div className="grid auto-rows-min grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
             {activeOrders.map((order) => (
-              <OrderTicket key={order.id} order={order} onAdvanceItem={handleAdvanceItem} />
+              <OrderTicket key={order.id} order={order} pendingKeys={pendingKeys} onAdvanceItem={handleAdvanceItem} />
             ))}
           </div>
         )}

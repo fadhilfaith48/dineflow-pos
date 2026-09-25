@@ -89,6 +89,7 @@ export function LoginPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (loading) return
     setError('')
     setLoading(true)
     try {

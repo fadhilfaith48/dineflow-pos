@@ -20,13 +20,16 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
   const [username, setUsername] = useState('')
   const [role, setRole] = useState<Role>('kasir')
   const [error, setError] = useState('')
+  const [creating, setCreating] = useState(false)
 
   async function handleCreate() {
+    if (creating) return
     if (!name.trim() || !username.trim()) {
       setError('Nama dan username wajib diisi.')
       return
     }
     setError('')
+    setCreating(true)
     try {
       await onCreate({ name: name.trim(), username: username.trim(), role })
       setShowAdd(false)
@@ -35,6 +38,8 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
       setRole('kasir')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menambah staf')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -81,7 +86,7 @@ export function StaffManagement({ users, onCreate, onUpdateRole, onDelete, onRes
               </select>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleCreate}>
+              <Button size="sm" onClick={handleCreate} disabled={creating}>
                 Simpan
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowAdd(false)}>

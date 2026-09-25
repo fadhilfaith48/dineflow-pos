@@ -4,6 +4,7 @@ import { itemStatusLabel } from '@/lib/statusConfig'
 
 interface OrderTicketProps {
   order: Order
+  pendingKeys: ReadonlySet<string>
   onAdvanceItem: (orderId: number, itemId: number, status: OrderItem['status']) => void
   onVoidOrder?: (order: Order) => void
 }
@@ -36,7 +37,7 @@ const statusBg: Record<OrderItem['status'], string> = {
   diantar: 'bg-status-done/15',
 }
 
-export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketProps) {
+export function OrderTicket({ order, onAdvanceItem, onVoidOrder, pendingKeys }: OrderTicketProps) {
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-card">
       <header className="flex items-start justify-between gap-3 border-b border-dashed border-border-subtle px-5 py-4">
@@ -88,7 +89,8 @@ export function OrderTicket({ order, onAdvanceItem, onVoidOrder }: OrderTicketPr
                   {next && (
                     <button
                       onClick={() => onAdvanceItem(order.id, item.id, next)}
-                      className="mt-2 block rounded-lg bg-accent-primary px-4 py-2 text-kitchen-meta font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover"
+                      disabled={pendingKeys.has(`${order.id}:${item.id}`)}
+                      className="mt-2 block rounded-lg bg-accent-primary px-4 py-2 text-kitchen-meta font-bold uppercase tracking-wide text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {next === 'dimasak' ? 'Mulai Masak' : 'Siap Saji'}
                     </button>
