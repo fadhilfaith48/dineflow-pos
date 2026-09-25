@@ -7,10 +7,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    /**
+     * Dispatch broadcast secara aman: bila Reverb mati, penyimpanan tetap sukses.
+     */
+    private function safeDispatchSettingsChanged(array $payload): void
+    {
+        try {
+            SettingsChanged::dispatch($payload);
+        } catch (\Exception $e) {
+            Log::warning('Broadcast SettingsChanged gagal: '.$e->getMessage());
+        }
+    }
     public function index(): JsonResponse
     {
         return response()->json($this->payload());
@@ -34,7 +46,7 @@ class SettingController extends Controller
             Setting::setValue('restaurant_address', $validated['restaurantAddress']);
         }
 
-        SettingsChanged::dispatch($this->payload());
+        $this->safeDispatchSettingsChanged($this->payload());
 
         return response()->json($this->payload());
     }
@@ -50,7 +62,7 @@ class SettingController extends Controller
         $url = Storage::disk($disk)->url($path);
         Setting::setValue('logo_url', $url);
 
-        SettingsChanged::dispatch($this->payload());
+        $this->safeDispatchSettingsChanged($this->payload());
 
         return response()->json(['logoUrl' => $url]);
     }
@@ -66,7 +78,7 @@ class SettingController extends Controller
         $url = Storage::disk($disk)->url($path);
         Setting::setValue('qris_image_url', $url);
 
-        SettingsChanged::dispatch($this->payload());
+        $this->safeDispatchSettingsChanged($this->payload());
 
         return response()->json(['qrisImageUrl' => $url]);
     }
