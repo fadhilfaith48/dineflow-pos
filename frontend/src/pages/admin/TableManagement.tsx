@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { DiningTable, TableStatus } from '@/types'
+import { copyToClipboard } from '@/lib/clipboard'
 import { Button } from '@/components/Button'
 
 interface TableManagementProps {
@@ -25,11 +26,13 @@ const statusOption: Record<TableStatus, string> = {
 export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: TableManagementProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [number, setNumber] = useState('')
+  const [creating, setCreating] = useState(false)
   const [seats, setSeats] = useState('4')
   const [error, setError] = useState('')
   const [qrTable, setQrTable] = useState<DiningTable | null>(null)
 
   async function handleCreate() {
+    if (creating) return
     const num = number.trim()
     const seatCount = Number(seats) || 0
     if (!num || seatCount <= 0) {
@@ -37,6 +40,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
       return
     }
     setError('')
+    setCreating(true)
     try {
       await onCreate({ number: num, seats: seatCount })
       setShowAdd(false)
@@ -44,6 +48,8 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
       setSeats('4')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menambah meja')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -84,7 +90,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
               />
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleCreate}>
+              <Button size="sm" onClick={handleCreate} disabled={creating}>
                 Simpan
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowAdd(false)}>
@@ -163,7 +169,7 @@ export function TableManagement({ tables, onCreate, onUpdateStatus, onDelete }: 
                 variant="outline"
                 fullWidth
                 onClick={() => {
-                  navigator.clipboard.writeText(qrUrl)
+                  copyToClipboard(qrUrl).catch(() => {})
                   setQrTable(null)
                 }}
               >

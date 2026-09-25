@@ -1,5 +1,6 @@
 import type { OrderItem, PaymentMethod } from '@/types'
 import { formatRupiah } from '@/lib/format'
+import { copyToClipboard } from '@/lib/clipboard'
 import { Button } from '@/components/Button'
 
 export interface ReceiptData {
@@ -43,7 +44,7 @@ export function ReceiptModal({ receipt, onClose }: ReceiptModalProps) {
       '',
       'Terima kasih sudah berkunjung!',
     ]
-    navigator.clipboard.writeText(lines.join('\n'))
+    copyToClipboard(lines.join('\n')).catch(() => {})
   }
 
   return (

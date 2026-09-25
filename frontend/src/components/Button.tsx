@@ -28,6 +28,7 @@ export function Button({
   }
   return (
     <button
+      type={rest.type ?? 'button'}
       className={`${base} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...rest}
     >
