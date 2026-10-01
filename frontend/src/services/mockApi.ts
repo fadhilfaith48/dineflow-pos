@@ -1,5 +1,5 @@
 import type { Api, CartItemInput, CheckoutResult, CreateMenuItemInput, CreateOrderPayload, PaymentPayload } from './api'
-import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, PaymentStatus, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
+import type { DiningTable, MenuCategory, MenuItem, Order, OrderItem, Payment, PaymentStatus, PublicInfo, Role, SalesPeriod, SalesDateRange, SalesSummary, Settings, User } from '@/types'
 import { DEFAULT_PASSWORD, TAX_RATE } from '@/lib/constants'
 import { mockCategories, mockMenuItems, mockOrders, mockTables, mockUsers } from './mockData'
 
@@ -128,10 +128,6 @@ export class MockApi implements Api {
       if (table && table.status === 'terisi') table.status = 'perlu-dibersihkan'
     }
     return order
-  }
-
-  async confirmOrder(): Promise<Order> {
-    throw new Error('Konfirmasi manual tidak dipakai lagi. Pesanan otomatis ke dapur setelah lunas.')
   }
 
   async voidOrder(orderId: number, reason: string): Promise<Order> {
@@ -347,10 +343,14 @@ export class MockApi implements Api {
       return true
     })
     const counts = new Map<string, { quantity: number; revenue: number }>()
+    // Samakan dengan backend: totalRevenue pakai order.total (sudah PPN),
+    // subtotalRevenue dijumlahkan dari baris item.
     let totalRevenue = 0
+    let subtotalRevenue = 0
     for (const order of settled) {
+      totalRevenue += order.total
       for (const item of order.items) {
-        totalRevenue += item.price * item.quantity
+        subtotalRevenue += item.price * item.quantity
         const cur = counts.get(item.name) ?? { quantity: 0, revenue: 0 }
         cur.quantity += item.quantity
         cur.revenue += item.price * item.quantity
@@ -363,6 +363,7 @@ export class MockApi implements Api {
       .slice(0, 5)
     return {
       totalRevenue,
+      subtotalRevenue,
       orderCount: settled.length,
       topItems,
       paymentBreakdown: {
@@ -373,6 +374,10 @@ export class MockApi implements Api {
   }
 
   async getSettings(): Promise<Settings> {
+    return { taxRate: TAX_RATE * 100, restaurantName: 'DINEFLOW RESTAURANT', restaurantAddress: 'Jl. Raya No. 1, Jakarta' }
+  }
+
+  async getPublicInfo(): Promise<PublicInfo> {
     return { taxRate: TAX_RATE * 100, restaurantName: 'DINEFLOW RESTAURANT', restaurantAddress: 'Jl. Raya No. 1, Jakarta' }
   }
 

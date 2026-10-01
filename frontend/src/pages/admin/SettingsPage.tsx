@@ -17,16 +17,23 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getSettings().then((s) => {
-      setSettings(s)
-      setTaxRate(String(s.taxRate))
-      setRestaurantName(s.restaurantName)
-      setRestaurantAddress(s.restaurantAddress)
-      setLogoPreview(s.logoUrl ?? '')
-      setQrisPreview(s.qrisImageUrl ?? '')
-    })
+    // Tanpa catch, kegagalan load membuat form tetap kosong tanpa penjelasan
+    // dan admin bisa menyimpan pengaturan yang menimpa data lama.
+    api
+      .getSettings()
+      .then((s) => {
+        setSettings(s)
+        setTaxRate(String(s.taxRate))
+        setRestaurantName(s.restaurantName)
+        setRestaurantAddress(s.restaurantAddress)
+        setLogoPreview(s.logoUrl ?? '')
+        setQrisPreview(s.qrisImageUrl ?? '')
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : 'Gagal memuat pengaturan.'))
+      .finally(() => setLoading(false))
   }, [])
 
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -71,8 +78,19 @@ export function SettingsPage() {
     }
   }
 
-  if (!settings) {
+  if (loading) {
     return <LoadingState text="Memuat pengaturan..." />
+  }
+
+  // Gagal load: tampilkan banner + tombol muat ulang, jangan tampilkan form
+  // kosong yang seolah-olah data restaurante memang kosong.
+  if (!settings) {
+    return (
+      <div className="flex flex-col gap-4">
+        <ErrorBanner message={error || 'Gagal memuat pengaturan.'} />
+        <Button onClick={() => window.location.reload()}>Muat Ulang</Button>
+      </div>
+    )
   }
 
   return (

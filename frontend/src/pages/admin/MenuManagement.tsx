@@ -108,10 +108,17 @@ function MenuFormModal({ title, initial, categories, onClose, onSave }: MenuForm
     setError('')
     setSaving(true)
     try {
-      const variantInputs: MenuVariantInput[] | undefined =
-        validVariants.length > 0
-          ? validVariants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available, imageUrl: v.imageUrl, image: v.image }))
-          : undefined
+      // Selalu kirim array (boleh kosong). Kalau dikirim `undefined`, JSON.stringify
+      // menghapus key-nya dan backend menganggap "varian tidak disentuh" — akibatnya
+      // admin tidak bisa menghapus semua varian lewat form ini.
+      const variantInputs: MenuVariantInput[] = validVariants.map((v) => ({
+        id: v.id,
+        name: v.name,
+        price: v.price,
+        available: v.available,
+        imageUrl: v.imageUrl,
+        image: v.image,
+      }))
       await onSave({ ...form, variants: variantInputs })
       onClose()
     } catch (e) {

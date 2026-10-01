@@ -18,7 +18,11 @@ class SalesSummaryController extends Controller
 
         $orders = $query->with(['items', 'payment'])->get();
 
+        // totalRevenue = Σ order.total (DENGAN PPN), sama persis dengan total
+        // paymentBreakdown. Versi lama menjumlahkan harga item (TANPA PPN),
+        // sehingga dua angka di layar Reports berbeda 10% tanpa keterangan.
         $totalRevenue = 0;
+        $subtotalRevenue = 0;
         $counts = [];
 
         $breakdown = [
@@ -27,19 +31,22 @@ class SalesSummaryController extends Controller
         ];
 
         foreach ($orders as $order) {
+            $totalRevenue += $order->total;
+
             if ($order->payment && isset($breakdown[$order->payment->method])) {
                 $breakdown[$order->payment->method]['revenue'] += $order->total;
                 $breakdown[$order->payment->method]['count']++;
             }
 
             foreach ($order->items as $item) {
-                $totalRevenue += $item->price * $item->quantity;
+                $lineTotal = $item->price * $item->quantity;
+                $subtotalRevenue += $lineTotal;
                 $name = $item->name;
                 if (! isset($counts[$name])) {
                     $counts[$name] = ['quantity' => 0, 'revenue' => 0];
                 }
                 $counts[$name]['quantity'] += $item->quantity;
-                $counts[$name]['revenue'] += $item->price * $item->quantity;
+                $counts[$name]['revenue'] += $lineTotal;
             }
         }
 
@@ -56,6 +63,8 @@ class SalesSummaryController extends Controller
 
         return response()->json([
             'totalRevenue' => $totalRevenue,
+            // Tanpa PPN — supaya selisih pajak terlihat jelas di layar Reports.
+            'subtotalRevenue' => $subtotalRevenue,
             'orderCount' => $orders->count(),
             'topItems' => array_slice($items, 0, 5),
             'paymentBreakdown' => $breakdown,

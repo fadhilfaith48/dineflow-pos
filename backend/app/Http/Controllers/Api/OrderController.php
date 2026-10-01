@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Models\Table;
+use App\Services\TableStatusService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -41,11 +42,11 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'tableId' => ['nullable', 'exists:tables,id'],
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.menuItemId' => ['required', 'exists:menu_items,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.note' => ['nullable', 'string'],
-            'items.*.variantName' => ['nullable', 'string'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'items.*.note' => ['nullable', 'string', 'max:255'],
+            'items.*.variantName' => ['nullable', 'string', 'max:255'],
             'items.*.spiceLevel' => ['nullable', 'integer', 'between:0,5'],
         ]);
 
@@ -113,7 +114,19 @@ class OrderController extends Controller
                             throw ValidationException::withMessages([
                                 'items' => ['Varian "'.$variantName.'" untuk "'.($menuItem->name).'" sedang tidak tersedia'],
                             ]);
+                        } else {
+                            // Varian tidak ada. Versi lama jatuh ke harga dasar
+                            // tanpa error, jadi pelanggan bisa memesan varian
+                            // palsu dan ditagih harga menu biasa.
+                            throw ValidationException::withMessages([
+                                'items' => ['Varian "'.$variantName.'" tidak tersedia untuk "'.($menuItem->name).'"'],
+                            ]);
                         }
+                    } elseif ($variantName && $menuItem->variants()->count() === 0) {
+                        // Menu tanpa varian tidak boleh menerima nama varian.
+                        throw ValidationException::withMessages([
+                            'items' => ['Menu "'.($menuItem->name).'" tidak punya varian'],
+                        ]);
                     }
 
                     $subtotal += $unitPrice * $item['quantity'];
@@ -235,21 +248,17 @@ class OrderController extends Controller
             : null;
     }
 
-    public function confirm(Request $request, Order $order): OrderResource
-    {
-        if ($order->status !== 'menunggu-konfirmasi') {
-            throw ValidationException::withMessages([
-                'order' => ['Pesanan tidak dalam status menunggu konfirmasi'],
-            ]);
-        }
-
-        $order->status = 'diproses';
-        $order->save();
-
-        $this->safeBroadcastOrderChange($order, 'confirmed');
-
-        return new OrderResource($order->load(['table', 'items']));
-    }
+    /**
+     * Transisi status item yang sah. Item hanya boleh maju satu tahap
+     * (atau diulang dengan status yang sama) supaya dapur & pelayan tidak
+     * bisa menandai makanan "diantar" padahal belum sempat dimasak.
+     */
+    private const ITEM_STATUS_NEXT = [
+        'baru' => ['dimasak'],
+        'dimasak' => ['siap'],
+        'siap' => ['diantar'],
+        'diantar' => [],
+    ];
 
     public function updateItemStatus(Request $request, Order $order, int $itemId): OrderResource
     {
@@ -257,13 +266,72 @@ class OrderController extends Controller
             'status' => ['required', 'in:baru,dimasak,siap,diantar'],
         ]);
 
-        $item = $order->items()->findOrFail($itemId);
-        $item->status = $validated['status'];
-        $item->save();
+        $newStatus = $validated['status'];
+
+        DB::transaction(function () use ($order, $itemId, $newStatus) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+
+            // Order yang sudah ditutup tidak boleh disentuh status itemnya,
+            // kalau tidak order "selesai"/"dibatalkan" bisa dihidupkan lagi
+            // lewat panel dapur atau pelayan.
+            if (! in_array($order->status, ['diproses', 'selesai'], true)) {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan tidak dalam status diproses'],
+                ]);
+            }
+
+            $item = $order->items()->lockForUpdate()->findOrFail($itemId);
+
+            if ($item->status !== $newStatus) {
+                $allowed = self::ITEM_STATUS_NEXT[$item->status] ?? [];
+
+                if (! in_array($newStatus, $allowed, true)) {
+                    throw ValidationException::withMessages([
+                        'status' => ['Status item tidak bisa diubah dari "'.$item->status.'" ke "'.$newStatus.'"'],
+                    ]);
+                }
+            }
+
+            $item->status = $newStatus;
+            $item->save();
+
+            $this->completeIfAllItemsServed($order);
+        });
+
+        $order->refresh();
 
         $this->safeBroadcastOrderChange($order, 'item-status');
 
         return new OrderResource($order->load(['table', 'items']));
+    }
+
+    /**
+     * Tutup pesanan otomatis begitu tidak ada lagi item yang menunggu
+     * dilayani. Untuk pesanan self-order tidak ada pelayan yang menandai
+     * "diantar", jadi status "siap" sudah dianggap selesai layanan.
+     */
+    private function completeIfAllItemsServed(Order $order): void
+    {
+        $statuses = $order->items()->pluck('status');
+
+        if ($statuses->isEmpty()) {
+            return;
+        }
+
+        $allServed = $order->source === 'self-order'
+            ? $statuses->every(fn ($s) => in_array($s, ['siap', 'diantar'], true))
+            : $statuses->every(fn ($s) => $s === 'diantar');
+
+        if (! $allServed) {
+            return;
+        }
+
+        $order->status = 'selesai';
+        $order->save();
+
+        TableStatusService::syncForOrder($order);
+
+        $this->safeBroadcastOrderChange($order, 'paid');
     }
 
     public function void(Request $request, Order $order): OrderResource
@@ -285,10 +353,24 @@ class OrderController extends Controller
                 ]);
             }
 
-            if ($order->payment()->exists()) {
+            // Pembayaran yang sudah 'paid' berarti uang sudah masuk — tidak
+            // boleh dibatalkan dari kasir. Tapi payment yang masih 'pending'
+            // (QRIS dibuat, pelanggan belum_scan) SEHARUSNYA boleh ditutup,
+            // kalau tidak order nyangkut selamanya: tidak bisa dibayar (409),
+            // tidak bisa dibatalkan (422), tidak bisa diselesaikan (butuh
+            // status diproses). Payment pending dilepas jadi 'cancelled' supaya
+            // kalau pelanggan terlanjur scan, tidak ada yang masuk ke kas.
+            $payment = $order->payment()->lockForUpdate()->first();
+
+            if ($payment?->status === 'paid') {
                 throw ValidationException::withMessages([
                     'order' => ['Pesanan sudah dibayar dan tidak dapat dibatalkan dari sini.'],
                 ]);
+            }
+
+            if ($payment && $payment->status === 'pending') {
+                $payment->status = 'cancelled';
+                $payment->save();
             }
 
             $order->status = 'dibatalkan';
@@ -296,13 +378,7 @@ class OrderController extends Controller
             $order->voided_by = $request->user()?->id;
             $order->save();
 
-            if ($order->table_id) {
-                $table = Table::lockForUpdate()->find($order->table_id);
-                if ($table && $table->status === 'terisi') {
-                    $table->status = 'kosong';
-                    $table->save();
-                }
-            }
+            TableStatusService::syncForOrder($order);
         });
 
         $order->refresh();
@@ -370,18 +446,30 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Kalau pelanggan sudah sempat membuat QRIS, payment-nya dilepas
+            // jadi 'cancelled' SEBELUM order dibatalkan. Tanpa ini, pelanggan
+            // bisa bayar di m-banking beberapa saat kemudian dan
+            // confirmPaid() akan menandai order yang sudah dibatalkan sebagai
+            // 'paid' sekaligus mengubah meja menjadi 'terisi' — uang hilang.
+            $payment = $order->payment()->lockForUpdate()->first();
+
+            if ($payment?->status === 'paid') {
+                throw ValidationException::withMessages([
+                    'order' => ['Pesanan sudah dibayar dan tidak dapat dibatalkan.'],
+                ]);
+            }
+
+            if ($payment && $payment->status === 'pending') {
+                $payment->status = 'cancelled';
+                $payment->save();
+            }
+
             $order->status = 'dibatalkan';
             $order->void_reason = 'Dibatalkan pelanggan sebelum bayar';
             $order->voided_by = null;
             $order->save();
 
-            if ($order->table_id) {
-                $table = Table::lockForUpdate()->find($order->table_id);
-                if ($table && $table->status === 'terisi') {
-                    $table->status = 'kosong';
-                    $table->save();
-                }
-            }
+            TableStatusService::syncForOrder($order);
         });
 
         $order->refresh();
@@ -411,13 +499,7 @@ class OrderController extends Controller
             $order->status = 'selesai';
             $order->save();
 
-            if ($order->table_id) {
-                $table = Table::lockForUpdate()->find($order->table_id);
-                if ($table && $table->status === 'terisi') {
-                    $table->status = 'perlu-dibersihkan';
-                    $table->save();
-                }
-            }
+            TableStatusService::syncForOrder($order);
         });
 
         $order->refresh();

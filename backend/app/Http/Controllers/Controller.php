@@ -22,11 +22,37 @@ abstract class Controller
         }
     }
 
-    /** True bila QueryException berasal dari pelanggaran constraint (unique, dst). */
+    /**
+     * True HANYA bila QueryException benar-benar pelanggaran UNIQUE.
+     *
+     * Versi lama hanya mengecek awalan SQLSTATE '23', yang juga dipakai
+     * pelanggaran foreign key, not-null, dan check constraint. Akibatnya
+     * semua error integritas salah diterjemahkan jadi "Pesanan sudah dibayar"
+     * (409), menutupi bug yang sebenarnya.
+     *
+     * PENTING: jangan panggil $e->getConnection(). Illuminate\Database\QueryException
+     * tidak punya method itu (hanya getConnectionName() & getConnectionDetails()),
+     * sehingga pemanggilannya melempar Error fatal di dalam blok catch — yang
+     * membuat guard anti-duplikat justru gagal total saat bentroknya benar-benar
+     * terjadi. Daripada menebak nama driver, kode errornya dibaca langsung dari
+     * errorInfo, yang terisi oleh PDO apa pun drivernya.
+     */
     protected function isUniqueViolation(QueryException $e): bool
     {
         $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $driverCode = $e->errorInfo[1] ?? null;
 
-        return str_starts_with($sqlState, '23');
+        // MySQL/MariaDB: SQLSTATE 23000 + kode 1062 (ER_DUP_ENTRY).
+        if ($sqlState === '23000' && (int) $driverCode === 1062) {
+            return true;
+        }
+
+        // PostgreSQL: SQLSTATE 23505 (unique_violation).
+        if ($sqlState === '23505') {
+            return true;
+        }
+
+        // SQLite tidak mengisi errorInfo dengan kode yang berguna.
+        return str_contains($e->getMessage(), 'UNIQUE constraint failed');
     }
 }

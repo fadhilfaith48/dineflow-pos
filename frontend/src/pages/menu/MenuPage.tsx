@@ -19,7 +19,11 @@ type PayMethod = 'choose' | 'qris' | 'kasir'
 
 export function MenuPage() {
   const { table } = useParams<{ table: string }>()
-  const cart = useCart()
+  const [taxRate, setTaxRate] = useState<number | undefined>(undefined)
+  // PPN diambil dari backend, bukan default 10% di useCart. Kalau admin
+  // mengubah PPN lewat Settings, total yang tampil di layar pelanggan harus
+  // sama dengan yang ditagih server.
+  const cart = useCart(taxRate)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
@@ -33,6 +37,8 @@ export function MenuPage() {
   const [orderNumber, setOrderNumber] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [payError, setPayError] = useState('')
   const [payRef, setPayRef] = useState('')
   const [payQr, setPayQr] = useState<string | null>(null)
   const [payGateway, setPayGateway] = useState('mock')
@@ -47,16 +53,28 @@ export function MenuPage() {
   const orderKeyRef = useRef(newIdempotencyKey())
 
   useEffect(() => {
-    api.getCategories().then((cats) => {
-      setCategories(cats)
-      setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
-    })
-    api.getMenuItems().then(setItems)
+    // Kegagalan pemuatan tidak boleh jadi unhandled rejection — halaman harus
+    // menampilkan error, bukan diam-diam kosong.
+    api
+      .getCategories()
+      .then((cats) => {
+        setCategories(cats)
+        setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
+      })
+      .catch((e) => setLoadError(e instanceof Error ? e.message : 'Gagal memuat kategori.'))
+    api.getMenuItems().then(setItems).catch(() => setLoadError('Gagal memuat menu.'))
+    api
+      .getPublicInfo()
+      .then((info) => setTaxRate(info.taxRate))
+      .catch(() => {
+        // Public-info hanya untuk akurasi PPN; kegagalan tidak boleh memblokir
+        // pemesanan — useCart memakai default bila taxRate undefined.
+      })
   }, [])
 
   useEffect(() => {
     echo.channel('menu').listen('MenuChanged', () => {
-      api.getMenuItems().then(setItems)
+      api.getMenuItems().then(setItems).catch(() => {})
     })
     return () => {
       echo.leaveChannel('menu')
@@ -148,16 +166,22 @@ export function MenuPage() {
     if (!trackedOrder || payingRef.current) return
     payingRef.current = true
     setPaying(true)
-    setPayMethod('qris')
+    setPayError('')
     try {
       const checkout = await api.checkoutOrder(trackedOrder.id)
       setPayRef(checkout.reference)
       setPayQr(checkout.qrContent)
       setPayGateway(checkout.gateway)
-    } catch {
-      setPayRef(String(trackedOrder.id))
+      setPayMethod('qris')
+    } catch (e) {
+      // Jangan pernah memalsukan reference. Versi lama memakai
+      // String(order.id) sebagai reference sehingga polling 404 terus dan
+      // tombol "Saya Sudah Bayar" pasti gagal tanpa penjelasan apa pun.
+      // Tampilkan kesalahan (409/422/429) apa adanya agar pelanggan tahu
+      // harus hubsungi kasir.
+      setPayRef('')
       setPayQr(null)
-      setPayGateway('mock')
+      setPayError(e instanceof Error ? e.message : 'Gagal membuat pembayaran QRIS. Minta kasir membantu.')
     } finally {
       payingRef.current = false
       setPaying(false)
@@ -166,6 +190,7 @@ export function MenuPage() {
 
   function handlePayKasir() {
     if (!trackedOrder) return
+    setPayError('')
     setPayMethod('kasir')
   }
 
@@ -193,9 +218,11 @@ export function MenuPage() {
   }
 
   async function handleQrisPaid() {
+    // getOrders() butuh login (role kasir/pelayan/dapur/admin) — pelanggan di
+    // halaman publik selalu mendapat 401. Pakai endpoint publik per nomor order.
     try {
-      const list = await api.getOrders()
-      setTrackedOrder(list.find((o) => o.orderNumber === orderNumber) ?? trackedOrder)
+      const found = await api.getOrderByNumber(orderNumber)
+      if (found) setTrackedOrder(found)
     } catch {
       // abaikan, pakai order yang sudah dipegang
     }
@@ -276,12 +303,15 @@ export function MenuPage() {
               </button>
             </div>
             <div className="border-t border-border-subtle bg-bg-surface p-4">
+              {payError && (
+                <p className="mb-2 text-center text-caption font-semibold text-status-danger">{payError}</p>
+              )}
               {cancelError && (
                 <p className="mb-2 text-center text-caption font-semibold text-status-danger">{cancelError}</p>
               )}
               <button
                 onClick={handleCancelOrder}
-                disabled={isCancelling}
+                disabled={isCancelling || paying}
                 className="h-14 w-full rounded-xl border border-status-danger/30 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/10 disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan'}
@@ -290,11 +320,11 @@ export function MenuPage() {
           </>
         )}
 
-        {payMethod === 'qris' && (
+        {payMethod === 'qris' && payRef && (
           <>
             <div className="flex-1 px-4 py-5">
               <QrisPay
-                reference={payRef || String(trackedOrder?.id ?? '')}
+                reference={payRef}
                 qrContent={payQr}
                 gateway={payGateway}
                 total={payAmount}
@@ -390,6 +420,11 @@ export function MenuPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {loadError && (
+          <p className="mb-3 rounded-lg border border-status-danger/30 bg-status-danger/5 px-3 py-2 text-caption text-status-danger">
+            {loadError}
+          </p>
+        )}
         {visibleItems.length > 0 && search.trim() === '' && (
           <FeaturedCard
             item={visibleItems[0]}
@@ -482,7 +517,7 @@ export function MenuPage() {
       <div className="sticky bottom-0 z-20 border-t border-border-subtle bg-bg-surface px-4 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <button
           onClick={() => setView('cart')}
-          disabled={cart.lines.length === 0}
+          disabled={cart.lines.length === 0 || !tableChecked || tableId === null}
           className="flex h-14 w-full items-center justify-between rounded-xl bg-accent-primary px-5 text-text-on-accent shadow-modal transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
         >
           <span className="font-num text-body font-bold">{cart.itemCount} item</span>
@@ -585,7 +620,7 @@ export function MenuPage() {
               </div>
               <button
                 onClick={handleSubmitOrder}
-                disabled={cart.lines.length === 0 || submitting}
+                disabled={cart.lines.length === 0 || submitting || !tableChecked || tableId === null}
                 className="h-14 w-full rounded-xl bg-accent-primary text-subheading font-bold text-text-on-accent transition-colors hover:bg-accent-primary-hover disabled:opacity-40"
               >
                 {submitting ? 'Memproses...' : 'Lanjut ke Pembayaran'}

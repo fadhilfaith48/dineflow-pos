@@ -159,6 +159,13 @@ export function KasirPage() {
   }
 
   function handleReprint(order: Order) {
+    // Struk order yang dibatalkan tidak boleh dicetak: tidak ada payment dan
+    // menyesatkan kasir/pelanggan karena pesanan tidak pernah diproduksi.
+    if (order.status === 'dibatalkan') {
+      setError('Pesanan yang dibatalkan tidak bisa dicetak ulang.')
+      return
+    }
+    setError('')
     setReceipt(orderToReceipt(order, order.payment, settings ?? undefined))
   }
 

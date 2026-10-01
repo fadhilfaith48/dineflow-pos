@@ -55,10 +55,11 @@ function HistoryRow({ order, onClick }: { order: Order; onClick: () => void }) {
     <li>
       <button
         onClick={onClick}
+        disabled={isCancelled}
         title={isCancelled ? 'Pesanan dibatalkan' : 'Cetak ulang struk'}
         className={`w-full rounded-lg border p-3 text-left transition-colors ${
           isCancelled
-            ? 'border-status-danger/30 bg-status-danger/5 opacity-60'
+            ? 'cursor-not-allowed border-status-danger/30 bg-status-danger/5 opacity-60'
             : 'border-border-subtle hover:border-accent-primary hover:bg-accent-tint/40'
         }`}
       >

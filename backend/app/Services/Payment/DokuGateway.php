@@ -17,8 +17,10 @@ use RuntimeException;
  *  3. getStatus()     -> POST /snap-adapter/b2b/v1.0/qr/qr-mpm-query,
  *                        konfirmasi lunas via latestTransactionStatus "00".
  *
- * Bila kredensial DOKU belum lengkap (proyek PKL tanpa aktivasi bisnis),
- * driver otomatis bertindak seperti MockQrisGateway agar demo tetap jalan.
+ * Bila kredensial DOKU belum lengkap, driver TIDAK lagi diam-diam memakai
+ * MockQrisGateway. Sebelumnya ia jatuh ke mock sehingga salah konfigurasi
+ * tidak ketahuan sampai pelanggan mendapat QR palsu yang tidak bisa dibayar.
+ * Sekarang kredensial kosong langsung gagal dengan pesan jelas.
  *
  * Membutuhkan di .env:
  *   PAYMENT_DRIVER=doku
@@ -60,9 +62,7 @@ class DokuGateway implements PaymentGateway
 
     public function createPayment(string $orderNumber, int $amount, string $paidVia): array
     {
-        if (! $this->usable()) {
-            return $this->fallback()->createPayment($orderNumber, $amount, $paidVia);
-        }
+        $this->assertConfigured();
 
         $timestamp = $this->timestamp();
 
@@ -114,9 +114,7 @@ class DokuGateway implements PaymentGateway
 
     public function getStatus(string $reference, string $invoiceNumber): string
     {
-        if (! $this->usable()) {
-            return $this->fallback()->getStatus($reference, $invoiceNumber);
-        }
+        $this->assertConfigured();
 
         $timestamp = $this->timestamp();
 
@@ -292,8 +290,19 @@ class DokuGateway implements PaymentGateway
         return date('YmdHis').sprintf('%09d', mt_rand(0, 999999999));
     }
 
-    private function fallback(): MockQrisGateway
+    /**
+     * Kredensial DOKU wajib lengkap. Gagal di sini jauh lebih baik daripada
+     * diam-diam memakai QR palsu: salah konfigurasi ketahuan saat restart /
+     * saat pesanan dibuat, bukan setelah pelanggan futile memindai QR.
+     */
+    private function assertConfigured(): void
     {
-        return new MockQrisGateway;
+        if (! $this->usable()) {
+            throw new RuntimeException(
+                'Kredensial DOKU belum lengkap di .env (butuh: DOKU_CLIENT_ID, DOKU_SECRET_KEY, '
+                .'DOKU_PRIVATE_KEY_FILE, DOKU_MERCHANT_ID, DOKU_TERMINAL_ID). '
+                .'Set PAYMENT_DRIVER=mock untuk demo, atau lengkapi kredensialnya.'
+            );
+        }
     }
 }

@@ -18,7 +18,9 @@ type View = 'tables' | 'order' | 'orders'
 type PayMethod = 'choose' | 'qris' | 'kasir'
 
 export function PelayanPage() {
-  const cart = useCart()
+  const [taxRate, setTaxRate] = useState<number | undefined>(undefined)
+  // PPN dari backend supaya ringkasan di layar pelayan sama dengan tagihan.
+  const cart = useCart(taxRate)
   const [view, setView] = useState<View>('tables')
   const [tables, setTables] = useState<DiningTable[]>([])
   const [categories, setCategories] = useState<MenuCategory[]>([])
@@ -41,6 +43,7 @@ export function PelayanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [payError, setPayError] = useState('')
   const [paying, setPaying] = useState(false)
   // Lock + kunci idempotensi disatukan: double-click yang lolos guard state
   // tetap memakai key SAMA sehingga backend tidak membuat order kedua.
@@ -68,8 +71,14 @@ export function PelayanPage() {
         setCategories(cats)
         setActiveCategory((prev) => prev ?? cats[0]?.id ?? null)
       }).catch(() => setError('Gagal memuat kategori menu. Cek koneksi ke server.')),
-      api.getMenuItems().then(setItems).catch(() => setError('Gagal memuat menu. Cek koneksi ke server.')),
+      api.getMenuItems().then(setItems).catch(() => {}),
       api.getOrders().then(setOrders).catch(() => setError('Gagal memuat pesanan. Cek koneksi ke server.')),
+      api
+        .getPublicInfo()
+        .then((info) => setTaxRate(info.taxRate))
+        .catch(() => {
+          // hanya akurasi PPN; kegagalan tidak boleh memblokir input pesanan
+        }),
     ]).finally(() => setIsLoading(false))
 
     echo.private('orders').listen('OrderStatusChanged', () => {
@@ -77,7 +86,7 @@ export function PelayanPage() {
       loadTables()
     })
     echo.channel('menu').listen('MenuChanged', () => {
-      api.getMenuItems().then(setItems)
+      api.getMenuItems().then(setItems).catch(() => {})
     })
 
     return () => {
@@ -144,16 +153,19 @@ export function PelayanPage() {
     if (payingRef.current) return
     payingRef.current = true
     setPaying(true)
+    setPayError('')
     setPayMethod('qris')
     try {
       const checkout = await api.checkoutOrder(payOrderId)
       setPayRef(checkout.reference)
       setPayQr(checkout.qrContent)
       setPayGateway(checkout.gateway)
-    } catch {
-      setPayRef(String(payOrderId))
+    } catch (e) {
+      // Jangan pernah memalsukan reference. Versi lama memakai String(orderId)
+      // sehingga polling 404 terus tanpa penjelasan apa pun.
+      setPayRef('')
       setPayQr(null)
-      setPayGateway('mock')
+      setPayError(e instanceof Error ? e.message : 'Gagal membuat pembayaran QRIS.')
     } finally {
       payingRef.current = false
       setPaying(false)
@@ -161,6 +173,7 @@ export function PelayanPage() {
   }
 
   function handlePayKasir() {
+    setPayError('')
     setPayMethod('kasir')
   }
 
@@ -315,10 +328,10 @@ export function PelayanPage() {
               </>
             )}
 
-            {payMethod === 'qris' && (
+            {payMethod === 'qris' && payRef && (
               <>
                 <QrisPay
-                  reference={payRef || String(payAmount)}
+                  reference={payRef}
                   qrContent={payQr}
                   gateway={payGateway}
                   total={payAmount}
@@ -358,12 +371,15 @@ export function PelayanPage() {
               </>
             )}
 
+            {payError && (
+              <p className="mt-3 text-center text-caption font-semibold text-status-danger">{payError}</p>
+            )}
             {cancelError && (
               <p className="mt-3 text-center text-caption font-semibold text-status-danger">{cancelError}</p>
             )}
             <button
               onClick={handleCancelOrder}
-              disabled={isCancelling}
+              disabled={isCancelling || paying}
               className="mt-3 w-full rounded-xl border border-status-danger/30 py-3 text-body font-semibold text-status-danger transition-colors hover:bg-status-danger/10 disabled:opacity-40 disabled:pointer-events-none"
             >
               {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan'}

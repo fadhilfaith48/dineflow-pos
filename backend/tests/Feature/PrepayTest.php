@@ -21,6 +21,9 @@ class PrepayTest extends TestCase
         parent::setUp();
 
         config()->set('dinflow.payment_driver', 'mock');
+        // Endpoint mock-paid kini butuh flag ALLOW_MOCK_PAYMENT (default false).
+        // Di setUp test ini disalakan karena skenario memakai driver mock.
+        config()->set('dinflow.allow_mock_payment', true);
     }
 
     private function makeMenu(): MenuItem

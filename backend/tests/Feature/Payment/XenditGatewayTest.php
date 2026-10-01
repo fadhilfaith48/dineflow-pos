@@ -4,6 +4,7 @@ namespace Tests\Feature\Payment;
 
 use App\Services\Payment\XenditGateway;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Tests\TestCase;
 
 class XenditGatewayTest extends TestCase
@@ -112,7 +113,12 @@ class XenditGatewayTest extends TestCase
         });
     }
 
-    public function test_falls_back_to_local_mock_when_secret_key_missing(): void
+    /**
+     * Secret key kosong harus GAGAL dengan pesan jelas, bukan diam-diam memakai
+     * MockQrisGateway (yang menghasilkan QR stub "some-random-qr-string" yang
+     * tidak bisa dipindai).
+     */
+    public function test_missing_secret_key_fails_loudly_instead_of_falling_back_to_mock(): void
     {
         config()->set('dinflow.xendit', [
             'secret_key' => '',
@@ -120,12 +126,16 @@ class XenditGatewayTest extends TestCase
         ]);
 
         $gateway = new XenditGateway;
-        $result = $gateway->createPayment('ORD-1', 10000, 'qris');
 
-        $this->assertSame('mock', $result['gateway']);
-        $this->assertStringStartsWith('MOCK-', $result['reference']);
-        $this->assertSame('pending', $gateway->getStatus($result['reference'], 'ORD-1'));
+        try {
+            $gateway->createPayment('ORD-1', 10000, 'qris');
+            $this->fail('createPayment seharusnya gagal saat secret key kosong.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('XENDIT_SECRET_KEY', $e->getMessage());
+            $this->assertStringContainsString('PAYMENT_DRIVER=mock', $e->getMessage());
+        }
 
-        Http::assertNothingSent();
+        $this->expectException(RuntimeException::class);
+        $gateway->getStatus('qr_123', 'ORD-1');
     }
 }

@@ -18,6 +18,7 @@ import type {
   SalesDateRange,
   SalesSummary,
   Settings,
+  PublicInfo,
   User,
 } from '@/types'
 
@@ -89,7 +90,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
 
-  if (res.status === 401) {
+  if (res.status === 401 && token) {
+    // Hanya logout bila request benar-benar mengirim token. 401 dari endpoint
+    // publik (mis. halaman Menu Pesan Mandiri yang memanggil endpoint
+    // terproteksi) tidak boleh menghapus sesi yang sedang berjalan.
     clearAuth()
     window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT))
   }
@@ -216,6 +220,10 @@ export class HttpApi implements Api {
     return request<{ data: DiningTable }>(`/tables/${encodeURIComponent(slug)}`).then(unwrap)
   }
 
+  async getPublicInfo(): Promise<PublicInfo> {
+    return request<PublicInfo>('/public-info')
+  }
+
   async createTable(input: { number: string; seats: number }): Promise<DiningTable> {
     return request<{ data: DiningTable }>('/tables', {
       method: 'POST',
@@ -258,12 +266,6 @@ export class HttpApi implements Api {
     }).then(unwrap)
   }
 
-  async confirmOrder(orderId: number): Promise<Order> {
-    return request<{ data: Order }>(`/orders/${orderId}/confirm`, {
-      method: 'PATCH',
-    }).then(unwrap)
-  }
-
   async completeOrder(orderId: number): Promise<Order> {
     return request<{ data: Order }>(`/orders/${orderId}/complete`, {
       method: 'PATCH',
@@ -278,7 +280,9 @@ export class HttpApi implements Api {
   }
 
   async cancelOrder(orderId: number): Promise<Order> {
-    return request<{ data: Order }>(`/orders/${orderId}/void`, {
+    // Path /cancel (bukan /void): pembatalan mandiri pelanggan tanpa login.
+    // Void oleh staff memakai PATCH /orders/{id}/void — dua aksi berbeda.
+    return request<{ data: Order }>(`/orders/${orderId}/cancel`, {
       method: 'POST',
     }).then(unwrap)
   }

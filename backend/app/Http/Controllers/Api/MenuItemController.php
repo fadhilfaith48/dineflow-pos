@@ -164,9 +164,12 @@ class MenuItemController extends Controller
         DB::transaction(function () use ($validated, $menuItem, $request) {
             $menuItem->save();
 
+            // `variants` tidak dikirim (null di payload) = admin tidak menyentuh
+            // varian, jadi varian lama HARUS dipertahankan. Tanpa penjagaan ini,
+            // `foreach (null)` membuat manager tidak sinkron dan varian ikut hilang.
             if (array_key_exists('variants', $validated)) {
                 $menuItem->variants()->delete();
-                foreach ($validated['variants'] as $i => $v) {
+                foreach ($validated['variants'] ?? [] as $i => $v) {
                     $menuItem->variants()->create([
                         'name' => $v['name'],
                         'price' => $v['price'],

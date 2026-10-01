@@ -7,9 +7,11 @@ use App\Models\MenuItem;
 use App\Models\MenuItemVariant;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Setting;
 use App\Models\Table;
 use App\Models\User;
+use App\Services\TableStatusService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -222,6 +224,46 @@ class DatabaseSeeder extends Seeder
                     ['#M05', 15000, 1, 'baru'],
                 ],
             ],
+            // Order SELESAI. Laporan penjualan hanya menghitung status
+            // 'selesai' (SalesSummaryController), jadi tanpa data ini layar
+            // Reports & CSV selalu kosong setelah `db:seed` — Pivot harian
+            // tidak punya apa pun untuk digambar saat demo/sidang.
+            [
+                'order_number' => 'ORD-0005',
+                'table' => 'T2',
+                'source' => 'pelayan',
+                'status' => 'selesai',
+                'method' => 'tunai',
+                'created_at' => '2026-08-27 12:40:00',
+                'items' => [
+                    ['#M01', 18000, 2, 'diantar', null, null, 2],
+                    ['#M08', 8000, 1, 'diantar', null, 'Jumbo'],
+                ],
+            ],
+            [
+                'order_number' => 'ORD-0006',
+                'table' => 'T4',
+                'source' => 'self-order',
+                'status' => 'selesai',
+                'method' => 'qris',
+                'created_at' => '2026-08-27 13:15:00',
+                'items' => [
+                    ['#M02', 22000, 1, 'diantar', 'Tidak pedas', null, 0],
+                    ['#M04', 15000, 1, 'diantar', null, 'Original'],
+                ],
+            ],
+            [
+                'order_number' => 'ORD-0007',
+                'table' => 'T1',
+                'source' => 'pelayan',
+                'status' => 'selesai',
+                'method' => 'qris',
+                'created_at' => '2026-08-26 19:05:00',
+                'items' => [
+                    ['#M09', 10000, 3, 'diantar', null, 'Jumbo'],
+                    ['#M10', 12000, 1, 'diantar'],
+                ],
+            ],
         ];
 
         foreach ($orders as $data) {
@@ -261,6 +303,40 @@ class DatabaseSeeder extends Seeder
                     ],
                 );
             }
+
+            // Order 'selesai' wajib punya payment: laporan penjualan menghitung
+            // omzet per metode pembayaran HANYA dari order yang punya payment.
+            // Tanpa ini, breakdown Tunai/QRIS kosong walaupun order-nya ada.
+            if ($data['status'] === 'selesai') {
+                $method = $data['method'] ?? 'tunai';
+
+                Payment::updateOrCreate(
+                    ['order_id' => $order->id],
+                    [
+                        'reference' => 'MOCK-'.$order->order_number,
+                        'method' => $method,
+                        'status' => 'paid',
+                        'gateway' => 'mock',
+                        'paid_via' => $method,
+                        'amount' => $order->total,
+                        'subtotal' => $subtotal,
+                        'ppn_amount' => $order->total - $subtotal,
+                        'total' => $order->total,
+                        'cash_received' => $method === 'tunai' ? $order->total : null,
+                        'change' => null,
+                        'paid_by' => $method === 'tunai'
+                            ? User::where('username', 'kasir')->value('id')
+                            : null,
+                        'paid_at' => $data['created_at'],
+                    ],
+                );
+            }
         }
+
+        // Status meja di seedTables ditulis manual untuk kebutuhan tampilan,
+        // tapi bisa jadi tidak cocok dengan order yang baru dibuat (mis. meja
+        // masih 'kosong' padahal sudah ada pesanan selesai). Samakan dengan
+        // aturan yang sama seperti runtime.
+        TableStatusService::syncAll();
     }
 }

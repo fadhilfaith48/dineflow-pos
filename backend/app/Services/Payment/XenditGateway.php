@@ -24,8 +24,8 @@ use RuntimeException;
  * Catatan sandbox: di test mode qr_string = "some-random-qr-string" (stub
  * Xendit, tidak scannable) dan pembayaran hanya bisa "masuk" lewat simulasi.
  *
- * Bila kredensial Xendit belum diisi, driver otomatis bertindak sebagai
- * MockQrisGateway agar demo tetap jalan.
+ * Bila kredensial Xendit belum diisi, driver TIDAK diam-diam memakai
+ * MockQrisGateway. Kredensial kosong langsung gagal dengan pesan jelas.
  *
  * Membutuhkan di .env:
  *   PAYMENT_DRIVER=xendit
@@ -53,9 +53,7 @@ class XenditGateway implements PaymentGateway
 
     public function createPayment(string $orderNumber, int $amount, string $paidVia): array
     {
-        if (! $this->usable()) {
-            return $this->fallback()->createPayment($orderNumber, $amount, $paidVia);
-        }
+        $this->assertConfigured();
 
         $response = Http::baseUrl($this->baseUrl())
             ->withBasicAuth($this->config['secret_key'], '')
@@ -91,9 +89,7 @@ class XenditGateway implements PaymentGateway
 
     public function getStatus(string $reference, string $invoiceNumber): string
     {
-        if (! $this->usable()) {
-            return $this->fallback()->getStatus($reference, $invoiceNumber);
-        }
+        $this->assertConfigured();
 
         $response = Http::baseUrl($this->baseUrl())
             ->withBasicAuth($this->config['secret_key'], '')
@@ -155,8 +151,17 @@ class XenditGateway implements PaymentGateway
         return rtrim((string) ($this->config['host'] ?? 'https://api.xendit.co'), '/');
     }
 
-    private function fallback(): MockQrisGateway
+    /**
+     * Secret key Xendit wajib ada. Gagal di sini lebih baik daripada
+     * diam-diam memakai QR palsu yang tidak pernah bisa dibayar.
+     */
+    private function assertConfigured(): void
     {
-        return new MockQrisGateway;
+        if (! $this->usable()) {
+            throw new RuntimeException(
+                'XENDIT_SECRET_KEY belum diisi di .env. '
+                .'Set PAYMENT_DRIVER=mock untuk demo, atau lengkapi kredensialnya.'
+            );
+        }
     }
 }

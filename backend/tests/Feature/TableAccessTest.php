@@ -127,7 +127,7 @@ class TableAccessTest extends TestCase
     {
         $order = $this->makeSelfOrder('device-a');
 
-        $this->postJson("/api/orders/{$order->id}/void", headers: ['X-Device-Id' => 'device-b'])
+        $this->postJson("/api/orders/{$order->id}/cancel", headers: ['X-Device-Id' => 'device-b'])
             ->assertStatus(403);
 
         $this->assertEquals('menunggu', $order->fresh()->status);
@@ -137,7 +137,7 @@ class TableAccessTest extends TestCase
     {
         $order = $this->makeSelfOrder('device-a');
 
-        $this->postJson("/api/orders/{$order->id}/void", headers: ['X-Device-Id' => 'device-a'])
+        $this->postJson("/api/orders/{$order->id}/cancel", headers: ['X-Device-Id' => 'device-a'])
             ->assertOk()
             ->assertJsonPath('data.status', 'dibatalkan');
     }

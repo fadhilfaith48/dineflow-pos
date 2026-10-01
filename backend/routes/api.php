@@ -19,20 +19,40 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/menu-items', [MenuItemController::class, 'index']);
 Route::get('/tables', [TableController::class, 'index']);
 Route::get('/tables/{slug}', [TableController::class, 'resolve'])->middleware('throttle:60,1');
+// Info restoran untuk halaman publik (nama, PPN, logo) supaya total di layar
+// pelanggan sama dengan yang ditagih backend. Tanpa endpoint ini, useCart()
+// jatuh ke default 10% sementara admin bisa mengubah PPN lewat Settings.
+Route::get('/public-info', [SettingController::class, 'publicInfo'])->middleware('throttle:60,1');
 Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:60,1');
 // Tracking order publik: dipakai halaman /order/ORD-XXXX hasil scan QR pelanggan.
 Route::get('/order-status/{orderNumber}', [OrderController::class, 'track'])->middleware('throttle:60,1');
 
-// Bayar di muka (QRIS): checkout & polling pintar — self-order publik, sehingga
-// diletakkan di grup publik; status/mock-paid diproteksi relatif (reference).
+// Bayar di muka (QRIS). Endpoint ini PUBLIK karena halaman Menu Pesan Mandiri
+// dipakai pelanggan tanpa login, tapi controller membatasi:Tanpa token, hanya
+// order source 'self-order' yang boleh di-checkout. Sebelumnya endpoint publik
+// ini bisa dipakai siapa pun untuk mengunci order kasir/pelayan (payment
+// pending dibuat, lalu kasir mendapat 409 "sudah dibayar").
 Route::post('/orders/{order}/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:20,1');
 Route::get('/payments/{reference}/status', [PaymentController::class, 'status'])->middleware('throttle:60,1');
+// Endpoint pembayaran palsu. PUBLIK tapi dijaga berlapis: driver mock/xendit
+// + flag ALLOW_MOCK_PAYMENT (default false). Jangan pernah true di produksi.
 Route::post('/payments/{reference}/mock-paid', [PaymentController::class, 'mockPaid'])->middleware('throttle:10,1');
 // Simulasi pembayaran (hanya driver xendit, endpoint test mode Xendit).
 Route::post('/payments/{reference}/simulate-payment', [PaymentController::class, 'simulate']);
-// Pembatalan self-order (publik): batalkan pesanan sendiri sebelum bayar di muka.
-// Dilindungi controller: hanya source self-order + status menunggu + dalam jendela waktu.
-Route::post('/orders/{order}/void', [OrderController::class, 'cancel'])->middleware('throttle:30,1');
+// Webhook Xendit: pembayaran bisa masuk tanpa polling (mis. pelanggan menutup
+// halaman setelah scan). Signature diverifikasi controller, dan limiter menjaga
+// token tidak bisa dipakai untuk membanjiri endpoint publik ini.
+Route::post('/xendit/callback', [PaymentController::class, 'xenditCallback'])->middleware('throttle:60,1');
+// Pembatalan self-order (PUBLIK, tanpa login): pelanggan membatalkan pesanannya
+// sendiri sebelum bayar di muka. Dilindungi controller: hanya source self-order
+// + status menunggu + dalam jendela waktu.
+//
+// Catatan nama: path-nya /cancel (bukan /void) karena aksi ini berbeda dari void
+// kasir di bawah. Sebelumnya keduanya berbagi path /orders/{order}/void dan
+// hanya dibedakan HTTP verb — PATCH untuk void, POST untuk cancel. Fungsinya
+// jalan, tapi sangat rawan salah baca: void kasir yang terpanggil POST akan
+// masuk ke cancel() dan ditolak dengan "tidak bisa dibatalkan lewat halaman pelanggan".
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
@@ -65,8 +85,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->middleware('role:kasir,admin');
 
     Route::get('/orders', [OrderController::class, 'index'])->middleware('role:kasir,pelayan,dapur,admin');
-    Route::patch('/orders/{order}/confirm', [OrderController::class, 'confirm'])->middleware('role:kasir,admin');
     Route::patch('/orders/{order}/complete', [OrderController::class, 'complete'])->middleware('role:kasir,admin');
+    // Void kasir/pelayan: batalkan pesanan yang sudah dibuat staff, mis. setelah
+    // QRIS dibuat tapi belum dibayar. Berbeda dari /cancel di atas yang publik.
     Route::patch('/orders/{order}/void', [OrderController::class, 'void'])->middleware('role:kasir,admin,dapur,pelayan');
     Route::patch('/orders/{order}/items/{itemId}', [OrderController::class, 'updateItemStatus'])->middleware('role:dapur,pelayan,admin');
     Route::post('/orders/{order}/payments', [PaymentController::class, 'store'])->middleware('role:kasir,admin');

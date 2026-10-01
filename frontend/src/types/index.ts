@@ -120,7 +120,10 @@ export interface SalesDateRange {
 }
 
 export interface SalesSummary {
+  /** Total WITH PPN — inilah yang benar-benar dibayar pelanggan. */
   totalRevenue: number
+  /** Omzet sebelum PPN, dari penjumlahan baris item pesanan selesai. */
+  subtotalRevenue: number
   orderCount: number
   topItems: TopSellingItem[]
   paymentBreakdown: Record<'tunai' | 'qris', PaymentMethodStat>
@@ -132,4 +135,15 @@ export interface Settings {
   restaurantAddress: string
   logoUrl?: string
   qrisImageUrl?: string
+}
+
+/**
+ * Info restoran untuk halaman publik (Menu Pesan Mandiri, tanpa login).
+ * Tidak memuat qrisImageUrl karena itu milik kasir.
+ */
+export interface PublicInfo {
+  taxRate: number
+  restaurantName: string
+  restaurantAddress: string
+  logoUrl?: string
 }

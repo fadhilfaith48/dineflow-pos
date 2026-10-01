@@ -5,6 +5,7 @@ namespace Tests\Feature\Payment;
 use App\Services\Payment\DokuGateway;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Tests\TestCase;
 
 class DokuGatewayTest extends TestCase
@@ -180,7 +181,13 @@ class DokuGatewayTest extends TestCase
         }
     }
 
-    public function test_falls_back_to_local_mock_when_credentials_missing(): void
+    /**
+     * Kredensial kosong harus GAGAL dengan pesan jelas, bukan diam-diam memakai
+     * MockQrisGateway. Fallback diam-diam membuat pelanggan mendapat QR palsu
+     * yang tidak pernah bisa dibayar, dan salah konfigurasi baru ketahuan
+     * jauh kemudian.
+     */
+    public function test_missing_credentials_fail_loudly_instead_of_falling_back_to_mock(): void
     {
         config()->set('dinflow.doku', [
             'client_id' => '',
@@ -194,12 +201,16 @@ class DokuGatewayTest extends TestCase
         ]);
 
         $gateway = new DokuGateway;
-        $result = $gateway->createPayment('ORD-1', 10000, 'qris');
 
-        $this->assertSame('mock', $result['gateway']);
-        $this->assertStringStartsWith('MOCK-', $result['reference']);
-        $this->assertSame('pending', $gateway->getStatus($result['reference'], 'ORD-1'));
+        try {
+            $gateway->createPayment('ORD-1', 10000, 'qris');
+            $this->fail('createPayment seharusnya gagal saat kredensial kosong.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('DOKU', $e->getMessage());
+            $this->assertStringContainsString('PAYMENT_DRIVER=mock', $e->getMessage());
+        }
 
-        Http::assertNothingSent();
+        $this->expectException(RuntimeException::class);
+        $gateway->getStatus('2026090912300000001', 'ORD-1');
     }
 }

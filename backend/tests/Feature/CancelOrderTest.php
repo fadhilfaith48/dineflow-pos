@@ -57,7 +57,7 @@ class CancelOrderTest extends TestCase
         $table = Table::create(['number' => 'T1', 'seats' => 2, 'status' => 'kosong', 'qr_code' => 'T1']);
         $order = $this->makeSelfOrder('menunggu', $table);
 
-        $this->postJson("/api/orders/{$order->id}/void")
+        $this->postJson("/api/orders/{$order->id}/cancel")
             ->assertOk()
             ->assertJsonPath('data.status', 'dibatalkan')
             ->assertJsonPath('data.voidReason', 'Dibatalkan pelanggan sebelum bayar');
@@ -73,7 +73,7 @@ class CancelOrderTest extends TestCase
         $order->created_at = now()->subMinutes(11);
         $order->save();
 
-        $this->postJson("/api/orders/{$order->id}/void")
+        $this->postJson("/api/orders/{$order->id}/cancel")
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
 
@@ -90,7 +90,7 @@ class CancelOrderTest extends TestCase
             'total' => 19800,
         ]);
 
-        $this->postJson("/api/orders/{$order->id}/void")
+        $this->postJson("/api/orders/{$order->id}/cancel")
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
 
@@ -101,7 +101,7 @@ class CancelOrderTest extends TestCase
     {
         $order = $this->makeSelfOrder('diproses');
 
-        $this->postJson("/api/orders/{$order->id}/void")
+        $this->postJson("/api/orders/{$order->id}/cancel")
             ->assertStatus(422)
             ->assertJsonValidationErrors('order');
 
@@ -112,7 +112,7 @@ class CancelOrderTest extends TestCase
     {
         $order = $this->makeSelfOrder('menunggu');
 
-        $this->postJson("/api/orders/{$order->id}/void")->assertOk();
+        $this->postJson("/api/orders/{$order->id}/cancel")->assertOk();
 
         $user = User::factory()->create(['role' => 'kasir']);
         Sanctum::actingAs($user);

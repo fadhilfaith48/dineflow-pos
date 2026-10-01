@@ -23,6 +23,18 @@ return [
     'self_order_cancel_minutes' => (int) env('SELF_ORDER_CANCEL_MINUTES', 10),
 
     /*
+    | Payment QRIS yang menggantung
+    |
+    | Gateway punya masa berlaku QR sendiri, tapi status di sisi kita hanya
+    | berubah saat ada yang polling. Kalau pelanggan menutup halaman setelah
+    | scan, payment menggantung 'pending' selamanya dan ordernya tidak bisa
+    | ditutup. Setelah ambang ini, perintah payments:expire menandainya
+    | 'expired' (dijadwalkan tiap menit — butuh cron `schedule:run`).
+    */
+
+    'payment_expire_minutes' => (int) env('PAYMENT_EXPIRE_MINUTES', 15),
+
+    /*
     |------------------------------------------------------------------
     | Pembatasan anti-mainan endpoint publik (self-order)
     |------------------------------------------------------------------
@@ -51,6 +63,25 @@ return [
     // aplikasi otomatis jatuh ke mock agar demo tetap jalan.
     'payment_driver' => env('PAYMENT_DRIVER', 'mock'),
 
+    /*
+    | Endpoint pembayaran palsu (mock-paid / simulate-payment) terbuka ke
+    | publik dan hanya dilindungi nilai PAYMENT_DRIVER. Kalau instalasi lupa
+    | menyetel PAYMENT_DRIVER, endpoint itu aktif untuk siapa pun. Karena itu
+    | ada flag kedua yang harus DINYALAKAN secara sengaja: demo tetap jalan
+    | dengan ALLOW_MOCK_PAYMENT=true, tapi tidak aktif diam-diam di produksi.
+    | Biarkan false di produksi sungguhan.
+    |
+    | Default-nya mengikuti APP_ENV supaya tidak harus diisi manual di tiap
+    | mesin dev: APP_ENV=local (atau testing) otomatis menyalakan, sedangkan
+    | produksi — yang default Laravel adalah 'production' — otomatis mematikan
+    | walau flag tidak pernah diisi. Override manual tetap menang.
+    */
+
+    'allow_mock_payment' => (bool) env(
+        'ALLOW_MOCK_PAYMENT',
+        env('APP_ENV', 'production') !== 'production'
+    ),
+
     'doku' => [
         'client_id' => env('DOKU_CLIENT_ID', ''),
         'secret_key' => env('DOKU_SECRET_KEY', ''),
@@ -72,6 +103,10 @@ return [
         'secret_key' => env('XENDIT_SECRET_KEY', ''),
         'host' => env('XENDIT_HOST', 'https://api.xendit.co'),
         'callback_url' => env('XENDIT_CALLBACK_URL', ''),
+
+        // Token callback webhook. Tanpa ini POST /api/xendit/callback selalu 401
+        // (pembayaran masih terdeteksi lewat polling, tapi tidak real-time).
+        'callback_token' => env('XENDIT_CALLBACK_TOKEN', ''),
     ],
 
 ];

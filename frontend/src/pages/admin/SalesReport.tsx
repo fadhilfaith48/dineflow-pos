@@ -187,6 +187,11 @@ export function SalesReport() {
           <div className="mt-2 font-num text-display font-bold text-accent-primary">
             {formatRupiah(summary.totalRevenue)}
           </div>
+          {/* Backend kini mengirim subtotalRevenue (belum PPN) supaya angka di
+              kartu ini bisa dibandingkan dengan jumlah baris item pada laporan. */}
+          <div className="mt-1 text-caption text-text-secondary">
+            Sebelum PPN {formatRupiah(summary.subtotalRevenue)}
+          </div>
         </div>
         <div className="rounded-xl border border-border-subtle bg-bg-surface p-5 shadow-card">
           <div className="text-body font-semibold uppercase tracking-wide text-text-secondary">

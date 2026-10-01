@@ -28,6 +28,29 @@ class SettingController extends Controller
         return response()->json($this->payload());
     }
 
+    /**
+     * Info restoran untuk halaman PUBLIK (Menu Pesan Mandiri, tanpa login).
+     *
+     * Endpoint /settings di atas butuh role kasir/admin, jadi halaman pelanggan
+     * tidak bisa mengambil PPN. Akibatnya useCart() jatuh ke default 10%:
+     * kalau admin mengubah PPN jadi 11%, total yang tampil di layar pelanggan
+     * berbeda dari yang ditagih backend.
+     *
+     * Sengaja TIDAK memuat qrisImageUrl (kode QRIS merchants) — itu milik
+     * kasir, bukan data yang perlu dilihat pelanggan.
+     */
+    public function publicInfo(): JsonResponse
+    {
+        $settings = Setting::pluck('value', 'key')->toArray();
+
+        return response()->json([
+            'taxRate' => (int) ($settings['tax_rate'] ?? 10),
+            'restaurantName' => $settings['restaurant_name'] ?? 'DINEFLOW RESTAURANT',
+            'restaurantAddress' => $settings['restaurant_address'] ?? 'Jl. Raya No. 1, Jakarta',
+            'logoUrl' => $settings['logo_url'] ?? null,
+        ]);
+    }
+
     public function update(Request $request): JsonResponse
     {
         $validated = $request->validate([

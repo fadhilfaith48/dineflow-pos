@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api } from '@/services/httpApi'
 import { formatRupiah } from '@/lib/format'
+import type { PaymentStatus } from '@/types'
+
+const DEAD_MESSAGE: Record<string, string> = {
+  failed: 'Pembayaran gagal. Silakan minta kasir membantu.',
+  expired: 'Waktu pembayaran habis. Silakan minta kasir membuka pembayaran baru.',
+  cancelled: 'Pembayaran dibatalkan. Silakan minta kasir membantu.',
+}
 
 interface QrisPayProps {
   reference: string
@@ -19,6 +26,9 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // Status terminal selain 'paid'. Tanpa ini, polling berjalan terus 3 detik
+  // sekali selamanya untuk pembayaran yang sudah gagal/kedaluwarsa.
+  const [dead, setDead] = useState<PaymentStatus | null>(null)
   const busyRef = useRef(false)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const onPaidRef = useRef(onPaid)
@@ -35,6 +45,11 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
           if (timer.current) clearInterval(timer.current)
           setDone(true)
           onPaidRef.current()
+          return
+        }
+        if (res.status === 'failed' || res.status === 'expired' || res.status === 'cancelled') {
+          if (timer.current) clearInterval(timer.current)
+          setDead(res.status)
         }
       } catch {
         // abaikan error polling, coba lagi pada interval berikutnya
@@ -84,11 +99,35 @@ export function QrisPay({ reference, qrContent, gateway, total, onPaid }: QrisPa
     }
   }
 
+  if (dead) {
+    return (
+      <div className="flex flex-col items-center text-center">
+        <div className="rounded-lg border border-status-danger/30 bg-status-danger/5 px-4 py-2 text-caption font-semibold text-status-danger">
+          {DEAD_MESSAGE[dead] ?? 'Pembayaran tidak dapat dilanjutkan.'}
+        </div>
+        <p className="mt-3 text-caption text-text-secondary">
+          Minta kasir atau pelayan membuka pembayaran baru untuk pesanan ini.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="w-fit rounded-xl border border-border-subtle p-4">
-        <QRCodeSVG value={qrContent || reference} size={200} />
-      </div>
+      {/* Jangan render QR dari reference: itu bukan payload QRIS dan memindainya
+          akan gagal. qrContent kosong = gateway tidak memberi QR statis. */}
+      {qrContent ? (
+        <div className="w-fit rounded-xl border border-border-subtle p-4">
+          <QRCodeSVG value={qrContent} size={200} />
+        </div>
+      ) : (
+        <div className="w-fit rounded-xl border border-border-subtle p-6 text-center">
+          <p className="text-caption font-semibold text-text-primary">QRIS dinamis tidak tersedia</p>
+          <p className="mt-1 text-caption text-text-secondary">
+            Minta pelayan menampilkan QR dari aplikasi pembayaran Anda.
+          </p>
+        </div>
+      )}
 
       {!done && (
         <>

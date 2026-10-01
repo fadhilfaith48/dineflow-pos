@@ -1,4 +1,4 @@
-import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, PaymentStatus, DiningTable, SalesSummary, SalesPeriod, SalesDateRange, User, Role, Settings } from '@/types'
+import type { MenuCategory, MenuItem, Order, Payment, PaymentMethod, PaymentStatus, DiningTable, SalesSummary, SalesPeriod, SalesDateRange, User, Role, Settings, PublicInfo } from '@/types'
 
 /**
  * Kontrak API yang dipakai seluruh halaman.
@@ -13,13 +13,13 @@ export interface Api {
   getMenuItems(categoryId?: number): Promise<MenuItem[]>
   getTables(): Promise<DiningTable[]>
   getTableBySlug(slug: string): Promise<DiningTable>
+  getPublicInfo(): Promise<PublicInfo>
   createTable(input: { number: string; seats: number }): Promise<DiningTable>
   updateTable(id: number, data: Partial<DiningTable>): Promise<DiningTable>
   deleteTable(id: number): Promise<void>
   getOrders(): Promise<Order[]>
   getOrderByNumber(orderNumber: string): Promise<Order | null>
   createOrder(payload: CreateOrderPayload): Promise<Order>
-  confirmOrder(orderId: number): Promise<Order>
   completeOrder(orderId: number): Promise<Order>
   voidOrder(orderId: number, reason: string): Promise<Order>
   cancelOrder(orderId: number): Promise<Order>
