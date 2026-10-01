@@ -294,8 +294,6 @@ class OrderController extends Controller
 
             $item->status = $newStatus;
             $item->save();
-
-            $this->completeIfAllItemsServed($order);
         });
 
         $order->refresh();
@@ -303,35 +301,6 @@ class OrderController extends Controller
         $this->safeBroadcastOrderChange($order, 'item-status');
 
         return new OrderResource($order->load(['table', 'items']));
-    }
-
-    /**
-     * Tutup pesanan otomatis begitu tidak ada lagi item yang menunggu
-     * dilayani. Untuk pesanan self-order tidak ada pelayan yang menandai
-     * "diantar", jadi status "siap" sudah dianggap selesai layanan.
-     */
-    private function completeIfAllItemsServed(Order $order): void
-    {
-        $statuses = $order->items()->pluck('status');
-
-        if ($statuses->isEmpty()) {
-            return;
-        }
-
-        $allServed = $order->source === 'self-order'
-            ? $statuses->every(fn ($s) => in_array($s, ['siap', 'diantar'], true))
-            : $statuses->every(fn ($s) => $s === 'diantar');
-
-        if (! $allServed) {
-            return;
-        }
-
-        $order->status = 'selesai';
-        $order->save();
-
-        TableStatusService::syncForOrder($order);
-
-        $this->safeBroadcastOrderChange($order, 'paid');
     }
 
     public function void(Request $request, Order $order): OrderResource

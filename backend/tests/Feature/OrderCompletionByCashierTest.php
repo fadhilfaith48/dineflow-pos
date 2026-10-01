@@ -5,18 +5,21 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
- * Auto-complete: begitu semua item terlayani, pesanan tidak perlu menunggu
- * kasir menekan "Tandai Selesai". Ini menutup celah di mana order sudah
- * disaji tapi tetap menggantung 'diproses' dan mejanya tidak pernah ditandai
- * perlu dibersihkan.
+ * Penutup pesanan hanya boleh lewat aksi kasir "Tandai Selesai". Dulu
+ * backend menutup order otomatis begitu semua item berstatus "diantar"
+ * (atau "siap" untuk self-order), sehingga pesanan langsung hilang dari
+ * layar Pelayan, Dapur, dan Kasir tanpa pernah adaKasir yang menutup nota.
+ * Sekarang menandai diantar hanya mengubah status item; order tetap
+ * "diproses" sampai kasir menutupnya.
  */
-class OrderAutoCompleteTest extends TestCase
+class OrderCompletionByCashierTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -52,7 +55,17 @@ class OrderAutoCompleteTest extends TestCase
             ->assertOk();
     }
 
-    public function test_order_completes_when_last_item_is_delivered(): void
+    private function createTable(string $number, string $qrCode, string $status = 'terisi'): Table
+    {
+        return Table::create([
+            'number' => $number,
+            'seats' => 2,
+            'status' => $status,
+            'qr_code' => $qrCode,
+        ]);
+    }
+
+    public function test_order_stays_processed_when_every_item_is_delivered(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'dapur']));
 
@@ -62,10 +75,25 @@ class OrderAutoCompleteTest extends TestCase
         $this->assertSame('diproses', $order->fresh()->status, 'Masih ada item yang belum diantar.');
 
         $this->markItem($order, 1, 'diantar');
-        $this->assertSame('selesai', $order->fresh()->status);
+
+        $this->assertSame('diproses', $order->fresh()->status, 'Menandai diantar tidak boleh menutup pesanan.');
+        $this->assertSame('diantar', $order->items()->orderBy('id')->skip(1)->firstOrFail()->status);
     }
 
-    public function test_self_order_completes_when_last_item_is_ready(): void
+    public function test_table_stays_occupied_while_order_waits_for_cashier(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'dapur']));
+
+        $table = $this->createTable('T1', 'abc12345');
+        $order = $this->createOrder('pelayan', $table->id, ['siap']);
+
+        $this->markItem($order, 0, 'diantar');
+
+        $this->assertSame('diproses', $order->fresh()->status);
+        $this->assertSame('terisi', $table->fresh()->status, 'Meja belum dilepas sebelum kasir menutup pesanan.');
+    }
+
+    public function test_self_order_stays_processed_when_every_item_is_ready(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'dapur']));
 
@@ -75,7 +103,8 @@ class OrderAutoCompleteTest extends TestCase
         $this->assertSame('diproses', $order->fresh()->status);
 
         $this->markItem($order, 1, 'siap');
-        $this->assertSame('selesai', $order->fresh()->status, 'Self-order tidak ada pelayan yang menandai diantar.');
+
+        $this->assertSame('diproses', $order->fresh()->status, 'Self-order juga ditutup kasir lewat "Tandai Selesai".');
     }
 
     public function test_non_self_order_does_not_complete_at_ready_stage(): void
@@ -89,48 +118,32 @@ class OrderAutoCompleteTest extends TestCase
         $this->assertSame('diproses', $order->fresh()->status, 'Pelayan masih harus menandai diantar.');
     }
 
-    public function test_autocomplete_marks_table_needs_cleaning(): void
+    public function test_cashier_complete_closes_order_and_frees_table(): void
     {
-        Sanctum::actingAs(User::factory()->create(['role' => 'dapur']));
+        Sanctum::actingAs(User::factory()->create(['role' => 'kasir']));
 
-        $table = \App\Models\Table::create([
-            'number' => 'T1', 'seats' => 2, 'status' => 'terisi', 'qr_code' => 'abc12345',
-        ]);
+        $table = $this->createTable('T1', 'abc12345');
+        $order = $this->createOrder('pelayan', $table->id, ['diantar']);
 
-        $order = $this->createOrder('pelayan', $table->id, ['siap']);
-
-        $this->markItem($order, 0, 'diantar');
+        $this->patchJson("/api/orders/{$order->id}/complete")->assertOk();
 
         $this->assertSame('selesai', $order->fresh()->status);
         $this->assertSame('perlu-dibersihkan', $table->fresh()->status);
     }
 
-    public function test_autocomplete_keeps_table_occupied_when_other_order_active(): void
-    {
-        Sanctum::actingAs(User::factory()->create(['role' => 'dapur']));
-
-        $table = \App\Models\Table::create([
-            'number' => 'T1', 'seats' => 2, 'status' => 'terisi', 'qr_code' => 'abc12345',
-        ]);
-
-        $finishing = $this->createOrder('pelayan', $table->id, ['siap']);
-        $this->createOrder('pelayan', $table->id, ['baru']);
-
-        $this->markItem($finishing, 0, 'diantar');
-
-        $this->assertSame('selesai', $finishing->fresh()->status);
-        $this->assertSame('terisi', $table->fresh()->status);
-    }
-
-    public function test_manual_complete_still_works_as_fallback(): void
+    public function test_table_kept_occupied_when_another_order_still_active(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'kasir']));
 
-        $order = $this->createOrder('pelayan');
+        $table = $this->createTable('T1', 'abc12345');
 
-        $this->patchJson("/api/orders/{$order->id}/complete")->assertOk();
+        $finishing = $this->createOrder('pelayan', $table->id, ['diantar']);
+        $this->createOrder('pelayan', $table->id, ['baru']);
 
-        $this->assertSame('selesai', $order->fresh()->status);
+        $this->patchJson("/api/orders/{$finishing->id}/complete")->assertOk();
+
+        $this->assertSame('selesai', $finishing->fresh()->status);
+        $this->assertSame('terisi', $table->fresh()->status, 'Masih ada pesanan aktif di meja ini.');
     }
 
     public function test_paid_order_enters_kitchen_not_completed(): void
